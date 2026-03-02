@@ -1,0 +1,89 @@
+بناءً على متطلباتك باستخدام Supabase (PostgreSQL)، قمت بتصميم Schema احترافية تضمن لك الدقة في التقارير، تتبع العمليات (Audit Trail)، ونظام صلاحيات مرن (Role-Based Access Control).
+1. هيكل الجداول (Database Schema)
+أ. جدول الصلاحيات والمستخدمين (profiles)
+بدلاً من الاعتماد فقط على جداول Supabase الافتراضية، ننشئ جدولاً للملفات الشخصية لتخزين المسميات الوظيفية والأدوار.
+CREATE TABLE profiles (
+  id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  full_name text,
+  job_title text,
+  department text,
+  role text DEFAULT 'employee', -- (employee, manager, it_procurement, finance, admin)
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+ب. جدول طلبات الشراء (purchase_requests)
+هذا الجدول يمثل "الرأس" للطلب ويحتوي على الحقول الرقابية وتتبع التعديل.
+CREATE TABLE purchase_requests (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  subject text NOT NULL,
+  justification text, -- مبررات الاحتياج
+  status text DEFAULT 'pending', -- (pending, it_approved, finance_approved, rejected, completed)
+  
+  -- الحقول المالية (تعبأ لاحقاً)
+  budget_status boolean, -- البند يسمح/لا يسمح
+  budget_line_item text, -- رقم البند
+  commitment_number text, -- رقم الارتباط
+  total_amount decimal(12, 2) DEFAULT 0,
+  amount_in_words text, -- المبلغ كتابة
+  
+  -- حقول التتبع والرقابة (Audit Fields)
+  created_by uuid REFERENCES profiles(id),
+  updated_by uuid REFERENCES profiles(id),
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  is_deleted boolean DEFAULT false -- حذف منطقي للتقارير
+);
+
+ج. جدول أصناف الطلب (request_items)
+هذا الجدول لتفاصيل المواد المطلوبة (الجدول الموجود في منتصف الورقة).
+CREATE TABLE request_items (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  request_id uuid REFERENCES purchase_requests(id) ON DELETE CASCADE,
+  product_name text NOT NULL, -- الاسم التجاري والموديل
+  specifications text,
+  unit text,
+  quantity integer NOT NULL,
+  unit_price decimal(12, 2),
+  total_price decimal(12, 2) GENERATED ALWAYS AS (quantity * unit_price) STORED,
+  country_of_origin text,
+  warranty_period text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+د. جدول الموافقات والتواقيع (approvals_log)
+بدلاً من وضع خانات التوقيع في جدول الطلب نفسه، نستخدم جدولاً منفصلاً لتسجيل "من وافق ومتى" ليكون لديك سجل تاريخي (History).
+CREATE TABLE approvals_log (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  request_id uuid REFERENCES purchase_requests(id),
+  user_id uuid REFERENCES profiles(id),
+  action text, -- (approved, rejected, requested_changes)
+  comments text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+2. نظام الصلاحيات (Row Level Security - RLS)
+في Supabase، الصلاحيات لا تتم في الكود فقط بل في قاعدة البيانات لضمان الأمان:
+ * الموظف (Employee): يمكنه إنشاء الطلبات ورؤية طلباته فقط.
+ * مدير القسم (Manager): يمكنه رؤية طلبات قسمه والموافقة المبدئية.
+ * IT / المشتريات: يمكنهم رؤية كافة الطلبات وتعديل خانة "مراجعة المخزون".
+ * المالية (Finance): لديهم صلاحية تعديل خانات "رقم الارتباط" و "البند يسمح".
+مثال لكود صلاحية (Policy):
+-- الموظف يرى طلباته فقط
+CREATE POLICY "Users can view their own requests" 
+ON purchase_requests FOR SELECT 
+USING (auth.uid() = created_by);
+
+-- الإدارة المالية ترى كل الطلبات
+CREATE POLICY "Finance can view all requests" 
+ON purchase_requests FOR SELECT 
+USING (EXISTS (
+  SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'finance'
+));
+
+3. مميزات التوسع والتقارير في هذا التصميم:
+ * تتبع التعديلات (Audit Trail): حقول updated_by و updated_at تتيح لك معرفة آخر شخص قام بلمس الطلب، وهو أمر ضروري في دار الأميرات للرقابة الداخلية.
+ * الحذف المنطقي (is_deleted): لا نحذف الطلبات نهائياً من قاعدة البيانات، بل نغير حالتها فقط، وهذا يسمح باستخراج تقارير سنوية حتى للطلبات الملغاة.
+ * الدقة المالية: استخدام نوع decimal(12, 2) بدلاً من float لمنع أخطاء التقريب في المبالغ المالية.
+ * فصل البيانات: فصل "الأصناف" عن "الطلب" يتيح لك مستقبلاً استخراج تقارير مثل: (أكثر الأصناف طلباً، أكثر بلد منشأ يتم الشراء منه، إحصائيات الموردين المقترحين).
+هل تود أن أساعدك في كتابة وظيفة (Function) في Supabase تقوم بتحديث تاريخ التعديل updated_at تلقائياً عند تغيير أي سجل؟

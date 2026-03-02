@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Dar Alamirat Procurement</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="loader" class="loader-wrapper">
+        <output class="spinner-border text-primary">
+            <span class="visually-hidden">Loading...</span>
+        </output>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+        <div class="px-4 mb-4 d-flex align-items-center">
+            <i data-lucide="shopping-cart" class="text-white me-2" style="width: 28px;"></i>
+            <h4 class="fw-bold mb-0">Dar Alamirat</h4>
+        </div>
+        <nav class="nav flex-column">
+            <a class="nav-link active" href="#" data-view="overview">
+                <i data-lucide="layout-dashboard"></i> <span data-i18n="dashboard"></span>Dashboard</span>
+            </a>
+            <a class="nav-link" href="#" data-view="my-requests" id="link-my-requests">
+                <i data-lucide="file-text"></i> <span data-i18n="myRequests">My Requests</span>
+            </a>
+            <a class="nav-link" href="#" data-view="pending-approvals" id="link-approvals">
+                <i data-lucide="check-square"></i> <span data-i18n="pendingApprovals">Pending Approvals</span>
+            </a>
+            <a class="nav-link" href="#" data-view="all-requests" id="link-all-requests">
+                <i data-lucide="list"></i> <span data-i18n="allRequests">All Requests</span>
+            </a>
+            <a class="nav-link" href="#" data-view="reports" id="link-reports">
+                <i data-lucide="bar-chart-2"></i> <span data-i18n="reports">Reports</span>
+            </a>
+            <a class="nav-link" href="#" data-view="user-management" id="link-admin">
+                <i data-lucide="users"></i> <span data-i18n="userManagement">User Management</span>
+            </a>
+            <div class="mt-auto pt-4">
+                <a class="nav-link text-danger" href="#" id="logoutBtn">
+                    <i data-lucide="log-out"></i> <span data-i18n="signOut">Sign Out</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-link d-lg-none p-0 me-3" id="sidebarToggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <h5 class="fw-bold mb-0" id="currentViewTitle" data-i18n="dashboardOverview">Dashboard Overview</h5>
+            </div>
+            <div class="d-flex align-items-center">
+                <!-- Language Switcher -->
+                <div class="me-3">
+                    <button class="btn btn-sm btn-outline-secondary" id="langSwitchBtn">
+                        <i data-lucide="languages" class="me-1"></i>
+                        <span id="langText">العربية</span>
+                    </button>
+                </div>
+                
+                <div class="text-end me-3 d-none d-sm-block">
+                    <div class="fw-bold mb-0" id="userName">User Name</div>
+                    <div class="small text-muted" id="userRole">Role</div>
+                </div>
+                <div class="dropdown">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                         style="width: 40px; height: 40px; cursor: pointer;" 
+                         data-bs-toggle="dropdown" id="userInitials">
+                        UN
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- View Content Containers -->
+        <div id="view-container">
+            <!-- Overview Content (Default) -->
+            <div class="view-content" id="view-overview">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small fw-bold" data-i18n="totalRequests">TOTAL REQUESTS</span>
+                                <i data-lucide="file-text" class="text-primary"></i>
+                            </div>
+                            <h3 class="fw-bold mb-0" id="stat-total">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small fw-bold" data-i18n="pendingReview">PENDING REVIEW</span>
+                                <i data-lucide="clock" class="text-warning"></i>
+                            </div>
+                            <h3 class="fw-bold mb-0" id="stat-pending">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small fw-bold" data-i18n="approved">APPROVED</span>
+                                <i data-lucide="check-circle" class="text-success"></i>
+                            </div>
+                            <h3 class="fw-bold mb-0" id="stat-approved">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small fw-bold" data-i18n="rejected">REJECTED</span>
+                                <i data-lucide="x-circle" class="text-danger"></i>
+                            </div>
+                            <h3 class="fw-bold mb-0" id="stat-rejected">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span data-i18n="recentRequests">Recent Purchase Requests</span>
+                                <button class="btn btn-sm btn-primary" id="createNewBtn">
+                                    <i data-lucide="plus" style="width: 14px;"></i> <span data-i18n="newRequest">New Request</span>
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th class="ps-4" data-i18n="requestId">Request ID</th>
+                                                <th data-i18n="subject">Subject</th>
+                                                <th data-i18n="requester">Requester</th>
+                                                <th data-i18n="status">Status</th>
+                                                <th data-i18n="date">Date</th>
+                                                <th class="text-end pe-4" data-i18n="action">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="recentRequestsTable">
+                                            <!-- To be populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header" data-i18n="activityLog">Activity Log</div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush" id="activityLog">
+                                    <div class="list-group-item text-center py-4 text-muted" data-i18n="noActivity">
+                                        No recent activity
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request Form (Modal or View) -->
+            <div class="view-content d-none" id="view-create-request">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0" data-i18n="nonSalesPurchase">Non-Sales Supplies Purchase Request</h5>
+                        <button class="btn btn-sm btn-outline-secondary" data-view="overview" data-i18n="backToDashboard">
+                           Back to Dashboard
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <form id="purchaseRequestForm">
+                            <div class="row mb-4">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold" data-i18n="subject" for="subjectInput">Subject</label>
+                                    <input type="text" class="form-control" name="subject" id="subjectInput" required data-i18n="subject">
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold" data-i18n="justification" for="justificationInput">Justification (مبررات الاحتياج)</label>
+                                    <textarea class="form-control" name="justification" id="justificationInput" rows="2"></textarea>
+                                </div>
+                            </div>
+
+                            <hr>
+                            <h6 class="fw-bold mb-3" data-i18n="requestedItems">Requested Items</h6>
+                            <div class="table-responsive mb-3">
+                                <table class="table table-bordered" id="itemsTable">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th data-i18n="description">Description (Product & Model)</th>
+                                            <th data-i18n="specs">Specs</th>
+                                            <th data-i18n="unit">Unit</th>
+                                            <th style="width: 100px;" data-i18n="qty">Qty</th>
+                                            <th style="width: 150px;" data-i18n="unitPrice">Unit Price</th>
+                                            <th style="width: 150px;" data-i18n="total">Total</th>
+                                            <th style="width: 50px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsBody">
+                                        <!-- Row placeholder -->
+                                        <tr>
+                                            <td><input type="text" class="form-control" name="product_name[]" required></td>
+                                            <td><input type="text" class="form-control" name="specifications[]"></td>
+                                            <td><input type="text" class="form-control" name="unit[]" placeholder="pcs"></td>
+                                            <td><input type="number" class="form-control qty-input" name="quantity[]" value="1" min="1" required></td>
+                                            <td><input type="number" class="form-control price-input" name="unit_price[]" step="0.01" value="0.00" required></td>
+                                            <td><input type="number" class="form-control row-total" readonly value="0.00"></td>
+                                            <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i data-lucide="trash-2" style="width: 14px;"></i></button></td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="5" class="text-end fw-bold">Grand Total:</td>
+                                            <td><input type="number" id="grandTotal" class="form-control fw-bold" readonly value="0.00"></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary mb-4" id="addRowBtn">
+                                <i data-lucide="plus" style="width: 14px;"></i> <span data-i18n="addItem">Add Item</span>
+                            </button>
+
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary px-5 py-2 fw-bold" data-i18n="submitRequest">Submit Request</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details View (Review/Approve) -->
+            <div class="view-content d-none" id="view-request-details">
+                <div id="detailsContent">
+                     <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Other views placeholders -->
+            <div class="view-content d-none" id="view-my-requests">
+                <div class="card">
+                    <div class="card-header">My Purchase Requests</div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Subject</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="myRequestsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="view-content d-none" id="view-pending-approvals">
+                <div class="card">
+                    <div class="card-header">Requests Awaiting My Approval</div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Requester</th>
+                                        <th>Subject</th>
+                                        <th>Current Status</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pendingApprovalsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        i18nManager.init();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
