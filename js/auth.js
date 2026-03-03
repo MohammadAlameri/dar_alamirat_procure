@@ -57,7 +57,30 @@ if (document.getElementById('loginForm')) {
             alert.classList.remove('d-none');
         } finally {
             btn.disabled = false;
-            btn.innerText = 'Sign In';
+            btn.innerText = i18nManager.get('signIn') || 'Sign In';
         }
     });
 }
+
+// Password toggle for login
+document.getElementById('togglePassword')?.addEventListener('click', () => {
+    const passwordInput = document.getElementById('password');
+    const icon = document.querySelector('#togglePassword i');
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.dataset.lucide = 'eye-off';
+    } else {
+        passwordInput.type = 'password';
+        icon.dataset.lucide = 'eye';
+    }
+    lucide.createIcons();
+});
+
+// Contact Admin Alert
+document.querySelector('[data-i18n="contactAdmin"]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const msg = i18nManager.currentLang === 'ar' ? 
+        'يمكنك مراسلتي على واتساب\nمحمد العامري\n+966551771975' : 
+        'You can message me on WhatsApp\nMohammad Alameri\n+966551771975';
+    alert(msg);
+});

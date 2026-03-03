@@ -11,6 +11,17 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="css/style.css">
+    <script>
+        // Immediate Auth Check to prevent flickering
+        (function() {
+            // Check if language is RTL
+            const lang = localStorage.getItem('lang') || 'en';
+            if (lang === 'ar') {
+                document.documentElement.dir = 'rtl';
+                document.documentElement.lang = 'ar';
+            }
+        })();
+    </script>
 </head>
 <body>
     <div id="loader" class="loader-wrapper">
@@ -39,7 +50,7 @@
                 <i data-lucide="list"></i> <span data-i18n="allRequests">All Requests</span>
             </a>
 
-            <a class="nav-link" href="#" data-view="user-management" id="link-admin">
+            <a class="nav-link d-none" href="#" data-view="user-management" id="link-admin">
                 <i data-lucide="users"></i> <span data-i18n="userManagement">User Management</span>
             </a>
             <div class="mt-auto pt-4">

@@ -39,13 +39,13 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <label class="form-label" for="password" data-i18n="password">Password</label>
-                        <a href="#" class="text-decoration-none small text-primary" data-i18n="forgot">Forgot?</a>
-                    </div>
+                    <label class="form-label" for="password" data-i18n="password">Password</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0"><i data-lucide="lock" style="width: 18px;"></i></span>
-                        <input type="password" class="form-control bg-light border-start-0" id="password" data-i18n="password" placeholder="••••••••" required>
+                        <input type="password" class="form-control bg-light border-start-0 border-end-0" id="password" data-i18n="password" placeholder="••••••••" required>
+                        <button class="btn btn-light bg-light border border-start-0" type="button" id="togglePassword">
+                            <i data-lucide="eye" style="width: 18px;"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="mb-3 form-check">

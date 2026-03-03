@@ -1,11 +1,17 @@
 // UI Helper Functions
 const ui = {
     showView(viewId) {
-        const viewEl = document.getElementById(`view-${viewId}`);
-        if (!viewEl) {
-            console.error(`View element view-${viewId} not found`);
-            return;
+        // Simple client-side authorization
+        const role = currentUser?.profile?.role;
+        if (viewId === 'user-management' && role !== 'admin') {
+            viewId = 'overview';
         }
+        if (viewId === 'all-requests' && !['admin', 'it_procurement', 'finance'].includes(role)) {
+            viewId = 'overview';
+        }
+
+        const viewEl = document.getElementById(`view-${viewId}`);
+        if (!viewEl) return;
 
         document.querySelectorAll('.view-content').forEach(el => el.classList.add('d-none'));
         viewEl.classList.remove('d-none');

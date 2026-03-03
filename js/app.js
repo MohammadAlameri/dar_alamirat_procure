@@ -94,7 +94,19 @@ function setupEventListeners() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
             const viewId = link.dataset.view;
+            
+            // Check permissions before showing view
+            if (viewId === 'user-management' && currentUser?.profile?.role !== 'admin') {
+                ui.showView('overview');
+                return;
+            }
+            
             ui.showView(viewId);
+            
+            // Auto-hide sidebar on mobile after selection
+            if (globalThis.innerWidth <= 992) {
+                document.getElementById('sidebar').classList.remove('show');
+            }
         });
     });
 

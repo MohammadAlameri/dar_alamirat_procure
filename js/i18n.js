@@ -161,7 +161,7 @@ const i18n = {
         employee: "موظف",
         it_procurement: "تقنية / مشتريات",
         finance: "مالية",
-        manager: "مدير مباشر",
+        manager: "مدير",
         // New tokens
         id: "المعرف",
         currentStatus: "الحالة الحالية",
