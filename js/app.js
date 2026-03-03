@@ -260,6 +260,8 @@ function setupEventListeners() {
             const requestData = {
                 subject: formData.get('subject'),
                 justification: formData.get('justification'),
+                requested_by_name: formData.get('requested_by_name'),
+                requested_by_title: formData.get('requested_by_title'),
                 status: 'pending',
                 created_by: currentUser.id,
                 total_amount: Number.parseFloat(document.getElementById('grandTotal').value)
@@ -271,6 +273,9 @@ function setupEventListeners() {
             const units = formData.getAll('unit[]');
             const qties = formData.getAll('quantity[]');
             const prices = formData.getAll('unit_price[]');
+            const countries = formData.getAll('country_of_origin[]');
+            const warranties = formData.getAll('warranty_period[]');
+            const brands = formData.getAll('brand_model[]');
 
             for (let i = 0; i < productNames.length; i++) {
                 items.push({
@@ -278,7 +283,10 @@ function setupEventListeners() {
                     specifications: specs[i],
                     unit: units[i],
                     quantity: Number.parseInt(qties[i]),
-                    unit_price: Number.parseFloat(prices[i])
+                    unit_price: Number.parseFloat(prices[i]),
+                    country_of_origin: countries[i] || null,
+                    warranty_period: warranties[i] || null,
+                    brand_model: brands[i] || null
                 });
             }
 
@@ -321,6 +329,13 @@ async function showRequestDetails(requestId) {
 
         if (error) throw error;
 
+        // Fetch approvals log with profile data
+        const { data: approvals } = await supabaseClient
+            .from('approvals_log')
+            .select('*, profiles:user_id (full_name, role, job_title)')
+            .eq('request_id', requestId)
+            .order('created_at', { ascending: true });
+
         const container = document.getElementById('detailsContent');
         const role = currentUser.profile.role;
         const statusClass = `badge-${req.status}`;
@@ -331,6 +346,10 @@ async function showRequestDetails(requestId) {
                 <div class="card mt-4 border-info">
                     <div class="card-header bg-info text-white">${i18nManager.get('itProcurementReview') || 'IT / Procurement Review'}</div>
                     <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">أسماء الموردين المقترحين (كل مورد في سطر)</label>
+                            <textarea id="suggestedSuppliers" class="form-control" rows="3" placeholder="مورد 1\nمورد 2\nمورد 3">${req.suggested_suppliers || ''}</textarea>
+                        </div>
                         <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments') || 'Add comments...'}"></textarea>
                         <button class="btn btn-success action-btn" data-action="it_approved">${i18nManager.get('approveToFinance') || 'Approve to Finance'}</button>
                         <button class="btn btn-danger action-btn" data-action="rejected">${i18nManager.get('rejected') || 'Reject'}</button>
@@ -374,7 +393,12 @@ async function showRequestDetails(requestId) {
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">${i18nManager.get('requestDetails')} #${req.id.substring(0, 8)}</h5>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="ui.showView('overview')">${i18nManager.get('closing')}</button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-info" id="printRequestBtn">
+                            <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'طباعة' : 'Print'}
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="ui.showView('overview')">${i18nManager.get('closing')}</button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row mb-4">
@@ -425,8 +449,12 @@ async function showRequestDetails(requestId) {
                 </div>
             </div>
         `;
-        ui.showView('overview'); // This is a bug in the code, should be request-details? No, showView handles it.
         ui.showView('request-details');
+
+        // Handle Print Button
+        document.getElementById('printRequestBtn')?.addEventListener('click', () => {
+            ui.printRequest(req, approvals || []);
+        });
 
         // Handle action buttons
         container.querySelectorAll('.action-btn').forEach(btn => {
@@ -435,6 +463,13 @@ async function showRequestDetails(requestId) {
                 const comments = document.getElementById('actionComments').value;
                 const updates = {};
                 
+                if (action === 'it_approved') {
+                    const suggestedSuppliers = document.getElementById('suggestedSuppliers')?.value || '';
+                    if (suggestedSuppliers) {
+                        updates.suggested_suppliers = suggestedSuppliers;
+                    }
+                }
+
                 if (action === 'finance_approved') {
                     updates.budget_line_item = document.getElementById('budget_line').value;
                     updates.commitment_number = document.getElementById('commitment_no').value;

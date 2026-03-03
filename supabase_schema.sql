@@ -161,3 +161,9 @@ CREATE POLICY "Users can view all logs" ON approvals_log FOR SELECT USING (true)
 CREATE POLICY "Authorized roles can insert logs" ON approvals_log FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('manager', 'it_procurement', 'finance', 'admin'))
 );
+
+-- 12. New columns for print template support
+ALTER TABLE purchase_requests ADD COLUMN IF NOT EXISTS requested_by_name text;
+ALTER TABLE purchase_requests ADD COLUMN IF NOT EXISTS requested_by_title text;
+ALTER TABLE purchase_requests ADD COLUMN IF NOT EXISTS suggested_suppliers text;
+ALTER TABLE request_items ADD COLUMN IF NOT EXISTS brand_model text;

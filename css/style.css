@@ -210,3 +210,51 @@ body {
 [dir="rtl"] .border-start-0 { border-right: 0 !important; border-left: 1px solid #dee2e6 !important; }
 [dir="rtl"] .border-end-0 { border-left: 0 !important; border-right: 1px solid #dee2e6 !important; }
 
+/* Print Specific Styles */
+@media print {
+    body {
+        background: #fff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: 'Times New Roman', 'Traditional Arabic', serif !important;
+    }
+    /* Hide everything except print-container */
+    body > *:not(#print-container) {
+        display: none !important;
+    }
+    #sidebar, .top-header, .view-content, .no-print, #loader, #view-container, .container-fluid {
+        display: none !important;
+    }
+    #main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    #print-container {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        visibility: visible !important;
+    }
+    #print-container * {
+        visibility: visible !important;
+    }
+    #print-container table th {
+        background-color: #f2f2f2 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    #print-container table td {
+        border: 1.5px solid #000 !important;
+        padding: 3px !important;
+        text-align: center;
+        font-size: 11px;
+    }
+}
+
+#print-container {
+    display: none;
+    font-family: 'Times New Roman', 'Traditional Arabic', serif;
+    color: #000;
+}
