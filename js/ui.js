@@ -236,9 +236,9 @@ const ui = {
         let hijriDate = '';
         try {
             const date = new Date(req.created_at);
-            hijriDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day: 'numeric', month: 'numeric', year: 'numeric'}).format(date);
+            hijriDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day: 'numeric', month: 'numeric', year: 'numeric'}).format(date).replace(/[هـ]/g, '').trim() + ' هـ';
         } catch(e) {
-            hijriDate = new Date(req.created_at).toLocaleDateString('ar');
+            hijriDate = new Date(req.created_at).toLocaleDateString('ar') + ' هـ';
         }
 
         // Find approvals by role/action
@@ -250,20 +250,20 @@ const ui = {
         const managerTitle = managerApproval && managerApproval.profiles ? (managerApproval.profiles.job_title || '') : '';
         let managerDate = '';
         if (managerApproval) {
-            try { managerDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(new Date(managerApproval.created_at)); } catch(e) { managerDate = ''; }
+            try { managerDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(new Date(managerApproval.created_at)).replace(/[هـ]/g, '').trim() + ' هـ'; } catch(e) { managerDate = ''; }
         }
 
         const itApproverName = itApproval && itApproval.profiles ? itApproval.profiles.full_name : '';
         const itApproverTitle = itApproval && itApproval.profiles ? (itApproval.profiles.job_title || '') : '';
         let itApprovalDate = '';
         if (itApproval) {
-            try { itApprovalDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(new Date(itApproval.created_at)); } catch(e) { itApprovalDate = ''; }
+            try { itApprovalDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(new Date(itApproval.created_at)).replace(/[هـ]/g, '').trim() + ' هـ'; } catch(e) { itApprovalDate = ''; }
         }
 
         const finApproverName = financeApproval && financeApproval.profiles ? financeApproval.profiles.full_name : '';
         let finApprovalDate = '';
         if (financeApproval) {
-            try { finApprovalDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(new Date(financeApproval.created_at)); } catch(e) { finApprovalDate = ''; }
+            try { finApprovalDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(new Date(financeApproval.created_at)).replace(/[هـ]/g, '').trim() + ' هـ'; } catch(e) { finApprovalDate = ''; }
         }
 
         // Requester info (filled at creation)
@@ -364,7 +364,7 @@ const ui = {
                         <span>الاسم <span style="border-bottom:1px dotted #000; min-width:140px; display:inline-block;">${managerName}</span></span>
                         <span>الوظيفة : <span style="border-bottom:1px dotted #000; min-width:140px; display:inline-block;">${managerTitle}</span></span>
                         <span>التوقيع .....................</span>
-                        <span>التاريخ:&nbsp; ${managerApproval ? managerDate + ' هـ' : '&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;١٤هـ'}</span>
+                        <span>التاريخ:&nbsp; ${managerApproval ? managerDate : '&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;١٤هـ'}</span>
                     </div>
                 </div>
 
@@ -375,7 +375,7 @@ const ui = {
                     <div style="display:flex; justify-content:space-between; font-size:12px; flex-wrap:wrap; gap:3px;">
                         <span>اسم المسؤول <span style="border-bottom:1px dotted #000; min-width:150px; display:inline-block;">${itApproverName}</span></span>
                         <span>التوقيع .........................</span>
-                        <span>التاريخ: ${itApproval ? itApprovalDate + ' هـ' : '&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;١٤هـ'}</span>
+                        <span>التاريخ: ${itApproval ? itApprovalDate : '&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;١٤هـ'}</span>
                     </div>
                     <div style="display:flex; margin-top:5px; gap:0;">
                         <div style="flex:1; border:1px solid #000; padding:4px;">

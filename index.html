@@ -53,6 +53,14 @@
             <a class="nav-link d-none" href="#" data-view="user-management" id="link-admin">
                 <i data-lucide="users"></i> <span data-i18n="userManagement">User Management</span>
             </a>
+
+            <div class="px-4 mt-4">
+                <button class="btn btn-sm w-100 sidebar-lang-btn" id="langSwitchBtn">
+                    <i data-lucide="languages"></i>
+                    <span id="langText">العربية</span>
+                </button>
+            </div>
+
             <div class="mt-auto pt-4">
                 <a class="nav-link text-danger" href="#" id="logoutBtn">
                     <i data-lucide="log-out"></i> <span data-i18n="signOut">Sign Out</span>
@@ -72,13 +80,6 @@
                 <h5 class="fw-bold mb-0" id="currentViewTitle" data-i18n="dashboardOverview">Dashboard Overview</h5>
             </div>
             <div class="d-flex align-items-center">
-                <!-- Language Switcher -->
-                <div class="me-3">
-                    <button class="btn btn-sm btn-outline-secondary" id="langSwitchBtn">
-                        <i data-lucide="languages" class="me-1"></i>
-                        <span id="langText">العربية</span>
-                    </button>
-                </div>
                 
                 <div class="text-end me-3 d-none d-sm-block">
                     <div class="fw-bold mb-0" id="userName">User Name</div>
