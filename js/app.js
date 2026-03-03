@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Check Auth 
     ui.setLoading(true);
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         if (!session) {
             globalThis.location.href = 'auth.html';
             return;
@@ -58,6 +58,22 @@ async function loadDashboardData() {
     } else if (role === 'finance') {
         ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'it_approved'), role);
     }
+
+    // New: Render All Requests Table
+    if (role === 'it_procurement' || role === 'finance' || role === 'admin') {
+        ui.renderRequestsTable('allRequestsTable', requests, role);
+    }
+
+    // New: Handle Profiles Table for Admin
+    if (role === 'admin') {
+        try {
+            const profiles = await db.getAllProfiles();
+            // Filter out any admin role profiles just in case
+            ui.renderProfilesTable(profiles.filter(p => p.role !== 'admin'));
+        } catch (error) {
+            console.error('Error loading profiles:', error);
+        }
+    }
 }
 
 function setupEventListeners() {
@@ -90,10 +106,120 @@ function setupEventListeners() {
         });
     }
 
-    // Create New Request button
-    document.getElementById('createNewBtn').addEventListener('click', () => {
-        ui.showView('create-request');
+    // Buttons
+    document.getElementById('createNewBtn').addEventListener('click', () => ui.showView('create-request'));
+    document.getElementById('showCreateProfileBtn')?.addEventListener('click', () => ui.toggleProfileForm(true));
+    document.getElementById('cancelProfileBtn')?.addEventListener('click', () => ui.toggleProfileForm(false));
+
+    // Password Toggle
+    document.getElementById('togglePassword')?.addEventListener('click', () => {
+        const passwordInput = document.getElementById('password');
+        const icon = document.querySelector('#togglePassword i');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.dataset.lucide = 'eye-off';
+        } else {
+            passwordInput.type = 'password';
+            icon.dataset.lucide = 'eye';
+        }
+        lucide.createIcons();
     });
+
+    // Profile Management: Edit/Delete (Event delegation)
+    const profilesTableBody = document.getElementById('profilesTableBody');
+    profilesTableBody?.addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.edit-profile-btn');
+        const deleteBtn = e.target.closest('.delete-profile-btn');
+
+        if (editBtn) {
+            const data = editBtn.dataset;
+            ui.toggleProfileForm(true);
+            document.getElementById('profile_id').value = data.id;
+            document.getElementById('full_name').value = data.name;
+            document.getElementById('email').value = data.email;
+            document.getElementById('role').value = data.role;
+            document.getElementById('job_title').value = data.title;
+            document.getElementById('department').value = data.dept;
+            document.getElementById('passwordHint').classList.remove('d-none');
+            document.getElementById('password').required = false;
+            document.getElementById('profileFormTitle').innerText = 'Edit Profile';
+        }
+
+        if (deleteBtn) {
+            const { id, name } = deleteBtn.dataset;
+            if (confirm(`Are you sure you want to delete profile for ${name}?`)) {
+                handleProfileDelete(id);
+            }
+        }
+    });
+
+    // Create/Edit Profile Form Submission
+    const createUserForm = document.getElementById('createUserForm');
+    if (createUserForm) {
+        createUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            ui.setLoading(true);
+            const alertEl = document.getElementById('createUserAlert');
+            const alertDiv = alertEl ? alertEl.querySelector('.alert') : null;
+            if (alertEl) alertEl.classList.add('d-none');
+
+            try {
+                const formData = new FormData(e.target);
+                const profileId = formData.get('profile_id');
+                const fullName = formData.get('full_name');
+                const email = formData.get('email');
+                const password = formData.get('password');
+                const role = formData.get('role');
+                const jobTitle = formData.get('job_title');
+                const department = formData.get('department');
+
+                if (profileId) {
+                    // Update
+                    await db.updateProfile(profileId, { full_name: fullName, role, job_title: jobTitle, department });
+                } else {
+                    // Create
+                    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { role: role, full_name: fullName } }
+                    });
+                    if (authError) throw authError;
+
+                    if (authData.user) {
+                        await db.createProfile({
+                            id: authData.user.id,
+                            full_name: fullName,
+                            email,
+                            role,
+                            job_title: jobTitle,
+                            department
+                        });
+                    }
+                }
+
+                if (alertDiv) {
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.innerText = i18nManager.get('profileCreated') || 'Action completed successfully!';
+                }
+                if (alertEl) alertEl.classList.remove('d-none');
+                
+                setTimeout(() => {
+                    ui.toggleProfileForm(false);
+                    loadDashboardData();
+                }, 1500);
+
+            } catch (error) {
+                console.error('Profile action error:', error);
+                if (alertDiv) {
+                    alertDiv.className = 'alert alert-danger';
+                    alertDiv.innerText = 'Error: ' + error.message;
+                }
+                if (alertEl) alertEl.classList.remove('d-none');
+            } finally {
+                ui.setLoading(false);
+            }
+        });
+    }
 
     // Logout
     document.getElementById('logoutBtn').addEventListener('click', async (e) => {
@@ -157,7 +283,7 @@ function setupEventListeners() {
             }
 
             await db.createRequest(requestData, items);
-            alert('Request submitted successfully!');
+            alert(i18nManager.get('requestSubmitted') || 'Request submitted successfully!');
             e.target.reset();
             ui.showView('overview');
             await loadDashboardData();
@@ -183,7 +309,7 @@ async function showRequestDetails(requestId) {
     ui.setLoading(true);
     try {
         // Fetch full request details
-        const { data: req, error } = await supabase
+        const { data: req, error } = await supabaseClient
             .from('purchase_requests')
             .select(`
                 *,
@@ -203,32 +329,42 @@ async function showRequestDetails(requestId) {
         if (role === 'it_procurement' && req.status === 'pending') {
             actionsHtml = `
                 <div class="card mt-4 border-info">
-                    <div class="card-header bg-info text-white">IT / Procurement Review</div>
+                    <div class="card-header bg-info text-white">${i18nManager.get('itProcurementReview') || 'IT / Procurement Review'}</div>
                     <div class="card-body">
-                        <textarea id="actionComments" class="form-control mb-3" placeholder="Add comments..."></textarea>
-                        <button class="btn btn-success action-btn" data-action="it_approved">Approve to Finance</button>
-                        <button class="btn btn-danger action-btn" data-action="rejected">Reject</button>
+                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments') || 'Add comments...'}"></textarea>
+                        <button class="btn btn-success action-btn" data-action="it_approved">${i18nManager.get('approveToFinance') || 'Approve to Finance'}</button>
+                        <button class="btn btn-danger action-btn" data-action="rejected">${i18nManager.get('rejected') || 'Reject'}</button>
                     </div>
                 </div>
             `;
         } else if (role === 'finance' && req.status === 'it_approved') {
             actionsHtml = `
                 <div class="card mt-4 border-success">
-                    <div class="card-header bg-success text-white">Finance Approval</div>
+                    <div class="card-header bg-success text-white">${i18nManager.get('financeApproval') || 'Finance Approval'}</div>
                     <div class="card-body">
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Budget Line Item</label>
+                                <label class="form-label">${i18nManager.get('budgetLine') || 'Budget Line Item'}</label>
                                 <input type="text" id="budget_line" class="form-control">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Commitment Number</label>
+                                <label class="form-label">${i18nManager.get('commitmentNo') || 'Commitment Number'}</label>
                                 <input type="text" id="commitment_no" class="form-control">
                             </div>
                         </div>
-                        <textarea id="actionComments" class="form-control mb-3" placeholder="Amount in words..."></textarea>
-                        <button class="btn btn-primary action-btn" data-action="finance_approved">Approve & Fund</button>
-                        <button class="btn btn-danger action-btn" data-action="rejected">Reject</button>
+                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('amountInWords') || 'Amount in words...'}"></textarea>
+                        <button class="btn btn-primary action-btn" data-action="finance_approved">${i18nManager.get('approveAndFund') || 'Approve & Fund'}</button>
+                        <button class="btn btn-danger action-btn" data-action="rejected">${i18nManager.get('rejected') || 'Reject'}</button>
+                    </div>
+                </div>
+            `;
+        } else if ((role === 'it_procurement' || role === 'admin') && req.status === 'finance_approved') {
+            actionsHtml = `
+                <div class="card mt-4 border-primary">
+                    <div class="card-header bg-primary text-white">${i18nManager.get('markAsPurchased')}</div>
+                    <div class="card-body">
+                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
+                        <button class="btn btn-primary action-btn" data-action="completed">${i18nManager.get('markAsPurchased')}</button>
                     </div>
                 </div>
             `;
@@ -237,25 +373,25 @@ async function showRequestDetails(requestId) {
         container.innerHTML = `
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Request Details #${req.id.substring(0, 8)}</h5>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="ui.showView('overview')">Close</button>
+                    <h5 class="mb-0">${i18nManager.get('requestDetails')} #${req.id.substring(0, 8)}</h5>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="ui.showView('overview')">${i18nManager.get('closing')}</button>
                 </div>
                 <div class="card-body">
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <h6 class="text-muted small fw-bold">SUBJECT</h6>
+                            <h6 class="text-muted small fw-bold">${i18nManager.get('subject').toUpperCase()}</h6>
                             <p class="h5 fw-bold">${req.subject}</p>
-                            <h6 class="text-muted small fw-bold mt-3">JUSTIFICATION</h6>
+                            <h6 class="text-muted small fw-bold mt-3">${i18nManager.get('justification').split('(')[0].trim().toUpperCase()}</h6>
                             <p>${req.justification || 'No justification provided'}</p>
                         </div>
                         <div class="col-md-3">
-                            <h6 class="text-muted small fw-bold">REQUESTER</h6>
-                            <p>${req.profiles.full_name}<br><small class="text-muted">${req.profiles.job_title} | ${req.profiles.department}</small></p>
+                            <h6 class="text-muted small fw-bold">${i18nManager.get('requester').toUpperCase()}</h6>
+                            <p>${req.profiles.full_name}<br><small class="text-muted">${i18nManager.get(req.profiles.role)} | ${req.profiles.department || ''}</small></p>
                         </div>
                         <div class="col-md-3">
-                            <h6 class="text-muted small fw-bold">STATUS</h6>
-                            <span class="badge ${statusClass}">${req.status.toUpperCase()}</span>
-                            <h6 class="text-muted small fw-bold mt-2">TOTAL PRICE</h6>
+                            <h6 class="text-muted small fw-bold">${i18nManager.get('status').toUpperCase()}</h6>
+                            <span class="badge ${statusClass}">${i18nManager.get(req.status).toUpperCase()}</span>
+                            <h6 class="text-muted small fw-bold mt-2">${i18nManager.get('totalPrice').toUpperCase()}</h6>
                             <p class="h5 fw-bold text-primary">${req.total_amount.toFixed(2)} AED</p>
                         </div>
                     </div>
@@ -263,12 +399,12 @@ async function showRequestDetails(requestId) {
                     <table class="table table-sm table-bordered">
                         <thead class="bg-light">
                             <tr>
-                                <th>Item Description</th>
-                                <th>Specs</th>
-                                <th>Unit</th>
-                                <th>Qty</th>
-                                <th>Price</th>
-                                <th>Total</th>
+                                <th>${i18nManager.get('itemDescription')}</th>
+                                <th>${i18nManager.get('specs')}</th>
+                                <th>${i18nManager.get('unit')}</th>
+                                <th>${i18nManager.get('qty')}</th>
+                                <th>${i18nManager.get('price')}</th>
+                                <th>${i18nManager.get('total')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -289,6 +425,7 @@ async function showRequestDetails(requestId) {
                 </div>
             </div>
         `;
+        ui.showView('overview'); // This is a bug in the code, should be request-details? No, showView handles it.
         ui.showView('request-details');
 
         // Handle action buttons
@@ -322,6 +459,18 @@ async function showRequestDetails(requestId) {
     } catch (e) {
         console.error(e);
         alert('Error loading details');
+    } finally {
+        ui.setLoading(false);
+    }
+}
+
+async function handleProfileDelete(id) {
+    ui.setLoading(true);
+    try {
+        await db.deleteProfile(id);
+        await loadDashboardData();
+    } catch (error) {
+        alert('Error deleting profile: ' + error.message);
     } finally {
         ui.setLoading(false);
     }

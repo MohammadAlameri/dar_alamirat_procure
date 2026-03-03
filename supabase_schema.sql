@@ -2,6 +2,7 @@
 CREATE TABLE profiles (
   id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   full_name text,
+  email text,
   job_title text,
   department text,
   role text DEFAULT 'employee' CHECK (role IN ('employee', 'manager', 'it_procurement', 'finance', 'admin')),
@@ -138,5 +139,25 @@ USING (
 );
 
 -- 10. Profile Policies
-CREATE POLICY "Users can view all profiles" ON profiles FOR SELECT USING (true);
+-- Users can view all profiles except admins (unless they are admin)
+-- Actually, let's allow users to see their own, and admins to see non-admins.
+CREATE POLICY "Users can view relevant profiles" ON profiles FOR SELECT USING (
+  auth.uid() = id OR 
+  ((auth.jwt() -> 'user_metadata' ->> 'role') = 'admin' AND role != 'admin')
+);
+
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Admins can update/delete non-admin profiles
+CREATE POLICY "Admins can manage non-admin profiles" 
+ON profiles FOR ALL 
+USING (
+  (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin' AND role != 'admin'
+);
+
+-- Allow new signups to insert their own profile
+-- 11. Approvals Log Policies
+CREATE POLICY "Users can view all logs" ON approvals_log FOR SELECT USING (true);
+CREATE POLICY "Authorized roles can insert logs" ON approvals_log FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('manager', 'it_procurement', 'finance', 'admin'))
+);

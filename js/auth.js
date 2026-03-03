@@ -1,7 +1,7 @@
 // Authentication Logic
 const auth = {
     async signIn(email, password) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
             email,
             password
         });
@@ -10,13 +10,13 @@ const auth = {
     },
 
     async signOut() {
-        const { error } = await supabase.auth.signOut();
+        const { error } = await supabaseClient.auth.signOut();
         if (error) throw error;
-        window.location.href = 'auth.html';
+        globalThis.location.href = 'auth.html';
     },
 
     async getCurrentUser() {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return null;
 
         const profile = await db.getProfile(user.id);
@@ -24,10 +24,10 @@ const auth = {
     }
 };
 
-// Check if already logged in
+// Check if already logged in (Only on login page)
 async function checkExistingSession() {
     if (document.getElementById('loginForm')) {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseClient.auth.getSession();
         if (session) {
             globalThis.location.href = 'index.html';
         }
@@ -50,7 +50,7 @@ if (document.getElementById('loginForm')) {
 
         try {
             await auth.signIn(email, password);
-            window.location.href = 'index.html';
+            globalThis.location.href = 'index.html';
         } catch (error) {
             console.error(error);
             alert.querySelector('.alert').innerText = error.message;

@@ -25,7 +25,7 @@ const i18n = {
         noActivity: "No recent activity",
         nonSalesPurchase: "Non-Sales Supplies Purchase Request",
         backToDashboard: "Back to Dashboard",
-        justification: "Justification (مبررات الاحتياج)",
+        justification: "Justification",
         requestedItems: "Requested Items",
         description: "Description (Product & Model)",
         specs: "Specs",
@@ -55,12 +55,37 @@ const i18n = {
         it_approved: "IT APPROVED",
         finance_approved: "FINANCE APPROVED",
         rejected_status: "REJECTED",
-        completed: "COMPLETED",
+        completed: "PURCHASED",
+        markAsPurchased: "Mark as Purchased",
         // Roles
         admin: "Admin",
         employee: "Employee",
         it_procurement: "IT / Procurement",
-        finance: "Finance"
+        finance: "Finance",
+        // New tokens
+        id: "ID",
+        currentStatus: "Current Status",
+        created: "Created",
+        myPurchaseRequests: "My Purchase Requests",
+        requestsAwaitingMyApproval: "Requests Awaiting My Approval",
+        requestSubmitted: "Request submitted successfully!",
+        itProcurementReview: "IT / Procurement Review",
+        addComments: "Add comments...",
+        approveToFinance: "Approve to Finance",
+        financeApproval: "Finance Approval",
+        budgetLine: "Budget Line Item",
+        commitmentNo: "Commitment Number",
+        amountInWords: "Amount in words...",
+        approveAndFund: "Approve & Fund",
+        grandTotalLabel: "Grand Total:",
+        fullName: "Full Name",
+        email: "Email",
+        jobTitle: "Job Title",
+        department: "Department",
+        role: "Role",
+        createUser: "Create User",
+        profileCreated: "Profile created successfully!",
+        manageProfiles: "Manage Profiles"
     },
     ar: {
         title: "دار الأميرات للمشتريات",
@@ -86,7 +111,7 @@ const i18n = {
         action: "إجراء",
         activityLog: "سجل النشاطات",
         noActivity: "لا يوجد نشاط أخير",
-        nonSalesPurchase: "طلب شراء مستلزمات غير مخصصة للبيع",
+        nonSalesPurchase: "طلب شراء مستلزمات غير مخصص للبيع",
         backToDashboard: "العودة للوحة التحكم",
         justification: "مبررات الاحتياج",
         requestedItems: "الأصناف المطلوبة",
@@ -118,12 +143,37 @@ const i18n = {
         it_approved: "موافقة تقنية",
         finance_approved: "موافقة مالية",
         rejected_status: "مرفوض",
-        completed: "مكتمل",
+        completed: "تم الشراء",
+        markAsPurchased: "تم الشراء",
         // Roles
         admin: "مدير",
         employee: "موظف",
         it_procurement: "تقنية / مشتريات",
-        finance: "مالية"
+        finance: "مالية",
+        // New tokens
+        id: "المعرف",
+        currentStatus: "الحالة الحالية",
+        created: "تاريخ الإنشاء",
+        myPurchaseRequests: "طلبات الشراء الخاصة بي",
+        requestsAwaitingMyApproval: "طلبات بانتظار موافقتي",
+        requestSubmitted: "تم إرسال الطلب بنجاح!",
+        itProcurementReview: "مراجعة تقنية / مشتريات",
+        addComments: "إضافة تعليقات...",
+        approveToFinance: "الموافقة للتحويل للمالية",
+        financeApproval: "موافقة المالية",
+        budgetLine: "بند الميزانية",
+        commitmentNo: "رقم الارتباط",
+        amountInWords: "المبلغ كتابة...",
+        approveAndFund: "الموافقة والتمويل",
+        grandTotalLabel: "الإجمالي الكلي:",
+        fullName: "الاسم الكامل",
+        email: "البريد الإلكتروني",
+        jobTitle: "المسمى الوظيفي",
+        department: "القسم",
+        role: "الدور",
+        createUser: "إنشاء مستخدم",
+        profileCreated: "تم إنشاء الملف الشخصي بنجاح!",
+        manageProfiles: "إدارة الملفات الشخصية"
     }
 };
 
@@ -138,7 +188,6 @@ const i18nManager = {
         this.currentLang = lang;
         localStorage.setItem('lang', lang);
         this.applyLanguage(lang);
-        // Refresh the page or update UI components
         globalThis.location.reload(); 
     },
 
@@ -146,7 +195,6 @@ const i18nManager = {
         document.documentElement.lang = lang;
         document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
         
-        // Translate elements with data-i18n attribute
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.dataset.i18n;
             if (i18n[lang][key]) {
@@ -163,6 +211,3 @@ const i18nManager = {
         return i18n[this.currentLang][key] || key;
     }
 };
-
-// Initialize on load
-// document.addEventListener('DOMContentLoaded', () => i18nManager.init());
