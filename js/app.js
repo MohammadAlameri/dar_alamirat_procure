@@ -37,24 +37,34 @@ async function loadDashboardData() {
     const role = currentUser.profile.role;
     let requests = [];
 
-    if (role === 'employee') {
-        requests = await db.getRequests({ userId: currentUser.id });
+    if (role === 'employee' || role === 'manager') {
+        // RLS handles the security; we just fetch what the user is allowed to see
+        requests = await db.getRequests();
     } else {
         requests = await db.getRequests();
     }
 
-    // Update stats
-    document.getElementById('stat-total').innerText = requests.length;
-    document.getElementById('stat-pending').innerText = requests.filter(r => r.status === 'pending').length;
-    document.getElementById('stat-approved').innerText = requests.filter(r => r.status === 'finance_approved').length;
-    document.getElementById('stat-rejected').innerText = requests.filter(r => r.status === 'rejected').length;
+    // Update stats - Robust Grouping for Dashboard
+    const statTotal = requests.length;
+    const statPending = requests.filter(r => ['pending', 'manager_approved', 'it_approved'].includes(r.status)).length;
+    const statApproved = requests.filter(r => ['finance_approved', 'completed'].includes(r.status)).length;
+    const statRejected = requests.filter(r => r.status && r.status.toLowerCase().includes('rejected')).length;
+
+    document.getElementById('stat-total').innerText = statTotal;
+    document.getElementById('stat-pending').innerText = statPending;
+    document.getElementById('stat-approved').innerText = statApproved;
+    document.getElementById('stat-rejected').innerText = statRejected;
 
     // Render tables
     ui.renderRequestsTable('recentRequestsTable', requests.slice(0, 5), role);
     ui.renderRequestsTable('myRequestsTable', requests.filter(r => r.created_by === currentUser.id), role);
     
-    if (role === 'it_procurement') {
+    // Filter "Pending Approvals" based on role and current status
+    if (role === 'manager') {
         ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'pending'), role);
+    } else if (role === 'it_procurement') {
+        const itPending = requests.filter(r => r.status === 'manager_approved' || r.status === 'finance_approved');
+        ui.renderRequestsTable('pendingApprovalsTable', itPending, role);
     } else if (role === 'finance') {
         ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'it_approved'), role);
     }
@@ -64,12 +74,14 @@ async function loadDashboardData() {
         ui.renderRequestsTable('allRequestsTable', requests, role);
     }
 
-    // New: Handle Profiles Table for Admin
     if (role === 'admin') {
         try {
+            console.log("Fetching all profiles as admin...");
             const profiles = await db.getAllProfiles();
-            // Filter out any admin role profiles just in case
-            ui.renderProfilesTable(profiles.filter(p => p.role !== 'admin'));
+            // Filter out admins from the list as requested
+            const filteredProfiles = profiles.filter(p => p.role !== 'admin');
+            console.log("Profiles found (excluding admins):", filteredProfiles.length);
+            ui.renderProfilesTable(filteredProfiles);
         } catch (error) {
             console.error('Error loading profiles:', error);
         }
@@ -341,49 +353,69 @@ async function showRequestDetails(requestId) {
         const statusClass = `badge-${req.status}`;
         
         let actionsHtml = '';
-        if (role === 'it_procurement' && req.status === 'pending') {
+        
+        // 1. Manager Step: pending -> manager_approved
+        if (role === 'manager' && req.status === 'pending') {
+            actionsHtml = `
+                <div class="card mt-4 border-primary">
+                    <div class="card-header bg-primary text-white">${i18nManager.currentLang === 'ar' ? 'اعتماد المدير المباشر' : 'Manager Approval'}</div>
+                    <div class="card-body">
+                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
+                        <button class="btn btn-success action-btn" data-action="manager_approved">${i18nManager.currentLang === 'ar' ? 'اعتماد' : 'Approve'}</button>
+                        <button class="btn btn-danger action-btn" data-action="rejected_by_manager">${i18nManager.get('rejected')}</button>
+                    </div>
+                </div>
+            `;
+        } 
+        // 2. IT/Procurement Step: manager_approved -> it_approved
+        else if (role === 'it_procurement' && req.status === 'manager_approved') {
             actionsHtml = `
                 <div class="card mt-4 border-info">
-                    <div class="card-header bg-info text-white">${i18nManager.get('itProcurementReview') || 'IT / Procurement Review'}</div>
+                    <div class="card-header bg-info text-white">${i18nManager.get('itProcurementReview')}</div>
                     <div class="card-body">
                         <div class="mb-3">
                             <label class="form-label fw-bold">أسماء الموردين المقترحين (كل مورد في سطر)</label>
                             <textarea id="suggestedSuppliers" class="form-control" rows="3" placeholder="مورد 1\nمورد 2\nمورد 3">${req.suggested_suppliers || ''}</textarea>
                         </div>
-                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments') || 'Add comments...'}"></textarea>
-                        <button class="btn btn-success action-btn" data-action="it_approved">${i18nManager.get('approveToFinance') || 'Approve to Finance'}</button>
-                        <button class="btn btn-danger action-btn" data-action="rejected">${i18nManager.get('rejected') || 'Reject'}</button>
+                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
+                        <button class="btn btn-success action-btn" data-action="it_approved">${i18nManager.get('approveToFinance')}</button>
+                        <button class="btn btn-danger action-btn" data-action="rejected_by_it">${i18nManager.get('rejected')}</button>
                     </div>
                 </div>
             `;
-        } else if (role === 'finance' && req.status === 'it_approved') {
+        } 
+        // 3. Finance Step: it_approved -> finance_approved
+        else if (role === 'finance' && req.status === 'it_approved') {
             actionsHtml = `
                 <div class="card mt-4 border-success">
-                    <div class="card-header bg-success text-white">${i18nManager.get('financeApproval') || 'Finance Approval'}</div>
+                    <div class="card-header bg-success text-white">${i18nManager.get('financeApproval')}</div>
                     <div class="card-body">
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">${i18nManager.get('budgetLine') || 'Budget Line Item'}</label>
-                                <input type="text" id="budget_line" class="form-control">
+                                <label class="form-label">${i18nManager.get('budgetLine')}</label>
+                                <input type="text" id="budget_line" class="form-control" value="${req.budget_line_item || ''}">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">${i18nManager.get('commitmentNo') || 'Commitment Number'}</label>
-                                <input type="text" id="commitment_no" class="form-control">
+                                <label class="form-label">${i18nManager.get('commitmentNo')}</label>
+                                <input type="text" id="commitment_no" class="form-control" value="${req.commitment_number || ''}">
                             </div>
                         </div>
-                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('amountInWords') || 'Amount in words...'}"></textarea>
-                        <button class="btn btn-primary action-btn" data-action="finance_approved">${i18nManager.get('approveAndFund') || 'Approve & Fund'}</button>
-                        <button class="btn btn-danger action-btn" data-action="rejected">${i18nManager.get('rejected') || 'Reject'}</button>
+                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('amountInWords')}"></textarea>
+                        <button class="btn btn-primary action-btn" data-action="finance_approved">${i18nManager.get('approveAndFund')}</button>
+                        <button class="btn btn-danger action-btn" data-action="rejected_by_finance">${i18nManager.get('rejected')}</button>
                     </div>
                 </div>
             `;
-        } else if ((role === 'it_procurement' || role === 'admin') && req.status === 'finance_approved') {
+        } 
+        // 4. Final IT/Procurement Step: finance_approved -> completed
+        else if ((role === 'it_procurement' || role === 'admin') && req.status === 'finance_approved') {
             actionsHtml = `
                 <div class="card mt-4 border-primary">
                     <div class="card-header bg-primary text-white">${i18nManager.get('markAsPurchased')}</div>
                     <div class="card-body">
                         <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
                         <button class="btn btn-primary action-btn" data-action="completed">${i18nManager.get('markAsPurchased')}</button>
+                        <button class="btn btn-danger action-btn" data-action="rejected_by_it">${i18nManager.get('rejected')}</button>
                     </div>
                 </div>
             `;
@@ -410,13 +442,35 @@ async function showRequestDetails(requestId) {
                         </div>
                         <div class="col-md-3">
                             <h6 class="text-muted small fw-bold">${i18nManager.get('requester').toUpperCase()}</h6>
-                            <p>${req.profiles.full_name}<br><small class="text-muted">${i18nManager.get(req.profiles.role)} | ${req.profiles.department || ''}</small></p>
+                            <p>${(req.profiles && req.profiles.full_name) ? req.profiles.full_name : (req.requested_by_name || 'Staff')}<br>
+                               <small class="text-muted">${req.profiles ? i18nManager.get(req.profiles.role) : ''} | ${req.profiles ? req.profiles.department : ''}</small></p>
                         </div>
                         <div class="col-md-3">
                             <h6 class="text-muted small fw-bold">${i18nManager.get('status').toUpperCase()}</h6>
                             <span class="badge ${statusClass}">${i18nManager.get(req.status).toUpperCase()}</span>
                             <h6 class="text-muted small fw-bold mt-2">${i18nManager.get('totalPrice').toUpperCase()}</h6>
-                            <p class="h5 fw-bold text-primary">${req.total_amount.toFixed(2)} AED</p>
+                            <p class="h5 fw-bold text-primary">${(req.total_amount || 0).toFixed(2)} AED</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Audit Trail / Previous Notes -->
+                    <div class="mb-4">
+                        <h6 class="text-muted small fw-bold">${i18nManager.currentLang === 'ar' ? 'سجل الموافقة والملاحظات' : 'APPROVAL LOG & NOTES'}</h6>
+                        <div class="list-group list-group-flush border rounded">
+                            ${approvals && approvals.length > 0 ? approvals.map(app => `
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold text-dark">${app.profiles?.full_name || 'System'}</span>
+                                        <small class="text-muted">${new Date(app.created_at).toLocaleString(i18nManager.currentLang === 'ar' ? 'ar-SA' : 'en-US')}</small>
+                                    </div>
+                                    <div class="small">
+                                        <span class="badge ${app.action.includes('rejected') ? 'bg-danger' : 'bg-success'} me-2">
+                                            ${i18nManager.get(app.action) || app.action}
+                                        </span>
+                                        <span class="text-secondary italic">${app.comments || (i18nManager.currentLang === 'ar' ? 'بدون ملاحظات' : 'No comments')}</span>
+                                    </div>
+                                </div>
+                            `).join('') : `<div class="list-group-item text-muted small">${i18nManager.currentLang === 'ar' ? 'لا توجد ملاحظات سابقة' : 'No previous log entries'}</div>`}
                         </div>
                     </div>
 

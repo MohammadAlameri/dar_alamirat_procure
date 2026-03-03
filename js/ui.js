@@ -38,18 +38,22 @@ const ui = {
 
     renderRequestsTable(tableId, requests, role) {
         const tbody = document.getElementById(tableId);
-        if (!tbody) return;
+        if (!tbody) {
+            console.warn(`Table body ${tableId} not found.`);
+            return;
+        }
         tbody.innerHTML = '';
 
-        if (requests.length === 0) {
+        if (!requests || requests.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">${i18nManager.currentLang === 'ar' ? 'لم يتم العثور على طلبات' : 'No requests found'}</td></tr>`;
             return;
         }
 
         requests.forEach(req => {
-            const date = new Date(req.created_at).toLocaleDateString();
+            const date = req.created_at ? new Date(req.created_at).toLocaleDateString() : '-';
             const statusClass = `badge-${req.status}`;
-            const userName = req.profiles ? req.profiles.full_name : 'Unknown';
+            // Use profile name, or raw requested_by_name, or 'System'
+            const userName = req.profiles?.full_name || req.requested_by_name || 'System';
             
             tbody.innerHTML += `
                 <tr>
@@ -60,7 +64,7 @@ const ui = {
                     <td>${date}</td>
                     <td class="text-end pe-4">
                         <button class="btn btn-sm btn-outline-primary view-details-btn" data-id="${req.id}">
-                            ${i18nManager.get('action')}
+                            ${i18nManager.get('action') || 'Action'}
                         </button>
                     </td>
                 </tr>
@@ -69,25 +73,47 @@ const ui = {
     },
 
     updateUserUI(user) {
-        document.getElementById('userName').innerText = user.profile.full_name;
-        document.getElementById('userRole').innerText = i18nManager.get(user.profile.role);
-        
-        const initials = user.profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
-        document.getElementById('userInitials').innerText = initials;
-
-        // Role-based sidebar visibility
-        const role = user.profile.role;
-        const linkAdmin = document.getElementById('link-admin');
-        const linkApprovals = document.getElementById('link-approvals');
-        const linkAllRequests = document.getElementById('link-all-requests');
-        const linkReports = document.getElementById('link-reports');
-
-        if (linkAdmin && role !== 'admin') linkAdmin.classList.add('d-none');
-        if (role === 'employee') {
-            if (linkApprovals) linkApprovals.classList.add('d-none');
-            if (linkAllRequests) linkAllRequests.classList.add('d-none');
-            if (linkReports) linkReports.classList.add('d-none');
+        if (!user || !user.profile) {
+            console.error("DEBUG: Cannot update UI, user profile missing.");
+            return;
         }
+
+        const role = user.profile.role;
+        const fullName = user.profile.full_name || 'User';
+        console.log("DEBUG: Updating UI for", fullName, "(Role:", role + ")");
+
+        const setSafeText = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = text;
+        };
+
+        setSafeText('userName', fullName);
+        setSafeText('userRole', i18nManager.get(role));
+        
+        const initials = fullName.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase();
+        setSafeText('userInitials', initials || '?');
+
+        // Sidebar Links - Safe checks
+        const links = {
+            admin: document.getElementById('link-admin'),
+            approvals: document.getElementById('link-approvals'),
+            all: document.getElementById('link-all-requests'),
+            reports: document.getElementById('link-reports')
+        };
+
+        if (links.admin) links.admin.classList.toggle('d-none', role !== 'admin');
+        
+        if (links.all) {
+            const canSeeAll = ['admin', 'it_procurement', 'finance'].includes(role);
+            links.all.classList.toggle('d-none', !canSeeAll);
+        }
+
+        if (links.approvals) {
+            const canApprove = ['admin', 'it_procurement', 'finance', 'manager'].includes(role);
+            links.approvals.classList.toggle('d-none', !canApprove);
+        }
+
+        if (links.reports) links.reports.classList.add('d-none');
     },
 
     addRowToItemsTable() {
@@ -130,40 +156,52 @@ const ui = {
     },
 
     renderProfilesTable(profiles) {
+        console.log("DEBUG: renderProfilesTable starting with", profiles?.length, "profiles");
         const tbody = document.getElementById('profilesTableBody');
-        if (!tbody) return;
+        if (!tbody) {
+            console.error("DEBUG ERR: profilesTableBody element NOT FOUND!");
+            return;
+        }
         tbody.innerHTML = '';
 
-        if (profiles.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No profiles found</td></tr>';
+        if (!profiles || profiles.length === 0) {
+            console.log("DEBUG: Profiles list is empty.");
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">${i18nManager.currentLang === 'ar' ? 'لا يوجد مستخدمين' : 'No profiles found'}</td></tr>`;
             return;
         }
 
-        profiles.forEach(profile => {
-            tbody.innerHTML += `
-                <tr>
-                    <td class="ps-4 fw-medium">${profile.full_name}</td>
+        profiles.forEach((profile, index) => {
+            try {
+                const roleName = i18nManager.get(profile.role) || profile.role;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="ps-4 fw-medium">${profile.full_name || '-'}</td>
                     <td>${profile.email || '-'}</td>
-                    <td><span class="badge bg-secondary">${i18nManager.get(profile.role)}</span></td>
+                    <td><span class="badge bg-secondary">${roleName}</span></td>
                     <td>${profile.department || '-'}</td>
                     <td class="text-end pe-4">
                         <button class="btn btn-sm btn-outline-primary edit-profile-btn" 
                                 data-id="${profile.id}" 
-                                data-name="${profile.full_name}"
+                                data-name="${profile.full_name || ''}"
                                 data-email="${profile.email || ''}"
                                 data-role="${profile.role}"
                                 data-title="${profile.job_title || ''}"
                                 data-dept="${profile.department || ''}">
                             <i data-lucide="edit-3" style="width:14px;"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger delete-profile-btn" data-id="${profile.id}" data-name="${profile.full_name}">
+                        <button class="btn btn-sm btn-outline-danger delete-profile-btn" data-id="${profile.id}" data-name="${profile.full_name || ''}">
                             <i data-lucide="trash-2" style="width:14px;"></i>
                         </button>
                     </td>
-                </tr>
-            `;
+                `;
+                tbody.appendChild(tr);
+            } catch (err) {
+                console.error(`Error rendering profile at index ${index}:`, err);
+            }
         });
-        lucide.createIcons();
+        
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        console.log("DEBUG: Profiles table populated.");
     },
 
     toggleProfileForm(showForm) {
@@ -197,10 +235,18 @@ const ui = {
             hijriDate = new Date(req.created_at).toLocaleDateString('ar');
         }
 
-        // Find approvals by role
+        // Find approvals by role/action
+        const managerApproval = approvals.find(a => a.action === 'manager_approved');
         const itApproval = approvals.find(a => a.action === 'it_approved');
         const financeApproval = approvals.find(a => a.action === 'finance_approved');
         
+        const managerName = managerApproval && managerApproval.profiles ? managerApproval.profiles.full_name : '';
+        const managerTitle = managerApproval && managerApproval.profiles ? (managerApproval.profiles.job_title || '') : '';
+        let managerDate = '';
+        if (managerApproval) {
+            try { managerDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(new Date(managerApproval.created_at)); } catch(e) { managerDate = ''; }
+        }
+
         const itApproverName = itApproval && itApproval.profiles ? itApproval.profiles.full_name : '';
         const itApproverTitle = itApproval && itApproval.profiles ? (itApproval.profiles.job_title || '') : '';
         let itApprovalDate = '';
@@ -214,13 +260,9 @@ const ui = {
             try { finApprovalDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(new Date(financeApproval.created_at)); } catch(e) { finApprovalDate = ''; }
         }
 
-        // Requester info
+        // Requester info (filled at creation)
         const requesterName = req.requested_by_name || '';
         const requesterTitle = req.requested_by_title || '';
-
-        // Creator info (could be manager or the one who entered)
-        const creatorName = req.profiles ? req.profiles.full_name : '';
-        const creatorTitle = req.profiles ? (req.profiles.job_title || '') : '';
 
         // Suppliers
         const suppliers = req.suggested_suppliers ? req.suggested_suppliers.split('\n') : ['', '', ''];
@@ -313,10 +355,10 @@ const ui = {
                 <div style="border:1.5px solid #000; margin-top:8px; padding:6px;">
                     <div style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:5px;">اعتماد مسؤول الجهة الطالبة :</div>
                     <div style="display:flex; justify-content:space-between; font-size:12px; flex-wrap:wrap; gap:3px;">
-                        <span>الاسم <span style="border-bottom:1px dotted #000; min-width:140px; display:inline-block;">${creatorName}</span></span>
-                        <span>الوظيفة : <span style="border-bottom:1px dotted #000; min-width:140px; display:inline-block;">${creatorTitle}</span></span>
+                        <span>الاسم <span style="border-bottom:1px dotted #000; min-width:140px; display:inline-block;">${managerName}</span></span>
+                        <span>الوظيفة : <span style="border-bottom:1px dotted #000; min-width:140px; display:inline-block;">${managerTitle}</span></span>
                         <span>التوقيع .....................</span>
-                        <span>التاريخ:&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;١٤هـ</span>
+                        <span>التاريخ:&nbsp; ${managerApproval ? managerDate + ' هـ' : '&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;١٤هـ'}</span>
                     </div>
                 </div>
 
@@ -327,17 +369,20 @@ const ui = {
                     <div style="display:flex; justify-content:space-between; font-size:12px; flex-wrap:wrap; gap:3px;">
                         <span>اسم المسؤول <span style="border-bottom:1px dotted #000; min-width:150px; display:inline-block;">${itApproverName}</span></span>
                         <span>التوقيع .........................</span>
-                        <span>التاريخ ${itApprovalDate ? itApprovalDate + ' هـ' : '&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;١٤هـ'}</span>
+                        <span>التاريخ: ${itApproval ? itApprovalDate + ' هـ' : '&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;١٤هـ'}</span>
                     </div>
                     <div style="display:flex; margin-top:5px; gap:0;">
                         <div style="flex:1; border:1px solid #000; padding:4px;">
                             <div style="font-weight:bold; font-size:11px; margin-bottom:2px;">أسماء الموردين المقترحين</div>
-                            <div style="font-size:11px;">1– ${suppliers[0] || '...........................................'}</div>
-                            <div style="font-size:11px;">2- ${suppliers[1] || '............................................'}</div>
-                            <div style="font-size:11px;">3- ${suppliers[2] || '............................................'}</div>
+                            <div id="supplierRows">
+                                ${req.suggested_suppliers ? req.suggested_suppliers.split('\n').filter(s => s.trim()).map((s, idx) => `<div style="font-size:11px;">${idx + 1}- ${s}</div>`).join('') : `
+                                    <div style="font-size:11px;">1- ...........................................</div>
+                                    <div style="font-size:11px;">2- ...........................................</div>
+                                `}
+                            </div>
                         </div>
                         <div style="width:330px; border:1px solid #000; border-right:0; padding:4px; display:flex; align-items:center; gap:8px;">
-                            <div style="font-size:10px; white-space:nowrap;">* رقماً: <span style="font-weight:bold; border-bottom:1px solid #000;">${totalAmount}</span></div>
+                            <div style="font-size:10px; white-space:nowrap;">* الإجمالي رقماً: <span style="font-weight:bold; border-bottom:1px solid #000;">${totalAmount}</span></div>
                             <div style="font-size:10px; flex-grow:1;">* الإجمالي كتابة: <span style="font-weight:bold; border-bottom:1px solid #000;">${amountWords || '..................................'}</span></div>
                         </div>
                     </div>

@@ -139,21 +139,24 @@ USING (
 );
 
 -- 10. Profile Policies
--- Users can view all profiles except admins (unless they are admin)
--- Actually, let's allow users to see their own, and admins to see non-admins.
-CREATE POLICY "Users can view relevant profiles" ON profiles FOR SELECT USING (
-  auth.uid() = id OR 
-  ((auth.jwt() -> 'user_metadata' ->> 'role') = 'admin' AND role != 'admin')
-);
+-- Users can view their own profile always
+CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
-
--- Admins can update/delete non-admin profiles
-CREATE POLICY "Admins can manage non-admin profiles" 
+-- Admins can view and manage all profiles
+CREATE POLICY "Admins can manage all profiles" 
 ON profiles FOR ALL 
 USING (
-  (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin' AND role != 'admin'
+  EXISTS (
+    SELECT 1 FROM profiles 
+    WHERE profiles.id = auth.uid() 
+    AND profiles.role = 'admin'
+  )
 );
+
+-- Allow other roles to view staff names for the request details
+CREATE POLICY "Everyone can view profiles" ON profiles FOR SELECT USING (true);
+
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Allow new signups to insert their own profile
 -- 11. Approvals Log Policies

@@ -96,12 +96,10 @@ const db = {
     },
 
     async getAllProfiles() {
-        // Since RLS is active, it will naturally exclude 'admin' profiles for non-admins if configured,
-        // but we'll additionally filter in the app to be safe.
+        // Since RLS is active, it will naturally handle permissions
         const { data, error } = await supabaseClient
             .from('profiles')
             .select('*')
-            .neq('role', 'admin') // Never show admins to other admins if requested
             .order('full_name', { ascending: true });
         
         if (error) throw error;

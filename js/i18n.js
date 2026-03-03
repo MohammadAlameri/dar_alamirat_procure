@@ -52,9 +52,14 @@ const i18n = {
         procurementSystem: "Procurement Management System",
         // Statuses
         pending: "PENDING",
+        manager_approved: "MGR APPROVED",
         it_approved: "IT APPROVED",
         finance_approved: "FINANCE APPROVED",
+        rejected: "REJECTED",
         rejected_status: "REJECTED",
+        rejected_by_manager: "REJECTED (MGR)",
+        rejected_by_it: "REJECTED (IT)",
+        rejected_by_finance: "REJECTED (FIN)",
         completed: "PURCHASED",
         markAsPurchased: "Mark as Purchased",
         // Roles
@@ -62,6 +67,7 @@ const i18n = {
         employee: "Employee",
         it_procurement: "IT / Procurement",
         finance: "Finance",
+        manager: "Manager",
         // New tokens
         id: "ID",
         currentStatus: "Current Status",
@@ -140,16 +146,22 @@ const i18n = {
         procurementSystem: "نظام إدارة المشتريات",
         // Statuses
         pending: "قيد الانتظار",
+        manager_approved: "موافقة المدير",
         it_approved: "موافقة تقنية",
         finance_approved: "موافقة مالية",
+        rejected: "مرفوض",
         rejected_status: "مرفوض",
+        rejected_by_manager: "مرفوض من المدير",
+        rejected_by_it: "مرفوض من التقنية",
+        rejected_by_finance: "مرفوض من المالية",
         completed: "تم الشراء",
         markAsPurchased: "تم الشراء",
         // Roles
-        admin: "مدير",
+        admin: "مدير نـظـام",
         employee: "موظف",
         it_procurement: "تقنية / مشتريات",
         finance: "مالية",
+        manager: "مدير مباشر",
         // New tokens
         id: "المعرف",
         currentStatus: "الحالة الحالية",
