@@ -197,7 +197,13 @@ body {
 .badge-it_approved { background-color: #0d8ca1; color: #fff; }
 .badge-manager_approved { background-color: #5c6bc0; color: #fff; }
 .badge-finance_approved { background-color: #1e7e34; color: #fff; }
-.badge-rejected { background-color: #bd2130; color: #fff; }
+.badge-rejected, 
+.badge-rejected_by_manager, 
+.badge-rejected_by_it, 
+.badge-rejected_by_finance, 
+.badge-rejected_by_staff { background-color: #bd2130; color: #fff; }
+.badge-purchased { background-color: #6f42c1; color: #fff; }
+.badge-received_by_staff { background-color: #17a2b8; color: #fff; }
 .badge-completed { background-color: #495057; color: #fff; }
 
 /* Form Styles */

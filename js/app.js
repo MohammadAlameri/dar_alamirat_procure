@@ -46,8 +46,8 @@ async function loadDashboardData() {
 
     // Update stats - Robust Grouping for Dashboard
     const statTotal = requests.length;
-    const statPending = requests.filter(r => ['pending', 'manager_approved', 'it_approved'].includes(r.status)).length;
-    const statApproved = requests.filter(r => ['finance_approved', 'completed'].includes(r.status)).length;
+    const statPending = requests.filter(r => ['pending', 'manager_approved', 'it_approved', 'finance_approved', 'purchased'].includes(r.status)).length;
+    const statApproved = requests.filter(r => r.status === 'completed').length;
     const statRejected = requests.filter(r => r.status && r.status.toLowerCase().includes('rejected')).length;
 
     document.getElementById('stat-total').innerText = statTotal;
@@ -63,7 +63,7 @@ async function loadDashboardData() {
     if (role === 'manager') {
         ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'pending'), role);
     } else if (role === 'it_procurement') {
-        const itPending = requests.filter(r => r.status === 'manager_approved' || r.status === 'finance_approved');
+        const itPending = requests.filter(r => r.status === 'manager_approved' || r.status === 'finance_approved' || r.status === 'received_by_staff');
         ui.renderRequestsTable('pendingApprovalsTable', itPending, role);
     } else if (role === 'finance') {
         ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'it_approved'), role);
@@ -78,10 +78,14 @@ async function loadDashboardData() {
         try {
             console.log("Fetching all profiles as admin...");
             const profiles = await db.getAllProfiles();
-            // Filter out admins from the list as requested
             const filteredProfiles = profiles.filter(p => p.role !== 'admin');
+            
             console.log("Profiles found (excluding admins):", filteredProfiles.length);
             ui.renderProfilesTable(filteredProfiles);
+
+            // Fetch and populate manager dropdown for the form
+            const allManagers = profiles.filter(p => p.role === 'manager');
+            ui.populateManagerDropdown(allManagers);
         } catch (error) {
             console.error('Error loading profiles:', error);
         }
@@ -149,6 +153,11 @@ function setupEventListeners() {
         lucide.createIcons();
     });
 
+    // Handle role change to toggle manager field visibility
+    document.getElementById('role')?.addEventListener('change', () => {
+        ui.updateManagerFieldVisibility();
+    });
+
     // Profile Management: Edit/Delete (Event delegation)
     const profilesTableBody = document.getElementById('profilesTableBody');
     profilesTableBody?.addEventListener('click', (e) => {
@@ -164,9 +173,11 @@ function setupEventListeners() {
             document.getElementById('role').value = data.role;
             document.getElementById('job_title').value = data.title;
             document.getElementById('department').value = data.dept;
+            document.getElementById('manager_id').value = data.manager || '';
             document.getElementById('passwordHint').classList.remove('d-none');
             document.getElementById('password').required = false;
             document.getElementById('profileFormTitle').innerText = 'Edit Profile';
+            ui.updateManagerFieldVisibility();
         }
 
         if (deleteBtn) {
@@ -196,10 +207,17 @@ function setupEventListeners() {
                 const role = formData.get('role');
                 const jobTitle = formData.get('job_title');
                 const department = formData.get('department');
+                const managerId = formData.get('manager_id') || null;
 
                 if (profileId) {
                     // Update
-                    await db.updateProfile(profileId, { full_name: fullName, role, job_title: jobTitle, department });
+                    await db.updateProfile(profileId, { 
+                        full_name: fullName, 
+                        role, 
+                        job_title: jobTitle, 
+                        department,
+                        manager_id: managerId 
+                    });
                 } else {
                     // Create
                     const { data: authData, error: authError } = await supabaseClient.auth.signUp({
@@ -216,7 +234,8 @@ function setupEventListeners() {
                             email,
                             role,
                             job_title: jobTitle,
-                            department
+                            department,
+                            manager_id: managerId
                         });
                     }
                 }
@@ -426,8 +445,56 @@ async function showRequestDetails(requestId) {
                     <div class="card-header bg-primary text-white">${i18nManager.get('markAsPurchased')}</div>
                     <div class="card-body">
                         <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
-                        <button class="btn btn-primary action-btn" data-action="completed">${i18nManager.get('markAsPurchased')}</button>
+                        <button class="btn btn-primary action-btn" data-action="purchased">${i18nManager.get('markAsPurchased')}</button>
                         <button class="btn btn-danger action-btn" data-action="rejected_by_it">${i18nManager.get('rejected')}</button>
+                    </div>
+                </div>
+            `;
+        }
+        // 5. Staff Receipt Step: purchased -> received_by_staff
+        else if (req.status === 'purchased' && currentUser.id === req.created_by) {
+            actionsHtml = `
+                <div class="card mt-4 border-warning">
+                    <div class="card-header bg-warning text-dark fw-bold">${i18nManager.get('staffReceipt')}</div>
+                    <div class="card-body">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6 text-muted small">
+                                <strong>${i18nManager.get('requester')}:</strong> ${currentUser.profile.full_name}<br>
+                                <strong>${i18nManager.get('jobTitle')}:</strong> ${currentUser.profile.job_title || '-'}<br>
+                                <strong>${i18nManager.get('department')}:</strong> ${currentUser.profile.department || '-'}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">${i18nManager.get('rejectionReasons')} (${i18nManager.currentLang === 'ar' ? 'في حال الرفض فقط' : 'If rejected only'})</label>
+                            <textarea id="staffRejectionReason" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success receipt-action-btn" data-action="accepted">
+                                <i data-lucide="check-circle" style="width:18px;"></i> ${i18nManager.get('acceptReceipt')}
+                            </button>
+                            <button class="btn btn-outline-danger receipt-action-btn" data-action="rejected">
+                                <i data-lucide="x-circle" style="width:18px;"></i> ${i18nManager.get('rejectReceipt')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        // 6. IT Final Completion: received_by_staff OR rejected_by_staff -> completed
+        else if ((role === 'it_procurement' || role === 'admin') && (req.status === 'received_by_staff' || req.status === 'rejected_by_staff')) {
+            const acceptanceStatus = i18nManager.get(req.staff_acceptance_status === 'accepted' ? 'staffAccepted' : 'staffRejected');
+            const acceptanceClass = req.staff_acceptance_status === 'accepted' ? 'text-success' : 'text-danger';
+            
+            actionsHtml = `
+                <div class="card mt-4 border-dark">
+                    <div class="card-header bg-dark text-white">${i18nManager.get('completeRequest')}</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6 class="fw-bold ${acceptanceClass}">${acceptanceStatus}</h6>
+                            ${req.staff_rejection_reason ? `<p class="border p-2 bg-light small"><strong>${i18nManager.get('rejectionReasons')}:</strong> ${req.staff_rejection_reason}</p>` : ''}
+                        </div>
+                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
+                        <button class="btn btn-dark action-btn" data-action="completed">${i18nManager.get('completeRequest')}</button>
                     </div>
                 </div>
             `;
@@ -439,8 +506,13 @@ async function showRequestDetails(requestId) {
                     <h5 class="mb-0">${i18nManager.get('requestDetails')} #${req.id.substring(0, 8)}</h5>
                     <div class="d-flex gap-2">
                         <button class="btn btn-sm btn-outline-info" id="printRequestBtn">
-                            <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'طباعة' : 'Print'}
+                            <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'طباعة الطلب' : 'Print Request'}
                         </button>
+                        ${['purchased', 'received_by_staff', 'rejected_by_staff', 'completed'].includes(req.status) ? `
+                            <button class="btn btn-sm btn-outline-success" id="printReceiptBtn">
+                                <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.get('printReceipt')}
+                            </button>
+                        ` : ''}
                         <button class="btn btn-sm btn-outline-secondary" onclick="ui.showView('overview')">${i18nManager.get('closing')}</button>
                     </div>
                 </div>
@@ -465,6 +537,24 @@ async function showRequestDetails(requestId) {
                         </div>
                     </div>
                     
+                    <!-- NEW: Receipt Info Section (if processed) -->
+                    ${['received_by_staff', 'rejected_by_staff', 'completed'].includes(req.status) ? `
+                    <div class="mb-4 p-3 border rounded bg-light">
+                         <h6 class="text-muted small fw-bold mb-2">${i18nManager.get('staffReceipt').toUpperCase()}</h6>
+                         <div class="row">
+                             <div class="col-md-6">
+                                 <span class="badge ${req.staff_acceptance_status === 'accepted' ? 'bg-success' : 'bg-danger'} mb-2">
+                                     ${i18nManager.get(req.staff_acceptance_status === 'accepted' ? 'staffAccepted' : 'staffRejected')}
+                                 </span>
+                                 ${req.staff_rejection_reason ? `<div class="mt-1 small"><strong>${i18nManager.get('rejectionReasons')}:</strong> ${req.staff_rejection_reason}</div>` : ''}
+                             </div>
+                             <div class="col-md-6 text-end">
+                                 <small class="text-muted">${req.staff_receiving_date ? new Date(req.staff_receiving_date).toLocaleString() : ''}</small>
+                             </div>
+                         </div>
+                    </div>
+                    ` : ''}
+
                     <!-- Audit Trail / Previous Notes -->
                     <div class="mb-4">
                         <h6 class="text-muted small fw-bold">${i18nManager.currentLang === 'ar' ? 'سجل الموافقة والملاحظات' : 'APPROVAL LOG & NOTES'}</h6>
@@ -517,9 +607,13 @@ async function showRequestDetails(requestId) {
         `;
         ui.showView('request-details');
 
-        // Handle Print Button
+        // Handle Print Buttons
         document.getElementById('printRequestBtn')?.addEventListener('click', () => {
             ui.printRequest(req, approvals || []);
+        });
+
+        document.getElementById('printReceiptBtn')?.addEventListener('click', () => {
+            ui.printReceipt(req, approvals || []);
         });
 
         // Handle action buttons
@@ -547,6 +641,41 @@ async function showRequestDetails(requestId) {
                     await db.updateRequestStatus(requestId, action, updates);
                     await db.logApproval(requestId, currentUser.id, action, comments);
                     alert(`Request ${action.replace('_', ' ')}!`);
+                    ui.showView('overview');
+                    await loadDashboardData();
+                } catch (e) {
+                    alert('Error: ' + e.message);
+                } finally {
+                    ui.setLoading(false);
+                }
+            });
+        });
+
+        // Handle Receipt Specific branch (Staff)
+        container.querySelectorAll('.receipt-action-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const acceptanceStatus = btn.dataset.action; // 'accepted' or 'rejected'
+                const reason = document.getElementById('staffRejectionReason').value;
+                
+                if (acceptanceStatus === 'rejected' && !reason) {
+                    alert(i18nManager.currentLang === 'ar' ? 'يرجى إدخال سبب الرفض' : 'Please enter rejection reason');
+                    return;
+                }
+
+                ui.setLoading(true);
+                try {
+                    const updates = {
+                        staff_acceptance_status: acceptanceStatus,
+                        staff_rejection_reason: reason,
+                        staff_receiving_date: new Date()
+                    };
+                    const targetStatus = acceptanceStatus === 'accepted' ? 'received_by_staff' : 'rejected_by_staff';
+                    const actionLog = acceptanceStatus === 'accepted' ? 'staff_accepted' : 'staff_rejected';
+                    
+                    await db.updateRequestStatus(requestId, targetStatus, updates);
+                    await db.logApproval(requestId, currentUser.id, actionLog, reason);
+                    
+                    alert(i18nManager.get('requestSubmitted'));
                     ui.showView('overview');
                     await loadDashboardData();
                 } catch (e) {

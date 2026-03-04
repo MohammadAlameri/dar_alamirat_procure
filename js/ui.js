@@ -66,7 +66,7 @@ const ui = {
                     <td class="ps-4 fw-medium text-primary">#${req.id.substring(0, 8)}</td>
                     <td>${req.subject}</td>
                     <td>${userName}</td>
-                    <td><span class="badge ${statusClass}">${i18nManager.get(req.status === 'rejected' ? 'rejected_status' : req.status)}</span></td>
+                    <td><span class="badge ${statusClass}">${i18nManager.get(req.status)}</span></td>
                     <td>${date}</td>
                     <td class="text-end pe-4">
                         <button class="btn btn-sm btn-outline-primary view-details-btn" data-id="${req.id}">
@@ -192,7 +192,8 @@ const ui = {
                                 data-email="${profile.email || ''}"
                                 data-role="${profile.role}"
                                 data-title="${profile.job_title || ''}"
-                                data-dept="${profile.department || ''}">
+                                data-dept="${profile.department || ''}"
+                                data-manager="${profile.manager_id || ''}">
                             <i data-lucide="edit-3" style="width:14px;"></i>
                         </button>
                         <button class="btn btn-sm btn-outline-danger delete-profile-btn" data-id="${profile.id}" data-name="${profile.full_name || ''}">
@@ -210,10 +211,24 @@ const ui = {
         console.log("DEBUG: Profiles table populated.");
     },
 
+    updateManagerFieldVisibility() {
+        const role = document.getElementById('role')?.value;
+        const managerGroup = document.getElementById('managerGroup');
+        if (managerGroup) {
+            // Only show manager selection if role is 'employee' (staff)
+            if (role === 'employee') {
+                managerGroup.classList.remove('d-none');
+            } else {
+                managerGroup.classList.add('d-none');
+            }
+        }
+    },
+
     toggleProfileForm(showForm) {
         if (showForm) {
             document.getElementById('profile-list-section')?.classList.add('d-none');
             document.getElementById('profile-form-section')?.classList.remove('d-none');
+            this.updateManagerFieldVisibility();
         } else {
             document.getElementById('profile-list-section')?.classList.remove('d-none');
             document.getElementById('profile-form-section')?.classList.add('d-none');
@@ -222,7 +237,23 @@ const ui = {
             document.getElementById('passwordHint').classList.add('d-none');
             document.getElementById('password').required = true;
             document.getElementById('profileFormTitle').innerText = i18nManager.get('createUser');
+            document.getElementById('manager_id').value = '';
         }
+    },
+
+    populateManagerDropdown(managers) {
+        const select = document.getElementById('manager_id');
+        if (!select) return;
+        
+        // Keep the "None" option
+        select.innerHTML = `<option value="">-- ${i18nManager.currentLang === 'ar' ? 'بدون' : 'None'} --</option>`;
+        
+        managers.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m.id;
+            opt.innerText = `${m.full_name} (${m.department || ''})`;
+            select.appendChild(opt);
+        });
     },
 
     printRequest(req, approvals = []) {
@@ -427,6 +458,194 @@ const ui = {
                     3. يجب ذكر بلد الصنع والاسم التجاري للمنشأ + مدة الضمان .<br>
                     4. يجب تحديد حجم العبوه المطلوبة او توضع للصنف الواحد الكمية حسب العبوة بما يوافق الكمية المحددة .<br>
                     5 * تعبأ بحسب بيانات العرض المقبول من المورد
+                </div>
+            </div>
+        `;
+
+        window.print();
+    },
+
+    printReceipt(req, approvals = []) {
+        const container = document.getElementById('print-container');
+        if (!container) return;
+
+        // Dates and Times
+        const dateObj = req.staff_receiving_date ? new Date(req.staff_receiving_date) : new Date();
+        const daysAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const dayOfWeek = daysAr[dateObj.getDay()];
+        let hijriDate = '';
+        try {
+            hijriDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(dateObj).replace(/[هـ]/g, '').trim() + ' هـ';
+        } catch(e) { hijriDate = dateObj.toLocaleDateString('ar') + ' هـ'; }
+        const gregorianDate = dateObj.toLocaleDateString('en-GB'); // Just date string
+        const topDateG = new Date(req.created_at || new Date()).toLocaleDateString('en-GB');
+
+        let timeStr = dateObj.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+
+        const requester = req.profiles || {};
+        const staffName = req.requested_by_name || requester.full_name || '';
+        const staffTitle = req.requested_by_title || (requester.job_title || '');
+        const dept = requester.department || '';
+
+        // Find the IT Officer Name (the one who marked it as complete)
+        // If it's completed, we can try to show their name inside 'مسؤول التسليم'
+        let itOfficerName = '';
+        if (req.status === 'completed' && currentUser && currentUser.profile.role === 'IT/Procurement') {
+            itOfficerName = currentUser.profile.full_name;
+        } else if (req.status === 'completed' || req.status === 'received_by_staff') {
+            // If another person is printing it, ideally we'd look in an approvals log, 
+            // but for simplicity we will just show the name if available from context.
+            // A more robust way would be to save 'it_officer_name' in the DB column. Let's do a fallback:
+            itOfficerName = '...........................................'; // Empty space if unknown
+        }
+
+        // Items HTML (Dynamic Rows)
+        let itemsHtml = '';
+        const items = req.request_items || [];
+        if (items.length === 0) {
+            itemsHtml = `<tr><td colspan="5" style="border:1.5px solid #000; padding:10px; text-align:center;">لا توجد أصناف</td></tr>`;
+        } else {
+            items.forEach((item, i) => {
+                itemsHtml += `
+                    <tr>
+                        <td style="border:1.5px solid #000; padding:10px; text-align:center;">${i + 1}</td>
+                        <td style="border:1.5px solid #000; padding:10px; text-align:right;">${item.product_name} ${item.brand_model ? `(${item.brand_model})` : ''}</td>
+                        <td style="border:1.5px solid #000; padding:10px; text-align:center;">-</td>
+                        <td style="border:1.5px solid #000; padding:10px; text-align:center;">${item.quantity}</td>
+                        <td style="border:1.5px solid #000; padding:10px; text-align:right;">${item.specifications || ''}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Checkbox states - more robust checks
+        const isAccepted = req.staff_acceptance_status === 'accepted' || req.status === 'received_by_staff';
+        const isRejected = req.staff_acceptance_status === 'rejected' || req.status === 'rejected_by_staff';
+        const checkAccepted = isAccepted ? '✔' : '&nbsp;&nbsp;&nbsp;';
+        const checkRejected = isRejected ? '✔' : '&nbsp;&nbsp;&nbsp;';
+
+        // Rejection Section
+        let rejectionSection = '';
+        if (req.staff_rejection_reason) {
+            // Split by actual newline characters from the textarea
+            const reasons = req.staff_rejection_reason.split('\n').map(r => r.trim()).filter(Boolean);
+            reasons.forEach((r, idx) => {
+                rejectionSection += `<div style="padding-right:20px; margin-bottom:5px; border-bottom:1px dotted #000; direction: rtl; text-align: right;">${r} <span style="float:left;">-${idx + 1}</span></div>`;
+            });
+        } else if (isRejected) {
+             rejectionSection = `<div style="padding-right:20px; margin-bottom:5px; border-bottom:1px dotted #000; direction: rtl; text-align: right;">نعتذر، تم الرفض بدون إبداء أسباب <span style="float:left;">-1</span></div>`;
+        } else {
+            rejectionSection = `
+                <div style="padding-right:20px; color:#aaa; margin-bottom: 5px; direction: rtl; text-align: right;">
+                ...................................................................................................................................................
+                </div>
+            `;
+        }
+
+        container.innerHTML = `
+            <div class="print-content" dir="rtl" style="direction:rtl; text-align:right; font-family: 'Times New Roman', 'Traditional Arabic', serif; color:#000; padding:10mm; max-width:210mm; margin:0 auto; font-size:16px;">
+                
+                <!-- Main Outer Box -->
+                <div style="padding: 10px; position:relative;">
+                    
+                    <!-- Header -->
+                    <div style="text-align:center; margin-bottom: 30px; position:relative;">
+                        <div style="display:inline-block; text-align:center; color: #4a77b4;">
+                            <h1 style="margin:0; font-family: 'Arial', sans-serif; font-weight:900; font-size:36px; display:flex; align-items:center; justify-content:center; gap:10px;">
+                                <span>دار الاميرات</span>
+                                <span style="font-size:46px;">DA</span>
+                            </h1>
+                            <div style="font-size:16px; font-weight:bold; letter-spacing:2px; font-family: 'Arial', sans-serif;">DAR ALAMIRAT</div>
+                        </div>
+                        <h2 style="margin:20px 0 0 0; font-weight:bold; font-size:26px; text-decoration:underline;">استلام عهدة اصل</h2>
+                    </div>
+
+                    <!-- Dates -->
+                    <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-weight:bold; font-size:16px;">
+                        <div>التاريخ: .... / .... / .... 14هـ</div>
+                        <div>التاريخ: ${topDateG}</div>
+                    </div>
+
+                    <!-- Table 1: Receiver Info -->
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:25px; border: 1.5px solid #000; font-size:16px; text-align:center;">
+                        <tr>
+                            <td colspan="6" style="background:#e6e6e6; font-weight:bold; padding:10px; border: 1.5px solid #000; border-bottom: 2px solid #000;">بيانات المستلم</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1.5px solid #000; padding:10px; width:15%;">اسم الموظف</td>
+                            <td style="border: 1.5px solid #000; padding:10px; width:35%; text-align:right; padding-right:15px;">${staffName}</td>
+                            <td style="border: 1.5px solid #000; padding:10px; width:10%;">الإدارة</td>
+                            <td style="border: 1.5px solid #000; padding:10px; width:15%; text-align:right; padding-right:15px;">${dept}</td>
+                            <td style="border: 1.5px solid #000; padding:10px; width:10%;">المسمى الوظيفي</td>
+                            <td style="border: 1.5px solid #000; padding:10px; width:15%; text-align:right; padding-right:15px;">${staffTitle}</td>
+                        </tr>
+                    </table>
+
+                    <!-- Table 2: Items -->
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:25px; border: 1.5px solid #000; font-size:16px; text-align:center;">
+                        <tr>
+                            <td colspan="5" style="background:#e6e6e6; font-weight:bold; padding:10px; border: 1.5px solid #000; border-bottom: 2px solid #000;">بيانات العهدة</td>
+                        </tr>
+                        <tr>
+                            <th style="border: 1.5px solid #000; padding:10px; width:5%;">م</th>
+                            <th style="border: 1.5px solid #000; padding:10px; width:45%;">الوصف</th>
+                            <th style="border: 1.5px solid #000; padding:10px; width:15%;">النوع</th>
+                            <th style="border: 1.5px solid #000; padding:10px; width:10%;">الكمية</th>
+                            <th style="border: 1.5px solid #000; padding:10px; width:25%;">ملاحظة</th>
+                        </tr>
+                        ${itemsHtml}
+                    </table>
+
+                    <!-- Table 3: Declaration -->
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:25px; border: 1.5px solid #000; font-size:16px;">
+                        <tr>
+                            <td style="background:#e6e6e6; font-weight:bold; padding:10px; border: 1.5px solid #000; text-align:center; border-bottom: 2px solid #000;">إقرار</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1.5px solid #000; padding:20px; line-height:2.2;">
+                                أقر أنا الموقع أدناه بأنني استلمت العُهد الموضحة أعلاه في يوم/ <strong>${dayOfWeek}</strong> الموافق <strong>${gregorianDate}</strong> / <strong>${hijriDate}</strong> في تمام الساعة <strong>${timeStr}</strong> بحالة صالحة للاستخدام وأتعهد بالمحافظة عليها وان لا أتنازل عنها لأي شخص آخر وسأقوم بإعادتها عند طلبها أو عند ترك العمل أو دفع قيمة ما تسببت في تلفه وسأكون عرضة للمسائلة في حين مخالفتي للإقرار.
+                                <div style="display:flex; justify-content:space-between; margin-top:35px; font-weight:bold; padding:0 30px;">
+                                    <div>المستلم/ <span style="font-weight:normal; text-decoration:underline;">${staffName}</span></div>
+                                    <div>التوقيع/ ...........................................</div>
+                                </div>
+                                <br>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Table 4: Handover Details -->
+                    <table style="width:100%; border-collapse:collapse; border: 1.5px solid #000; font-size:16px;">
+                        <tr>
+                            <td style="background:#e6e6e6; font-weight:bold; padding:10px; border: 1.5px solid #000; text-align:center; border-bottom: 2px solid #000;">خاص بمسؤول التسليم والاستلام</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1.5px solid #000; padding:20px; line-height:2.2;">
+                                <div style="display:flex; justify-content:flex-start; gap:80px; font-weight:bold; margin-bottom:20px;">
+                                    <div>أ- تم استلام العُهد بحالة التسليم. ( ${checkAccepted} ) نعم</div>
+                                    <div>( ${checkRejected} ) لا، للأسباب التالية :</div>
+                                </div>
+                                <div style="margin-bottom:20px;">
+                                    ${rejectionSection}
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:25px; font-weight:bold;">
+                                    <div>تم استلام العُهد في يوم/ <strong>${dayOfWeek}</strong></div>
+                                    <div style="flex-grow:1; text-align:center;">الموافق <strong>${gregorianDate}</strong> / <strong>${hijriDate}</strong></div>
+                                    <div>في تمام الساعة <strong>${timeStr}</strong></div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-top:35px; font-weight:bold; padding:0 30px;">
+                                    <div>مسؤول التسليم: <span style="font-weight:normal; text-decoration:underline;">${req.status === 'completed' && itOfficerName ? itOfficerName : '...........................................'}</span></div>
+                                    <div>التوقيع: ...........................................</div>
+                                </div>
+                                <br>
+                            </td>
+                        </tr>
+                    </table>
+
+                </div> <!-- End Main Box -->
+                
+                <!-- Bottom Footer -->
+                <div style="margin-top:15px; text-align:center; font-size:12px; color:#555;">
+                    الأصل: ملف الموظف | نسخة: المستلم | نسخة: إدارة تقنية المعلومات
                 </div>
             </div>
         `;
