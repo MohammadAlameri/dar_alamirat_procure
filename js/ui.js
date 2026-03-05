@@ -78,7 +78,7 @@ const ui = {
                     <td>${displayTotal}</td>
                     <td class="text-end pe-4">
                         <button class="btn btn-sm btn-outline-primary ${detailBtnClass}" data-id="${req.id}">
-                            ${i18nManager.get('action') || 'Action'}
+                            ${i18nManager.get('action')}
                         </button>
                     </td>
                 </tr>
@@ -163,6 +163,26 @@ const ui = {
         if (links.reports) links.reports.classList.add('d-none');
     },
 
+    resetPurchaseRequestForm() {
+        const form = document.getElementById('purchaseRequestForm');
+        if (form) form.reset();
+        const editIdEl = document.getElementById('editRequestId');
+        if (editIdEl) editIdEl.value = '';
+        const tbody = document.getElementById('itemsBody');
+        if (tbody) {
+            tbody.innerHTML = '';
+            this.addRowToItemsTable();
+        }
+        this.calculateTotals();
+    },
+
+    resetExpenseRequestForm() {
+        const form = document.getElementById('expenseRequestForm');
+        if (form) form.reset();
+        const editIdEl = document.getElementById('editExpenseId');
+        if (editIdEl) editIdEl.value = '';
+    },
+
     addRowToItemsTable() {
         const tbody = document.getElementById('itemsBody');
         if (!tbody) return;
@@ -170,7 +190,7 @@ const ui = {
         tr.innerHTML = `
             <td><input type="text" class="form-control" name="product_name[]" required></td>
             <td><input type="text" class="form-control" name="specifications[]"></td>
-            <td><input type="text" class="form-control" name="unit[]" placeholder="pcs"></td>
+            <td><input type="text" class="form-control" name="unit[]" placeholder="${i18nManager.get('pcs')}"></td>
             <td><input type="number" class="form-control qty-input" name="quantity[]" value="1" min="1" required></td>
             <td><input type="number" class="form-control price-input" name="unit_price[]" step="0.01" value="0.00" required></td>
             <td><input type="number" class="form-control row-total" readonly value="0.00"></td>
@@ -226,7 +246,7 @@ const ui = {
                     tr.innerHTML = `
                         <td><input type="text" class="form-control" name="product_name[]" value="${item.product_name || ''}" required></td>
                         <td><input type="text" class="form-control" name="specifications[]" value="${item.specifications || ''}"></td>
-                        <td><input type="text" class="form-control" name="unit[]" value="${item.unit || ''}" placeholder="pcs"></td>
+                        <td><input type="text" class="form-control" name="unit[]" value="${item.unit || ''}" placeholder="${i18nManager.get('pcs')}"></td>
                         <td><input type="number" class="form-control qty-input" name="quantity[]" value="${item.quantity || 1}" min="1" required></td>
                         <td><input type="number" class="form-control price-input" name="unit_price[]" step="0.01" value="${item.unit_price || 0}" required></td>
                         <td><input type="number" class="form-control row-total" readonly value="${item.total_price || ((item.quantity||0)*(item.unit_price||0)).toFixed(2)}"></td>
@@ -242,6 +262,24 @@ const ui = {
             }
         }
         this.calculateTotals();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    },
+
+    loadExpenseForEdit(exp) {
+        this.showView('create-expense');
+        document.getElementById('currentViewTitle').innerText = i18nManager.get('editRequest');
+        const editIdEl = document.getElementById('editExpenseId');
+        if (editIdEl) editIdEl.value = exp.id;
+        
+        const subjIn = document.getElementById('expenseSubject');
+        if (subjIn) subjIn.value = exp.subject;
+        const amountIn = document.getElementById('expenseAmount');
+        if (amountIn) amountIn.value = exp.amount;
+        const levelSelect = document.getElementById('expenseApprovalLevel');
+        if (levelSelect) levelSelect.value = exp.highest_approval_level;
+        const stmtIn = document.getElementById('expenseStatement');
+        if (stmtIn) stmtIn.value = exp.statement;
+        
         if (typeof lucide !== 'undefined') lucide.createIcons();
     },
 
@@ -343,7 +381,7 @@ const ui = {
     printRequest(req, approvals = []) {
         const container = document.getElementById('print-container');
         if (!container) {
-            alert(i18nManager.get('errorPrintContainer'));
+            this.showNotification(i18nManager.get('errorPrintContainer'), 'error');
             return;
         }
 
@@ -741,7 +779,7 @@ const ui = {
     printExpenseRequest(exp, approvals = []) {
         const container = document.getElementById('print-container');
         if (!container) {
-            alert(i18nManager.get('errorPrintContainer'));
+            this.showNotification(i18nManager.get('errorPrintContainer'), 'error');
             return;
         }
 
@@ -1063,5 +1101,53 @@ const ui = {
         `;
 
         window.print();
+    },
+
+    showNotification(message, type = 'info', duration = 3000) {
+        const container = document.getElementById('notification-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        
+        // Map types to Lucide icons
+        let icon = 'info';
+        if (type === 'success') icon = 'check-circle';
+        if (type === 'error') icon = 'x-circle';
+        if (type === 'warning') icon = 'alert-triangle';
+
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i data-lucide="${icon}"></i>
+            </div>
+            <div class="toast-content">${message}</div>
+            <button class="toast-close">
+                <i data-lucide="x" style="width: 14px;"></i>
+            </button>
+        `;
+
+        container.appendChild(toast);
+        
+        // Initialize the new icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        const closeToast = (el) => {
+            el.classList.add('fade-out');
+            el.addEventListener('animationend', () => {
+                el.remove();
+            }, { once: true });
+        };
+
+        // Auto remove
+        const timeout = setTimeout(() => {
+            closeToast(toast);
+        }, duration);
+
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            clearTimeout(timeout);
+            closeToast(toast);
+        });
     }
 };

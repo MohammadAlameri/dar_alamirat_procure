@@ -42,19 +42,19 @@ if (document.getElementById('loginForm')) {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const btn = document.getElementById('loginBtn');
-        const alert = document.getElementById('authAlert');
+        const alertEl = document.getElementById('authAlert');
 
         btn.disabled = true;
         btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> ${i18nManager.get('signingIn')}`;
-        alert.classList.add('d-none');
+        alertEl.classList.add('d-none');
 
         try {
             await auth.signIn(email, password);
             globalThis.location.href = 'index.html';
         } catch (error) {
             console.error(error);
-            alert.querySelector('.alert').innerText = error.message;
-            alert.classList.remove('d-none');
+            alertEl.querySelector('.alert').innerText = error.message;
+            alertEl.classList.remove('d-none');
         } finally {
             btn.disabled = false;
             btn.innerText = i18nManager.get('signIn') || 'Sign In';
@@ -79,5 +79,5 @@ document.getElementById('togglePassword')?.addEventListener('click', () => {
 // Contact Admin Alert
 document.querySelector('[data-i18n="contactAdmin"]')?.addEventListener('click', (e) => {
     e.preventDefault();
-    alert(i18nManager.get('contactAdminMsg'));
+    ui.showNotification(i18nManager.get('contactAdminMsg'), 'info');
 });

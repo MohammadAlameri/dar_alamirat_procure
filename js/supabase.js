@@ -192,5 +192,21 @@ const db = {
             .from('expense_approvals_log')
             .insert([{ request_id: requestId, user_id: userId, action, comments }]);
         if (error) throw error;
+    },
+
+    async updateExpenseFull(id, expenseData) {
+        // 1. Update expense metadata and status
+        const { error: expError } = await supabaseClient
+            .from('expense_requests')
+            .update({...expenseData, updated_at: new Date()})
+            .eq('id', id);
+        if (expError) throw expError;
+
+        // 2. Delete logs so the process starts from pending
+        const { error: logsError } = await supabaseClient
+            .from('expense_approvals_log')
+            .delete()
+            .eq('request_id', id);
+        if (logsError) throw logsError;
     }
 };

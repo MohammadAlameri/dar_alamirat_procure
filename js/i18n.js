@@ -151,7 +151,21 @@ const i18n = {
         all: "All",
         printExpenseRequest: "Print Request",
         printExpenseReceipt: "Print Receipt",
-        approve: "Approve"
+        approve: "Approve",
+        managerApproval: "Manager Approval",
+        gmApproval: "GM Approval",
+        approvalLog: "Approval Log & Notes",
+        noComments: "No comments",
+        noLogEntries: "No previous log entries",
+        staffReceiptMsg: "Please confirm receiving the amount from petty cash",
+        cannotCompleteStaffRejected: "Cannot complete the request because the staff rejected the receipt. Please resolve the issue or edit the request.",
+        noApprovalsYet: "No approvals yet",
+        suggestedSuppliers: "Suggested Suppliers (one per line)",
+        suppliersPlaceholder: "Supplier 1\nSupplier 2\nSupplier 3",
+        noJustification: "No justification provided",
+        staff: "Staff",
+        pcs: "pcs",
+        printRequest: "Print Request"
     },
     ar: {
         title: "دار الأميرات للمشتريات",
@@ -305,7 +319,21 @@ const i18n = {
         all: "الكل",
         printExpenseRequest: "طباعة الطلب",
         printExpenseReceipt: "طباعة سند الاستلام",
-        approve: "موافقة"
+        approve: "موافقة",
+        managerApproval: "اعتماد المدير المباشر",
+        gmApproval: "اعتماد المدير العام",
+        approvalLog: "سجل الموافقة والملاحظات",
+        noComments: "بدون ملاحظات",
+        noLogEntries: "لا توجد ملاحظات سابقة",
+        staffReceiptMsg: "يرجى تأكيد استلام المبلغ من العهده",
+        cannotCompleteStaffRejected: "لا يمكن إكمال الطلب لأن الموظف رفض الاستلام. يرجى مراجعة المشكلة مع الموظف أو تعديل الطلب.",
+        noApprovalsYet: "لا توجد اعتمادات سابقة",
+        suggestedSuppliers: "أسماء الموردين المقترحين (كل مورد في سطر)",
+        suppliersPlaceholder: "مورد 1\nمورد 2\nمورد 3",
+        noJustification: "لم يتم تقديم مبررات",
+        staff: "موظف",
+        pcs: "حبة",
+        printRequest: "طباعة الطلب"
     }
 };
 

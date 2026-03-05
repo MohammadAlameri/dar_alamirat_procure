@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const userWithProfile = await auth.getCurrentUser();
         if (!userWithProfile) {
-            alert(i18nManager.get('errorProfileNotFound'));
+            ui.showNotification(i18nManager.get('errorProfileNotFound'), 'error');
             await auth.signOut();
             return;
         }
@@ -157,6 +157,12 @@ function setupEventListeners() {
                 return;
             }
             
+            // Reset all form states when switching views to prevent "ghost" edits
+            ui.resetPurchaseRequestForm();
+            ui.resetExpenseRequestForm();
+            const title = document.getElementById('currentViewTitle');
+            if (title) title.innerText = i18nManager.get('dashboardOverview');
+
             ui.showView(viewId);
             
             // Auto-hide sidebar on mobile after selection
@@ -233,19 +239,31 @@ function setupEventListeners() {
 
     // Buttons
     document.getElementById('createNewBtn').addEventListener('click', () => {
-        // Clear edit state
-        if (document.getElementById('editRequestId')) document.getElementById('editRequestId').value = '';
+        ui.resetPurchaseRequestForm();
         const title = document.getElementById('currentViewTitle');
         if (title) title.innerText = i18nManager.get('newRequest');
         ui.showView('create-request');
     });
 
     document.getElementById('createNewExpenseBtn')?.addEventListener('click', () => {
+        ui.resetExpenseRequestForm();
+        const title = document.getElementById('currentViewTitle');
+        if (title) title.innerText = i18nManager.get('newExpenseRequest');
         ui.showView('create-expense');
     });
 
     document.getElementById('dashCreateExpenseBtn')?.addEventListener('click', () => {
+        ui.resetExpenseRequestForm();
+        const title = document.getElementById('currentViewTitle');
+        if (title) title.innerText = i18nManager.get('newExpenseRequest');
         ui.showView('create-expense');
+    });
+
+    document.getElementById('myRequestsCreateBtn')?.addEventListener('click', () => {
+        ui.resetPurchaseRequestForm();
+        const title = document.getElementById('currentViewTitle');
+        if (title) title.innerText = i18nManager.get('newRequest');
+        ui.showView('create-request');
     });
 
     document.getElementById('allRequestsFilterType')?.addEventListener('change', () => {
@@ -455,19 +473,18 @@ function setupEventListeners() {
             const editId = formData.get('edit_request_id');
             if (editId) {
                 await db.updateRequestFull(editId, requestData, items);
-                alert(i18nManager.get('requestUpdated'));
+                ui.showNotification(i18nManager.get('requestUpdated'), 'success');
             } else {
                 await db.createRequest(requestData, items);
-                alert(i18nManager.get('requestSubmitted'));
+                ui.showNotification(i18nManager.get('requestSubmitted'), 'success');
             }
-            e.target.reset();
-            if (document.getElementById('editRequestId')) document.getElementById('editRequestId').value = '';
+            ui.resetPurchaseRequestForm();
             ui.showView('overview');
             await loadDashboardData();
 
         } catch (error) {
             console.error('Submit error:', error);
-            alert(i18nManager.get('errorSubmit') + error.message);
+            ui.showNotification(i18nManager.get('errorSubmit') + error.message, 'error');
         } finally {
             ui.setLoading(false);
         }
@@ -492,6 +509,7 @@ function setupEventListeners() {
 
         try {
             const formData = new FormData(e.target);
+            const editId = formData.get('edit_expense_id');
             const expenseData = {
                 subject: formData.get('subject'),
                 amount: Number.parseFloat(formData.get('amount')),
@@ -502,15 +520,20 @@ function setupEventListeners() {
                 employee_name: currentUser.profile.full_name
             };
 
-            await db.createExpenseRequest(expenseData);
-            alert(i18nManager.get('requestSubmitted'));
-            e.target.reset();
+            if (editId) {
+                await db.updateExpenseFull(editId, expenseData);
+                ui.showNotification(i18nManager.get('requestUpdated'), 'success');
+            } else {
+                await db.createExpenseRequest(expenseData);
+                ui.showNotification(i18nManager.get('requestSubmitted'), 'success');
+            }
+            ui.resetExpenseRequestForm();
             ui.showView('expense-requests');
             await loadDashboardData();
 
         } catch (error) {
             console.error('Expense submit error:', error);
-            alert(i18nManager.get('errorSubmit') + error.message);
+            ui.showNotification(i18nManager.get('errorSubmit') + error.message, 'error');
         } finally {
             ui.setLoading(false);
         }
@@ -564,10 +587,10 @@ async function showRequestDetails(requestId) {
         if (role === 'manager' && (req.status === 'pending' || req.status === 'rejected_by_manager')) {
             actionsHtml = `
                 <div class="card mt-4 border-primary">
-                    <div class="card-header bg-primary text-white">${i18nManager.currentLang === 'ar' ? 'اعتماد المدير المباشر' : 'Manager Approval'}</div>
+                    <div class="card-header bg-primary text-white">${i18nManager.get('managerApproval')}</div>
                     <div class="card-body">
                         <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
-                        <button class="btn btn-success action-btn" data-action="manager_approved">${i18nManager.currentLang === 'ar' ? 'اعتماد' : 'Approve'}</button>
+                        <button class="btn btn-success action-btn" data-action="manager_approved">${i18nManager.get('approve')}</button>
                         <button class="btn btn-danger action-btn" data-action="rejected_by_manager">${i18nManager.get('rejected')}</button>
                     </div>
                 </div>
@@ -580,8 +603,8 @@ async function showRequestDetails(requestId) {
                     <div class="card-header bg-info text-white">${i18nManager.get('itProcurementReview')}</div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">أسماء الموردين المقترحين (كل مورد في سطر)</label>
-                            <textarea id="suggestedSuppliers" class="form-control" rows="3" placeholder="مورد 1\nمورد 2\nمورد 3">${req.suggested_suppliers || ''}</textarea>
+                            <label class="form-label fw-bold">${i18nManager.get('suggestedSuppliers')}</label>
+                            <textarea id="suggestedSuppliers" class="form-control" rows="3" placeholder="${i18nManager.get('suppliersPlaceholder')}">${req.suggested_suppliers || ''}</textarea>
                         </div>
                         <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
                         <button class="btn btn-success action-btn" data-action="it_approved">${i18nManager.get('approveToFinance')}</button>
@@ -640,7 +663,7 @@ async function showRequestDetails(requestId) {
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">${i18nManager.get('rejectionReasons')} (${i18nManager.currentLang === 'ar' ? 'في حال الرفض فقط' : 'If rejected only'})</label>
+                            <label class="form-label fw-bold">${i18nManager.get('rejectionReasons')}</label>
                             <textarea id="staffRejectionReason" class="form-control" rows="2"></textarea>
                         </div>
                         <div class="d-flex gap-2">
@@ -671,9 +694,7 @@ async function showRequestDetails(requestId) {
                         </div>
                         ${isRejectedByStaff ? `
                             <div class="alert alert-warning small">
-                                ${i18nManager.currentLang === 'ar' 
-                                    ? 'لا يمكن إكمال الطلب لأن الموظف رفض الاستلام. يرجى مراجعة المشكلة مع الموظف أو تعديل الطلب.' 
-                                    : 'Cannot complete the request because the staff rejected the receipt. Please resolve the issue or edit the request.'}
+                                ${i18nManager.get('cannotCompleteStaffRejected')}
                             </div>
                         ` : `
                             <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
@@ -691,11 +712,11 @@ async function showRequestDetails(requestId) {
                     <div class="d-flex gap-2">
                         ${currentUser.id === req.created_by && req.status !== 'completed' ? `
                             <button class="btn btn-sm btn-outline-primary" id="editRequestBtn">
-                                <i data-lucide="edit" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'تعديل الطلب' : 'Edit Request'}
+                                <i data-lucide="edit" style="width:14px;"></i> ${i18nManager.get('editRequest')}
                             </button>
                         ` : ''}
                         <button class="btn btn-sm btn-outline-info" id="printRequestBtn">
-                            <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'طباعة الطلب' : 'Print Request'}
+                            <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.get('printRequest')}
                         </button>
                         ${['purchased', 'received_by_staff', 'rejected_by_staff', 'completed'].includes(req.status) ? `
                             <button class="btn btn-sm btn-outline-success" id="printReceiptBtn">
@@ -711,11 +732,11 @@ async function showRequestDetails(requestId) {
                             <h6 class="text-muted small fw-bold">${i18nManager.get('subject').toUpperCase()}</h6>
                             <p class="h5 fw-bold">${req.subject}</p>
                             <h6 class="text-muted small fw-bold mt-3">${i18nManager.get('justification').split('(')[0].trim().toUpperCase()}</h6>
-                            <p>${req.justification || 'No justification provided'}</p>
+                            <p>${req.justification || i18nManager.get('noJustification')}</p>
                         </div>
                         <div class="col-md-3">
                             <h6 class="text-muted small fw-bold">${i18nManager.get('requester').toUpperCase()}</h6>
-                            <p>${(req.profiles && req.profiles.full_name) ? req.profiles.full_name : (req.requested_by_name || 'Staff')}<br>
+                            <p>${(req.profiles && req.profiles.full_name) ? req.profiles.full_name : (req.requested_by_name || i18nManager.get('staff'))}<br>
                                <small class="text-muted">${req.profiles ? i18nManager.get(req.profiles.role) : ''} | ${req.profiles ? req.profiles.department : ''}</small></p>
                         </div>
                         <div class="col-md-3">
@@ -746,7 +767,7 @@ async function showRequestDetails(requestId) {
 
                     <!-- Audit Trail / Previous Notes -->
                     <div class="mb-4">
-                        <h6 class="text-muted small fw-bold">${i18nManager.currentLang === 'ar' ? 'سجل الموافقة والملاحظات' : 'APPROVAL LOG & NOTES'}</h6>
+                        <h6 class="text-muted small fw-bold">${i18nManager.get('approvalLog').toUpperCase()}</h6>
                         <div class="list-group list-group-flush border rounded">
                             ${approvals && approvals.length > 0 ? approvals.map(app => `
                                 <div class="list-group-item">
@@ -758,10 +779,10 @@ async function showRequestDetails(requestId) {
                                         <span class="badge ${app.action.includes('rejected') ? 'bg-danger' : 'bg-success'} me-2">
                                             ${i18nManager.get(app.action) || app.action}
                                         </span>
-                                        <span class="text-secondary italic">${app.comments || (i18nManager.currentLang === 'ar' ? 'بدون ملاحظات' : 'No comments')}</span>
+                                        <span class="text-secondary italic">${app.comments || i18nManager.get('noComments')}</span>
                                     </div>
                                 </div>
-                            `).join('') : `<div class="list-group-item text-muted small">${i18nManager.currentLang === 'ar' ? 'لا توجد ملاحظات سابقة' : 'No previous log entries'}</div>`}
+                            `).join('') : `<div class="list-group-item text-muted small">${i18nManager.get('noLogEntries')}</div>`}
                         </div>
                     </div>
 
@@ -833,11 +854,11 @@ async function showRequestDetails(requestId) {
                 try {
                     await db.updateRequestStatus(requestId, action, updates);
                     await db.logApproval(requestId, currentUser.id, action, comments);
-                    alert(i18nManager.get('requestProcessed'));
+                    ui.showNotification(i18nManager.get('requestProcessed'), 'success');
                     ui.showView('overview');
                     await loadDashboardData();
                 } catch (e) {
-                    alert(i18nManager.get('error') + e.message);
+                    ui.showNotification(i18nManager.get('error') + e.message, 'error');
                 } finally {
                     ui.setLoading(false);
                 }
@@ -851,7 +872,7 @@ async function showRequestDetails(requestId) {
                 const reason = document.getElementById('staffRejectionReason').value;
                 
                 if (acceptanceStatus === 'rejected' && !reason) {
-                    alert(i18nManager.get('errorRejectionReason'));
+                    ui.showNotification(i18nManager.get('errorRejectionReason'), 'warning');
                     return;
                 }
 
@@ -868,11 +889,11 @@ async function showRequestDetails(requestId) {
                     await db.updateRequestStatus(requestId, targetStatus, updates);
                     await db.logApproval(requestId, currentUser.id, actionLog, reason);
                     
-                    alert(i18nManager.get('requestSubmitted'));
+                    ui.showNotification(i18nManager.get('requestSubmitted'), 'success');
                     ui.showView('overview');
                     await loadDashboardData();
                 } catch (e) {
-                    alert(i18nManager.get('error') + e.message);
+                    ui.showNotification(i18nManager.get('error') + e.message, 'error');
                 } finally {
                     ui.setLoading(false);
                 }
@@ -881,7 +902,7 @@ async function showRequestDetails(requestId) {
 
     } catch (e) {
         console.error(e);
-        alert(i18nManager.get('errorLoadingDetails'));
+        ui.showNotification(i18nManager.get('errorLoadingDetails'), 'error');
     } finally {
         ui.setLoading(false);
     }
@@ -893,7 +914,7 @@ async function handleProfileDelete(id) {
         await db.deleteProfile(id);
         await loadDashboardData();
     } catch (error) {
-        alert(i18nManager.get('errorDeleteProfile') + error.message);
+        ui.showNotification(i18nManager.get('errorDeleteProfile') + error.message, 'error');
     } finally {
         ui.setLoading(false);
     }
@@ -927,10 +948,10 @@ async function showExpenseDetails(expenseId) {
         if (role === 'manager' && (exp.status === 'pending' || exp.status === 'rejected_by_manager')) {
             actionsHtml = `
                 <div class="card mt-4 border-primary">
-                    <div class="card-header bg-primary text-white">${i18nManager.currentLang === 'ar' ? 'اعتماد المدير المباشر' : 'Manager Approval'}</div>
+                    <div class="card-header bg-primary text-white">${i18nManager.get('managerApproval')}</div>
                     <div class="card-body">
                         <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
-                        <button class="btn btn-success expense-action-btn" data-action="manager_approved">${i18nManager.currentLang === 'ar' ? 'اعتماد' : 'Approve'}</button>
+                        <button class="btn btn-success expense-action-btn" data-action="manager_approved">${i18nManager.get('approve')}</button>
                         <button class="btn btn-danger expense-action-btn" data-action="rejected_by_manager">${i18nManager.get('rejected')}</button>
                     </div>
                 </div>
@@ -953,7 +974,7 @@ async function showExpenseDetails(expenseId) {
         else if (role === 'general_manager' && (exp.status === 'finance_approved' || exp.status === 'rejected_by_gm') && level === 'general_manager') {
             actionsHtml = `
                 <div class="card mt-4 border-dark">
-                    <div class="card-header bg-dark text-white">${i18nManager.currentLang === 'ar' ? 'اعتماد المدير العام' : 'GM Approval'}</div>
+                    <div class="card-header bg-dark text-white">${i18nManager.get('gmApproval')}</div>
                     <div class="card-body">
                         <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
                         <button class="btn btn-dark expense-action-btn" data-action="gm_approved">${i18nManager.get('approve')}</button>
@@ -986,7 +1007,7 @@ async function showExpenseDetails(expenseId) {
                 <div class="card mt-4 border-success">
                     <div class="card-header bg-success text-white fw-bold">${i18nManager.get('receiveAmount')}</div>
                     <div class="card-body">
-                        <p>${i18nManager.currentLang === 'ar' ? 'يرجى تأكيد استلام المبلغ من العهده' : 'Please confirm receiving the amount from petty cash'}</p>
+                        <p>${i18nManager.get('staffReceiptMsg')}</p>
                         <button class="btn btn-success expense-action-btn" data-action="received">${i18nManager.get('receiveAmount')}</button>
                     </div>
                 </div>
@@ -998,15 +1019,20 @@ async function showExpenseDetails(expenseId) {
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">${i18nManager.get('expenseRequests')} #${exp.id.substring(0, 8)}</h5>
                     <div class="d-flex gap-2">
+                        ${currentUser.id === exp.employee_id && !['completed', 'paid'].includes(exp.status) ? `
+                            <button class="btn btn-sm btn-outline-primary" id="editExpenseBtn">
+                                <i data-lucide="edit" style="width:14px;"></i> ${i18nManager.get('editRequest')}
+                            </button>
+                        ` : ''}
                         <button class="btn btn-sm btn-outline-info" id="printExpenseRequestBtn">
-                            <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'طباعة الطلب' : 'Print Request'}
+                            <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.get('printRequest')}
                         </button>
                         ${['paid', 'completed', 'received'].includes(exp.status) ? `
                             <button class="btn btn-sm btn-outline-success" id="printExpenseReceiptBtn">
                                 <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'طباعة سند الاستلام' : 'Print Receipt'}
                             </button>
                         ` : ''}
-                        <button class="btn btn-sm btn-outline-secondary" onclick="ui.showView('expense-requests')">${i18nManager.get('closing')}</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetAndBackToExpenses()">${i18nManager.get('closing')}</button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -1033,7 +1059,7 @@ async function showExpenseDetails(expenseId) {
 
                     <!-- Audit Log -->
                     <div class="mb-4">
-                        <h6 class="text-muted small fw-bold">${i18nManager.currentLang === 'ar' ? 'سجل الاعتمادات' : 'APPROVAL LOG'}</h6>
+                        <h6 class="text-muted small fw-bold">${i18nManager.get('approvalLog').toUpperCase()}</h6>
                         <div class="list-group list-group-flush border rounded">
                             ${approvals && approvals.length > 0 ? approvals.map(app => `
                                 <div class="list-group-item">
@@ -1048,7 +1074,7 @@ async function showExpenseDetails(expenseId) {
                                         <span class="text-secondary italic">${app.comments || ''}</span>
                                     </div>
                                 </div>
-                            `).join('') : `<div class="list-group-item text-muted small">${i18nManager.currentLang === 'ar' ? 'لا توجد اعتمادات سابقة' : 'No approvals yet'}</div>`}
+                            `).join('') : `<div class="list-group-item text-muted small">${i18nManager.get('noApprovalsYet')}</div>`}
                         </div>
                     </div>
 
@@ -1067,6 +1093,10 @@ async function showExpenseDetails(expenseId) {
             ui.printExpenseReceipt(exp, approvals || []);
         });
 
+        document.getElementById('editExpenseBtn')?.addEventListener('click', () => {
+            ui.loadExpenseForEdit(exp);
+        });
+
         // Handle expense action buttons
         container.querySelectorAll('.expense-action-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -1081,11 +1111,11 @@ async function showExpenseDetails(expenseId) {
                     await db.updateExpenseStatus(expenseId, nextStatus);
                     await db.logExpenseApproval(expenseId, currentUser.id, action, comments);
                     
-                    alert(i18nManager.get('requestProcessed'));
+                    ui.showNotification(i18nManager.get('requestProcessed'), 'success');
                     ui.showView('expense-requests');
                     await loadDashboardData();
                 } catch (e) {
-                    alert(i18nManager.get('error') + e.message);
+                    ui.showNotification(i18nManager.get('error') + e.message, 'error');
                 } finally {
                     ui.setLoading(false);
                 }
@@ -1094,8 +1124,19 @@ async function showExpenseDetails(expenseId) {
 
     } catch (e) {
         console.error(e);
-        alert(i18nManager.get('errorLoadingDetails'));
+        ui.showNotification(i18nManager.get('errorLoadingDetails'), 'error');
     } finally {
         ui.setLoading(false);
     }
+}
+
+// Global helpers to reset and go back
+function resetAndBackToExpenses() {
+    ui.resetExpenseRequestForm();
+    ui.showView('expense-requests');
+}
+
+function resetAndBackToPurchase() {
+    ui.resetPurchaseRequestForm();
+    ui.showView('overview');
 }

@@ -193,7 +193,7 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0" data-i18n="nonSalesPurchase">Non-Sales Supplies Purchase Request</h5>
-                        <button class="btn btn-sm btn-outline-secondary" data-view="overview" data-i18n="backToDashboard">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetAndBackToPurchase()" data-i18n="backToDashboard">
                            Back to Dashboard
                         </button>
                     </div>
@@ -286,7 +286,12 @@
             <!-- Other views placeholders -->
             <div class="view-content d-none" id="view-my-requests">
                 <div class="card">
-                    <div class="card-header" data-i18n="myPurchaseRequests">My Purchase Requests</div>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span data-i18n="myPurchaseRequests">My Purchase Requests</span>
+                        <button class="btn btn-sm btn-primary" id="myRequestsCreateBtn">
+                            <i data-lucide="plus" style="width: 14px;"></i> <span data-i18n="newRequest">New Procure Request</span>
+                        </button>
+                    </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
@@ -495,13 +500,14 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0" data-i18n="newExpenseRequest">New Expense Request</h5>
-                        <button class="btn btn-sm btn-outline-secondary" data-view="expense-requests" data-i18n="backToDashboard">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetAndBackToExpenses()" data-i18n="backToDashboard">
                            Back
                         </button>
                     </div>
                     <div class="card-body">
                         <form id="expenseRequestForm">
-                            <div class="row g-3">
+                             <input type="hidden" id="editExpenseId" name="edit_expense_id">
+                             <div class="row g-3">
                                 <div class="col-md-12">
                                     <label class="form-label fw-bold" data-i18n="subject" for="expenseSubject">Subject</label>
                                     <input type="text" class="form-control" name="subject" id="expenseSubject" required>
@@ -542,6 +548,9 @@
             </div>
         </div>
     </main>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
 
     <!-- Print Container (Hidden, used by window.print) -->
     <div id="print-container"></div>
