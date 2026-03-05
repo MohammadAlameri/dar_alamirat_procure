@@ -181,6 +181,7 @@
                     </div>
                     <div class="card-body">
                         <form id="purchaseRequestForm">
+                            <input type="hidden" id="editRequestId" name="edit_request_id">
                             <div class="row mb-4">
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label fw-bold" data-i18n="subject" for="subjectInput">Subject</label>
@@ -191,12 +192,12 @@
                                     <textarea class="form-control" name="justification" id="justificationInput" rows="2"></textarea>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold" for="requestedByName">اسم الموظف طالب الاحتياج</label>
-                                    <input type="text" class="form-control" name="requested_by_name" id="requestedByName" placeholder="اسم الموظف الذي يحتاج المواد">
+                                    <label class="form-label fw-bold" for="requestedByName" data-i18n="nameOfRequester">Requested By (Employee Name)</label>
+                                    <input type="text" class="form-control" name="requested_by_name" id="requestedByName" data-i18n="nameOfRequesterPlaceholder">
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold" for="requestedByTitle">وظيفة الموظف طالب الاحتياج</label>
-                                    <input type="text" class="form-control" name="requested_by_title" id="requestedByTitle" placeholder="المسمى الوظيفي">
+                                    <label class="form-label fw-bold" for="requestedByTitle" data-i18n="jobTitleOfRequester">Requested By (Job Title)</label>
+                                    <input type="text" class="form-control" name="requested_by_title" id="requestedByTitle" data-i18n="jobTitlePlaceholder">
                                 </div>
                             </div>
 
@@ -212,9 +213,9 @@
                                             <th style="width: 80px;" data-i18n="qty">Qty</th>
                                             <th style="width: 120px;" data-i18n="unitPrice">Unit Price</th>
                                             <th style="width: 120px;" data-i18n="total">Total</th>
-                                            <th style="width: 100px;">بلد الصناعة</th>
-                                            <th style="width: 100px;">مدة الضمان</th>
-                                            <th style="width: 130px;">الاسم التجاري</th>
+                                            <th style="width: 100px;" data-i18n="countryOfOrigin">Country of Origin</th>
+                                            <th style="width: 100px;" data-i18n="warrantyPeriod">Warranty Period</th>
+                                            <th style="width: 130px;" data-i18n="brandModel">Brand / Model</th>
                                             <th style="width: 50px;"></th>
                                         </tr>
                                     </thead>
@@ -227,9 +228,9 @@
                                             <td><input type="number" class="form-control qty-input" name="quantity[]" value="1" min="1" required></td>
                                             <td><input type="number" class="form-control price-input" name="unit_price[]" step="0.01" value="0.00" required></td>
                                             <td><input type="number" class="form-control row-total" readonly value="0.00"></td>
-                                            <td><input type="text" class="form-control" name="country_of_origin[]"></td>
-                                            <td><input type="text" class="form-control" name="warranty_period[]"></td>
-                                            <td><input type="text" class="form-control" name="brand_model[]"></td>
+                                            <td><input type="text" class="form-control" name="country_of_origin[]" data-i18n="countryOfOrigin"></td>
+                                            <td><input type="text" class="form-control" name="warranty_period[]" data-i18n="warrantyPeriod"></td>
+                                            <td><input type="text" class="form-control" name="brand_model[]" data-i18n="brandModel"></td>
                                             <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i data-lucide="trash-2" style="width: 14px;"></i></button></td>
                                         </tr>
                                     </tbody>
@@ -391,7 +392,7 @@
                                         <div class="mb-3" id="managerGroup">
                                             <label class="form-label" for="manager_id" data-i18n="directManager">Direct Manager</label>
                                             <select class="form-select" id="manager_id" name="manager_id">
-                                                <option value="">-- None --</option>
+                                                <option value="" data-i18n="none">-- None --</option>
                                             </select>
                                         </div>
                                         <button type="submit" class="btn btn-primary w-100" id="createUserBtn" data-i18n="submit">Save Profile</button>

@@ -45,7 +45,7 @@ if (document.getElementById('loginForm')) {
         const alert = document.getElementById('authAlert');
 
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Signing in...';
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> ${i18nManager.get('signingIn')}`;
         alert.classList.add('d-none');
 
         try {
@@ -79,8 +79,5 @@ document.getElementById('togglePassword')?.addEventListener('click', () => {
 // Contact Admin Alert
 document.querySelector('[data-i18n="contactAdmin"]')?.addEventListener('click', (e) => {
     e.preventDefault();
-    const msg = i18nManager.currentLang === 'ar' ? 
-        'يمكنك مراسلتي على واتساب\nمحمد العامري\n+966551771975' : 
-        'You can message me on WhatsApp\nMohammad Alameri\n+966551771975';
-    alert(msg);
+    alert(i18nManager.get('contactAdminMsg'));
 });

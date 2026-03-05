@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const userWithProfile = await auth.getCurrentUser();
         if (!userWithProfile) {
-            alert('User profile not found. Please contact admin.');
+            alert(i18nManager.get('errorProfileNotFound'));
             await auth.signOut();
             return;
         }
@@ -61,12 +61,12 @@ async function loadDashboardData() {
     
     // Filter "Pending Approvals" based on role and current status
     if (role === 'manager') {
-        ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'pending'), role);
+        ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'pending' || r.status === 'rejected_by_manager'), role);
     } else if (role === 'it_procurement') {
-        const itPending = requests.filter(r => r.status === 'manager_approved' || r.status === 'finance_approved' || r.status === 'received_by_staff');
+        const itPending = requests.filter(r => r.status === 'manager_approved' || r.status === 'finance_approved' || r.status === 'received_by_staff' || r.status === 'rejected_by_it' || r.status === 'rejected_by_it_purchase');
         ui.renderRequestsTable('pendingApprovalsTable', itPending, role);
     } else if (role === 'finance') {
-        ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'it_approved'), role);
+        ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'it_approved' || r.status === 'rejected_by_finance'), role);
     }
 
     // New: Render All Requests Table
@@ -135,7 +135,13 @@ function setupEventListeners() {
     }
 
     // Buttons
-    document.getElementById('createNewBtn').addEventListener('click', () => ui.showView('create-request'));
+    document.getElementById('createNewBtn').addEventListener('click', () => {
+        // Clear edit state
+        if (document.getElementById('editRequestId')) document.getElementById('editRequestId').value = '';
+        const title = document.getElementById('currentViewTitle');
+        if (title) title.innerText = i18nManager.get('newRequest');
+        ui.showView('create-request');
+    });
     document.getElementById('showCreateProfileBtn')?.addEventListener('click', () => ui.toggleProfileForm(true));
     document.getElementById('cancelProfileBtn')?.addEventListener('click', () => ui.toggleProfileForm(false));
 
@@ -176,13 +182,13 @@ function setupEventListeners() {
             document.getElementById('manager_id').value = data.manager || '';
             document.getElementById('passwordHint').classList.remove('d-none');
             document.getElementById('password').required = false;
-            document.getElementById('profileFormTitle').innerText = 'Edit Profile';
+            document.getElementById('profileFormTitle').innerText = i18nManager.get('editProfile');
             ui.updateManagerFieldVisibility();
         }
 
         if (deleteBtn) {
             const { id, name } = deleteBtn.dataset;
-            if (confirm(`Are you sure you want to delete profile for ${name}?`)) {
+            if (confirm(`${i18nManager.get('confirmDeleteProfile')} ${name}?`)) {
                 handleProfileDelete(id);
             }
         }
@@ -333,15 +339,22 @@ function setupEventListeners() {
                 });
             }
 
-            await db.createRequest(requestData, items);
-            alert(i18nManager.get('requestSubmitted') || 'Request submitted successfully!');
+            const editId = formData.get('edit_request_id');
+            if (editId) {
+                await db.updateRequestFull(editId, requestData, items);
+                alert(i18nManager.get('requestUpdated'));
+            } else {
+                await db.createRequest(requestData, items);
+                alert(i18nManager.get('requestSubmitted'));
+            }
             e.target.reset();
+            if (document.getElementById('editRequestId')) document.getElementById('editRequestId').value = '';
             ui.showView('overview');
             await loadDashboardData();
 
         } catch (error) {
             console.error('Submit error:', error);
-            alert('Error submitting request: ' + error.message);
+            alert(i18nManager.get('errorSubmit') + error.message);
         } finally {
             ui.setLoading(false);
         }
@@ -386,7 +399,7 @@ async function showRequestDetails(requestId) {
         let actionsHtml = '';
         
         // 1. Manager Step: pending -> manager_approved
-        if (role === 'manager' && req.status === 'pending') {
+        if (role === 'manager' && (req.status === 'pending' || req.status === 'rejected_by_manager')) {
             actionsHtml = `
                 <div class="card mt-4 border-primary">
                     <div class="card-header bg-primary text-white">${i18nManager.currentLang === 'ar' ? 'اعتماد المدير المباشر' : 'Manager Approval'}</div>
@@ -399,7 +412,7 @@ async function showRequestDetails(requestId) {
             `;
         } 
         // 2. IT/Procurement Step: manager_approved -> it_approved
-        else if (role === 'it_procurement' && req.status === 'manager_approved') {
+        else if (role === 'it_procurement' && (req.status === 'manager_approved' || req.status === 'rejected_by_it')) {
             actionsHtml = `
                 <div class="card mt-4 border-info">
                     <div class="card-header bg-info text-white">${i18nManager.get('itProcurementReview')}</div>
@@ -416,7 +429,7 @@ async function showRequestDetails(requestId) {
             `;
         } 
         // 3. Finance Step: it_approved -> finance_approved
-        else if (role === 'finance' && req.status === 'it_approved') {
+        else if (role === 'finance' && (req.status === 'it_approved' || req.status === 'rejected_by_finance')) {
             actionsHtml = `
                 <div class="card mt-4 border-success">
                     <div class="card-header bg-success text-white">${i18nManager.get('financeApproval')}</div>
@@ -439,14 +452,14 @@ async function showRequestDetails(requestId) {
             `;
         } 
         // 4. Final IT/Procurement Step: finance_approved -> completed
-        else if ((role === 'it_procurement' || role === 'admin') && req.status === 'finance_approved') {
+        else if ((role === 'it_procurement' || role === 'admin') && (req.status === 'finance_approved' || req.status === 'rejected_by_it_purchase')) {
             actionsHtml = `
                 <div class="card mt-4 border-primary">
                     <div class="card-header bg-primary text-white">${i18nManager.get('markAsPurchased')}</div>
                     <div class="card-body">
                         <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
                         <button class="btn btn-primary action-btn" data-action="purchased">${i18nManager.get('markAsPurchased')}</button>
-                        <button class="btn btn-danger action-btn" data-action="rejected_by_it">${i18nManager.get('rejected')}</button>
+                        <button class="btn btn-danger action-btn" data-action="rejected_by_it_purchase">${i18nManager.get('rejected')}</button>
                     </div>
                 </div>
             `;
@@ -482,6 +495,7 @@ async function showRequestDetails(requestId) {
         }
         // 6. IT Final Completion: received_by_staff OR rejected_by_staff -> completed
         else if ((role === 'it_procurement' || role === 'admin') && (req.status === 'received_by_staff' || req.status === 'rejected_by_staff')) {
+            const isRejectedByStaff = req.status === 'rejected_by_staff';
             const acceptanceStatus = i18nManager.get(req.staff_acceptance_status === 'accepted' ? 'staffAccepted' : 'staffRejected');
             const acceptanceClass = req.staff_acceptance_status === 'accepted' ? 'text-success' : 'text-danger';
             
@@ -493,8 +507,16 @@ async function showRequestDetails(requestId) {
                             <h6 class="fw-bold ${acceptanceClass}">${acceptanceStatus}</h6>
                             ${req.staff_rejection_reason ? `<p class="border p-2 bg-light small"><strong>${i18nManager.get('rejectionReasons')}:</strong> ${req.staff_rejection_reason}</p>` : ''}
                         </div>
-                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
-                        <button class="btn btn-dark action-btn" data-action="completed">${i18nManager.get('completeRequest')}</button>
+                        ${isRejectedByStaff ? `
+                            <div class="alert alert-warning small">
+                                ${i18nManager.currentLang === 'ar' 
+                                    ? 'لا يمكن إكمال الطلب لأن الموظف رفض الاستلام. يرجى مراجعة المشكلة مع الموظف أو تعديل الطلب.' 
+                                    : 'Cannot complete the request because the staff rejected the receipt. Please resolve the issue or edit the request.'}
+                            </div>
+                        ` : `
+                            <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
+                            <button class="btn btn-dark action-btn" data-action="completed">${i18nManager.get('completeRequest')}</button>
+                        `}
                     </div>
                 </div>
             `;
@@ -505,6 +527,11 @@ async function showRequestDetails(requestId) {
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">${i18nManager.get('requestDetails')} #${req.id.substring(0, 8)}</h5>
                     <div class="d-flex gap-2">
+                        ${currentUser.id === req.created_by && req.status !== 'completed' ? `
+                            <button class="btn btn-sm btn-outline-primary" id="editRequestBtn">
+                                <i data-lucide="edit" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'تعديل الطلب' : 'Edit Request'}
+                            </button>
+                        ` : ''}
                         <button class="btn btn-sm btn-outline-info" id="printRequestBtn">
                             <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'طباعة الطلب' : 'Print Request'}
                         </button>
@@ -616,6 +643,10 @@ async function showRequestDetails(requestId) {
             ui.printReceipt(req, approvals || []);
         });
 
+        document.getElementById('editRequestBtn')?.addEventListener('click', () => {
+            ui.loadRequestForEdit(req);
+        });
+
         // Handle action buttons
         container.querySelectorAll('.action-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -640,11 +671,11 @@ async function showRequestDetails(requestId) {
                 try {
                     await db.updateRequestStatus(requestId, action, updates);
                     await db.logApproval(requestId, currentUser.id, action, comments);
-                    alert(`Request ${action.replace('_', ' ')}!`);
+                    alert(i18nManager.get('requestProcessed'));
                     ui.showView('overview');
                     await loadDashboardData();
                 } catch (e) {
-                    alert('Error: ' + e.message);
+                    alert(i18nManager.get('error') + e.message);
                 } finally {
                     ui.setLoading(false);
                 }
@@ -658,7 +689,7 @@ async function showRequestDetails(requestId) {
                 const reason = document.getElementById('staffRejectionReason').value;
                 
                 if (acceptanceStatus === 'rejected' && !reason) {
-                    alert(i18nManager.currentLang === 'ar' ? 'يرجى إدخال سبب الرفض' : 'Please enter rejection reason');
+                    alert(i18nManager.get('errorRejectionReason'));
                     return;
                 }
 
@@ -679,7 +710,7 @@ async function showRequestDetails(requestId) {
                     ui.showView('overview');
                     await loadDashboardData();
                 } catch (e) {
-                    alert('Error: ' + e.message);
+                    alert(i18nManager.get('error') + e.message);
                 } finally {
                     ui.setLoading(false);
                 }
@@ -688,7 +719,7 @@ async function showRequestDetails(requestId) {
 
     } catch (e) {
         console.error(e);
-        alert('Error loading details');
+        alert(i18nManager.get('errorLoadingDetails'));
     } finally {
         ui.setLoading(false);
     }
@@ -700,7 +731,7 @@ async function handleProfileDelete(id) {
         await db.deleteProfile(id);
         await loadDashboardData();
     } catch (error) {
-        alert('Error deleting profile: ' + error.message);
+        alert(i18nManager.get('errorDeleteProfile') + error.message);
     } finally {
         ui.setLoading(false);
     }

@@ -64,6 +64,36 @@ const db = {
         return request;
     },
 
+    async updateRequestFull(requestId, requestData, items) {
+        // 1. Update request
+        const { error: reqError } = await supabaseClient
+            .from('purchase_requests')
+            .update({...requestData, updated_at: new Date()})
+            .eq('id', requestId);
+        if (reqError) throw reqError;
+
+        // 2. Delete old items
+        const { error: delError } = await supabaseClient
+            .from('request_items')
+            .delete()
+            .eq('request_id', requestId);
+        if (delError) throw delError;
+
+        // 3. Insert new items
+        const itemsWithReqId = items.map(item => ({ ...item, request_id: requestId }));
+        const { error: itemsError } = await supabaseClient
+            .from('request_items')
+            .insert(itemsWithReqId);
+        if (itemsError) throw itemsError;
+
+        // 4. Delete logs so the process starts from pending
+        const { error: logsError } = await supabaseClient
+            .from('approvals_log')
+            .delete()
+            .eq('request_id', requestId);
+        if (logsError) throw logsError;
+    },
+
     async updateRequestStatus(id, status, updates = {}) {
         const { data, error } = await supabaseClient
             .from('purchase_requests')

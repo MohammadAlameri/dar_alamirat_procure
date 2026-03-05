@@ -15,7 +15,7 @@ CREATE TABLE purchase_requests (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   subject text NOT NULL,
   justification text,
-  status text DEFAULT 'pending' CHECK (status IN ('pending', 'it_approved', 'finance_approved', 'rejected', 'completed')),
+  status text DEFAULT 'pending' CHECK (status IN ('pending', 'manager_approved', 'it_approved', 'finance_approved', 'purchased', 'received_by_staff', 'rejected_by_staff', 'completed', 'rejected_by_manager', 'rejected_by_it', 'rejected_by_finance', 'rejected_by_it_purchase', 'rejected')),
   
   -- Financial Fields (managed by Finance/Accountant)
   budget_status boolean,
@@ -114,15 +114,13 @@ CREATE POLICY "Staff can create requests"
 ON purchase_requests FOR INSERT 
 WITH CHECK (auth.uid() = created_by);
 
--- Update Policy: 
--- 1. Staff can update if still pending
--- 2. Finance can update financial status
--- 3. IT can update status
+-- 1. Staff can update if not completed (to edit)
+-- 2. Other roles can update based on their review stage
 CREATE POLICY "Authorized roles can update requests" 
 ON purchase_requests FOR UPDATE 
 USING (
-  (auth.uid() = created_by AND status = 'pending') OR
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('it_procurement', 'finance', 'admin'))
+  (auth.uid() = created_by AND status != 'completed') OR
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('manager', 'it_procurement', 'finance', 'admin'))
 );
 
 -- 9. RLS Policies for Items
@@ -132,10 +130,10 @@ USING (
   EXISTS (SELECT 1 FROM purchase_requests pr WHERE pr.id = request_id)
 );
 
-CREATE POLICY "Staff can manage items for pending requests" 
+CREATE POLICY "Staff can manage items for own requests" 
 ON request_items FOR ALL 
 USING (
-  EXISTS (SELECT 1 FROM purchase_requests pr WHERE pr.id = request_id AND pr.created_by = auth.uid() AND pr.status = 'pending')
+  EXISTS (SELECT 1 FROM purchase_requests pr WHERE pr.id = request_id AND pr.created_by = auth.uid() AND pr.status != 'completed')
 );
 
 -- 10. Profile Policies
@@ -161,8 +159,14 @@ CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.
 -- Allow new signups to insert their own profile
 -- 11. Approvals Log Policies
 CREATE POLICY "Users can view all logs" ON approvals_log FOR SELECT USING (true);
-CREATE POLICY "Authorized roles can insert logs" ON approvals_log FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('manager', 'it_procurement', 'finance', 'admin'))
+CREATE POLICY "Users can insert logs for reachable requests" ON approvals_log FOR INSERT WITH CHECK (
+  auth.uid() IS NOT NULL
+);
+
+CREATE POLICY "Staff can delete logs for own requests" 
+ON approvals_log FOR DELETE 
+USING (
+  EXISTS (SELECT 1 FROM purchase_requests pr WHERE pr.id = request_id AND pr.created_by = auth.uid())
 );
 
 -- 12. New columns for print template support

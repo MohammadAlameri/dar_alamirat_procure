@@ -51,7 +51,7 @@ const ui = {
         tbody.innerHTML = '';
 
         if (!requests || requests.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">${i18nManager.currentLang === 'ar' ? 'لم يتم العثور على طلبات' : 'No requests found'}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">${i18nManager.get('noRequestsFound')}</td></tr>`;
             return;
         }
 
@@ -161,6 +161,49 @@ const ui = {
         if (grandTotalEl) grandTotalEl.value = grandTotal.toFixed(2);
     },
 
+    loadRequestForEdit(req) {
+        this.showView('create-request');
+        document.getElementById('currentViewTitle').innerText = i18nManager.get('editRequest');
+        const editIdEl = document.getElementById('editRequestId');
+        if (editIdEl) editIdEl.value = req.id;
+        
+        const subjIn = document.getElementById('subjectInput');
+        if (subjIn) subjIn.value = req.subject;
+        const justIn = document.getElementById('justificationInput');
+        if (justIn) justIn.value = req.justification || '';
+        const nameIn = document.getElementById('requestedByName');
+        if (nameIn) nameIn.value = req.requested_by_name || '';
+        const titleIn = document.getElementById('requestedByTitle');
+        if (titleIn) titleIn.value = req.requested_by_title || '';
+        
+        const tbody = document.getElementById('itemsBody');
+        if (tbody) {
+            tbody.innerHTML = '';
+            if (req.request_items && req.request_items.length > 0) {
+                req.request_items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><input type="text" class="form-control" name="product_name[]" value="${item.product_name || ''}" required></td>
+                        <td><input type="text" class="form-control" name="specifications[]" value="${item.specifications || ''}"></td>
+                        <td><input type="text" class="form-control" name="unit[]" value="${item.unit || ''}" placeholder="pcs"></td>
+                        <td><input type="number" class="form-control qty-input" name="quantity[]" value="${item.quantity || 1}" min="1" required></td>
+                        <td><input type="number" class="form-control price-input" name="unit_price[]" step="0.01" value="${item.unit_price || 0}" required></td>
+                        <td><input type="number" class="form-control row-total" readonly value="${item.total_price || ((item.quantity||0)*(item.unit_price||0)).toFixed(2)}"></td>
+                        <td><input type="text" class="form-control" name="country_of_origin[]" value="${item.country_of_origin || ''}"></td>
+                        <td><input type="text" class="form-control" name="warranty_period[]" value="${item.warranty_period || ''}"></td>
+                        <td><input type="text" class="form-control" name="brand_model[]" value="${item.brand_model || ''}"></td>
+                        <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i data-lucide="trash-2" style="width: 14px;"></i></button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                this.addRowToItemsTable();
+            }
+        }
+        this.calculateTotals();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    },
+
     renderProfilesTable(profiles) {
         console.log("DEBUG: renderProfilesTable starting with", profiles?.length, "profiles");
         const tbody = document.getElementById('profilesTableBody');
@@ -172,7 +215,7 @@ const ui = {
 
         if (!profiles || profiles.length === 0) {
             console.log("DEBUG: Profiles list is empty.");
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">${i18nManager.currentLang === 'ar' ? 'لا يوجد مستخدمين' : 'No profiles found'}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">${i18nManager.get('noProfilesFound')}</td></tr>`;
             return;
         }
 
@@ -246,7 +289,7 @@ const ui = {
         if (!select) return;
         
         // Keep the "None" option
-        select.innerHTML = `<option value="">-- ${i18nManager.currentLang === 'ar' ? 'بدون' : 'None'} --</option>`;
+        select.innerHTML = `<option value="">-- ${i18nManager.get('none')} --</option>`;
         
         managers.forEach(m => {
             const opt = document.createElement('option');
@@ -259,9 +302,10 @@ const ui = {
     printRequest(req, approvals = []) {
         const container = document.getElementById('print-container');
         if (!container) {
-            alert('Print container not found');
+            alert(i18nManager.get('errorPrintContainer'));
             return;
         }
+
 
         // Format Hijri date
         let hijriDate = '';
@@ -462,7 +506,7 @@ const ui = {
             </div>
         `;
 
-        window.print();
+        globalThis.print();
     },
 
     printReceipt(req, approvals = []) {
@@ -490,7 +534,7 @@ const ui = {
         // Find the IT Officer Name (the one who marked it as complete)
         // If it's completed, we can try to show their name inside 'مسؤول التسليم'
         let itOfficerName = '';
-        if (req.status === 'completed' && currentUser && currentUser.profile.role === 'IT/Procurement') {
+        if (req.status === 'completed' && currentUser && currentUser.profile.role === 'it_procurement') {
             itOfficerName = currentUser.profile.full_name;
         } else if (req.status === 'completed' || req.status === 'received_by_staff') {
             // If another person is printing it, ideally we'd look in an approvals log, 
@@ -530,10 +574,10 @@ const ui = {
             // Split by actual newline characters from the textarea
             const reasons = req.staff_rejection_reason.split('\n').map(r => r.trim()).filter(Boolean);
             reasons.forEach((r, idx) => {
-                rejectionSection += `<div style="padding-right:20px; margin-bottom:5px; border-bottom:1px dotted #000; direction: rtl; text-align: right;">${r} <span style="float:left;">-${idx + 1}</span></div>`;
+                rejectionSection += `<div style="padding-right:20px; margin-bottom:5px; border-bottom:1px dotted #000; direction: rtl; text-align: right;">${idx + 1}- ${r}</div>`;
             });
         } else if (isRejected) {
-             rejectionSection = `<div style="padding-right:20px; margin-bottom:5px; border-bottom:1px dotted #000; direction: rtl; text-align: right;">نعتذر، تم الرفض بدون إبداء أسباب <span style="float:left;">-1</span></div>`;
+             rejectionSection = `<div style="padding-right:20px; margin-bottom:5px; border-bottom:1px dotted #000; direction: rtl; text-align: right;">1- نعتذر، تم الرفض بدون إبداء أسباب</div>`;
         } else {
             rejectionSection = `
                 <div style="padding-right:20px; color:#aaa; margin-bottom: 5px; direction: rtl; text-align: right;">
