@@ -152,5 +152,45 @@ const db = {
             .delete()
             .eq('id', id);
         if (error) throw error;
+    },
+
+    // --- Expense Request Methods ---
+    async getExpenseRequests() {
+        const { data, error } = await supabaseClient
+            .from('expense_requests')
+            .select(`
+                *,
+                profiles:employee_id (full_name, role)
+            `)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+
+    async createExpenseRequest(expenseData) {
+        const { data, error } = await supabaseClient
+            .from('expense_requests')
+            .insert([expenseData])
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async updateExpenseStatus(id, status, updates = {}) {
+        const { data, error } = await supabaseClient
+            .from('expense_requests')
+            .update({ status, ...updates, updated_at: new Date() })
+            .eq('id', id)
+            .select();
+        if (error) throw error;
+        return data && data.length > 0 ? data[0] : null;
+    },
+
+    async logExpenseApproval(requestId, userId, action, comments) {
+        const { error } = await supabaseClient
+            .from('expense_approvals_log')
+            .insert([{ request_id: requestId, user_id: userId, action, comments }]);
+        if (error) throw error;
     }
 };

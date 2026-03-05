@@ -49,6 +49,12 @@
             <a class="nav-link" href="#" data-view="all-requests" id="link-all-requests">
                 <i data-lucide="list"></i> <span data-i18n="allRequests">All Requests</span>
             </a>
+            
+            <hr class="sidebar-divider mx-4">
+            
+            <a class="nav-link" href="#" data-view="expense-requests" id="link-expenses">
+                <i data-lucide="banknote"></i> <span data-i18n="expenseRequests">Expense Requests</span>
+            </a>
 
             <a class="nav-link d-none" href="#" data-view="user-management" id="link-admin">
                 <i data-lucide="users"></i> <span data-i18n="userManagement">User Management</span>
@@ -387,6 +393,8 @@
                                                 <option value="manager" data-i18n="manager">Manager</option>
                                                 <option value="it_procurement" data-i18n="it_procurement">IT / Procurement</option>
                                                 <option value="finance" data-i18n="finance">Finance</option>
+                                                <option value="accountant" data-i18n="accountant">Petty Cash Mgr</option>
+                                                <option value="general_manager" data-i18n="general_manager">General Manager</option>
                                             </select>
                                         </div>
                                         <div class="mb-3" id="managerGroup">
@@ -425,6 +433,78 @@
                                 <tbody id="allRequestsTable"></tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expense Requests View -->
+            <div class="view-content d-none" id="view-expense-requests">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span data-i18n="expenseRequests">Expense Requests</span>
+                        <button class="btn btn-sm btn-primary" id="createNewExpenseBtn">
+                            <i data-lucide="plus" style="width: 14px;"></i> <span data-i18n="newExpenseRequest">New Expense Request</span>
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="requestId">ID</th>
+                                        <th data-i18n="subject">Subject</th>
+                                        <th data-i18n="requester">Requester</th>
+                                        <th data-i18n="amount">Amount</th>
+                                        <th data-i18n="status">Status</th>
+                                        <th data-i18n="date">Date</th>
+                                        <th class="text-end pe-4" data-i18n="action">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expenseRequestsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expense Request Form View -->
+            <div class="view-content d-none" id="view-create-expense">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0" data-i18n="newExpenseRequest">New Expense Request</h5>
+                        <button class="btn btn-sm btn-outline-secondary" data-view="expense-requests" data-i18n="backToDashboard">
+                           Back
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <form id="expenseRequestForm">
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold" data-i18n="subject" for="expenseSubject">Subject</label>
+                                    <input type="text" class="form-control" name="subject" id="expenseSubject" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold" data-i18n="amount" for="expenseAmount">Amount</label>
+                                    <input type="number" step="0.01" class="form-control" name="amount" id="expenseAmount" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold" data-i18n="approvalLevel" for="expenseApprovalLevel">Highest Approval Level</label>
+                                    <select class="form-select" name="highest_approval_level" id="expenseApprovalLevel" required>
+                                        <option value="" disabled selected data-i18n="selectApprovalLevel">Select level</option>
+                                        <option value="manager" data-i18n="manager">Manager</option>
+                                        <option value="finance" data-i18n="finance">Finance Manager</option>
+                                        <option value="general_manager" data-i18n="general_manager">General Manager</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold" data-i18n="statement" for="expenseStatement">Statement (البيان)</label>
+                                    <textarea class="form-control" name="statement" id="expenseStatement" rows="4" required></textarea>
+                                </div>
+                                <div class="col-md-12 text-end">
+                                    <button type="submit" class="btn btn-primary px-5" data-i18n="submitRequest">Submit Expense Request</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

@@ -29,7 +29,8 @@ const ui = {
             'my-requests': i18nManager.get('myRequests'),
             'pending-approvals': i18nManager.get('pendingApprovals'),
             'reports': i18nManager.get('reports'),
-            'user-management': i18nManager.get('userManagement')
+            'user-management': i18nManager.get('userManagement'),
+            'expense-requests': i18nManager.get('expenseRequests')
         };
         document.getElementById('currentViewTitle').innerText = titleMap[viewId] || i18nManager.get('requestDetails');
         
@@ -78,6 +79,39 @@ const ui = {
         });
     },
 
+    renderExpensesTable(tableId, expenses, role) {
+        const tbody = document.getElementById(tableId);
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (!expenses || expenses.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">${i18nManager.get('noRequestsFound')}</td></tr>`;
+            return;
+        }
+
+        expenses.forEach(exp => {
+            const date = exp.created_at ? new Date(exp.created_at).toLocaleDateString() : '-';
+            const statusClass = `badge-${exp.status}`;
+            const userName = exp.profiles?.full_name || exp.employee_name || 'System';
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td class="ps-4 fw-medium text-primary">#${exp.id.substring(0, 8)}</td>
+                    <td>${exp.subject}</td>
+                    <td>${userName}</td>
+                    <td>${Number(exp.amount).toFixed(2)}</td>
+                    <td><span class="badge ${statusClass}">${i18nManager.get(exp.status)}</span></td>
+                    <td>${date}</td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-sm btn-outline-primary view-expense-details-btn" data-id="${exp.id}">
+                            ${i18nManager.get('action')}
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    },
+
     updateUserUI(user) {
         if (!user || !user.profile) {
             console.error("DEBUG: Cannot update UI, user profile missing.");
@@ -115,7 +149,7 @@ const ui = {
         }
 
         if (links.approvals) {
-            const canApprove = ['admin', 'it_procurement', 'finance', 'manager'].includes(role);
+            const canApprove = ['admin', 'it_procurement', 'finance', 'manager', 'general_manager', 'accountant'].includes(role);
             links.approvals.classList.toggle('d-none', !canApprove);
         }
 

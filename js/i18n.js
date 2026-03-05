@@ -78,6 +78,8 @@ const i18n = {
         it_procurement: "IT / Procurement",
         finance: "Finance",
         manager: "Manager",
+        accountant: "Petty Cash Mgr (Accountant)",
+        general_manager: "General Manager",
         // New tokens
         id: "ID",
         currentStatus: "Current Status",
@@ -127,7 +129,21 @@ const i18n = {
         warrantyPeriod: "Warranty Period",
         brandModel: "Brand / Model",
         error: "Error: ",
-        errorSubmit: "Error submitting request: "
+        errorSubmit: "Error submitting request: ",
+        // Expense Request Tokens
+        expenseRequests: "Expense Requests",
+        newExpenseRequest: "New Expense Request",
+        statement: "Statement",
+        amount: "Amount",
+        approvalLevel: "Approval Level",
+        gm_approved: "GM APPROVED",
+        paid: "PAID",
+        received: "RECEIVED",
+        rejected_by_gm: "REJECTED (GM)",
+        payAmount: "Pay Amount",
+        receiveAmount: "Receive Amount",
+        selectApprovalLevel: "Select Approval Level",
+        totalExpenses: "TOTAL EXPENSES"
     },
     ar: {
         title: "دار الأميرات للمشتريات",
@@ -208,6 +224,8 @@ const i18n = {
         it_procurement: "تقنية / مشتريات",
         finance: "مالية",
         manager: "مدير",
+        accountant: "مدير عهده (محاسب)",
+        general_manager: "مدير عام",
         // New tokens
         id: "المعرف",
         currentStatus: "الحالة الحالية",
@@ -257,7 +275,21 @@ const i18n = {
         warrantyPeriod: "مدة الضمان",
         brandModel: "الاسم التجاري",
         error: "خطأ: ",
-        errorSubmit: "خطأ في إرسال الطلب: "
+        errorSubmit: "خطأ في إرسال الطلب: ",
+        // Expense Request Tokens
+        expenseRequests: "طلبات المصاريف",
+        newExpenseRequest: "طلب مصروف جديد",
+        statement: "البيان",
+        amount: "المبلغ",
+        approvalLevel: "مستوى الاعتماد",
+        gm_approved: "موافقة المدير العام",
+        paid: "تم الصرف",
+        received: "تم الاستلام",
+        rejected_by_gm: "مرفوض من المدير العام",
+        payAmount: "دفع المبلغ",
+        receiveAmount: "استلام المبلغ",
+        selectApprovalLevel: "اختر مستوى الاعتماد",
+        totalExpenses: "إجمالي المصاريف"
     }
 };
 

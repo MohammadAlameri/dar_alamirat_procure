@@ -69,7 +69,42 @@ async function loadDashboardData() {
         ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'it_approved' || r.status === 'rejected_by_finance'), role);
     }
 
-    // New: Render All Requests Table
+    // --- Expense Data Loading ---
+    let expenses = await db.getExpenseRequests();
+    
+    // Update dashboard stats with expenses too? 
+    // Or maybe keep them separate. The request just says "stat-total" which seems to be for purchase.
+    // Let's at least render the tables.
+    ui.renderExpensesTable('expenseRequestsTable', expenses, role);
+    
+    // Process Pendings for Expense as well
+    let pendingExpenses = [];
+    if (role === 'manager') {
+        pendingExpenses = expenses.filter(e => e.status === 'pending' || e.status === 'rejected_by_manager');
+    } else if (role === 'finance') {
+        pendingExpenses = expenses.filter(e => e.highest_approval_level !== 'manager' && (e.status === 'manager_approved' || e.status === 'rejected_by_finance'));
+    } else if (role === 'general_manager') {
+        pendingExpenses = expenses.filter(e => e.highest_approval_level === 'general_manager' && (e.status === 'finance_approved' || e.status === 'rejected_by_gm'));
+    } else if (role === 'accountant') {
+        // Ready for payment after all required approvals
+        pendingExpenses = expenses.filter(e => {
+            if (e.status === 'paid') return false;
+            if (e.highest_approval_level === 'manager' && e.status === 'manager_approved') return true;
+            if (e.highest_approval_level === 'finance' && e.status === 'finance_approved') return true;
+            if (e.highest_approval_level === 'general_manager' && e.status === 'gm_approved') return true;
+            return false;
+        });
+    }
+    
+    // Append or merge? Let's just append to the pendingApprovalsTable or handle separately if needed.
+    // For now, let's merge with purchase requests for the sidebar count or just render them.
+    // If we want a unified pending list:
+    // This requires a minor refactor of renderRequestsTable or just a custom one.
+    // Let's just add them to the relevant view if it's the pending-approvals view.
+    // But since the IDs are different, we need a way to distinguish.
+    
+    // --- End Expense Loading ---
+
     if (role === 'it_procurement' || role === 'finance' || role === 'admin') {
         ui.renderRequestsTable('allRequestsTable', requests, role);
     }
@@ -142,6 +177,11 @@ function setupEventListeners() {
         if (title) title.innerText = i18nManager.get('newRequest');
         ui.showView('create-request');
     });
+
+    document.getElementById('createNewExpenseBtn')?.addEventListener('click', () => {
+        ui.showView('create-expense');
+    });
+
     document.getElementById('showCreateProfileBtn')?.addEventListener('click', () => ui.toggleProfileForm(true));
     document.getElementById('cancelProfileBtn')?.addEventListener('click', () => ui.toggleProfileForm(false));
 
@@ -365,6 +405,41 @@ function setupEventListeners() {
         if (e.target.classList.contains('view-details-btn')) {
             const requestId = e.target.dataset.id;
             await showRequestDetails(requestId);
+        }
+        if (e.target.classList.contains('view-expense-details-btn')) {
+            const expenseId = e.target.dataset.id;
+            await showExpenseDetails(expenseId);
+        }
+    });
+
+    // Expense Request Form Submission
+    document.getElementById('expenseRequestForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        ui.setLoading(true);
+
+        try {
+            const formData = new FormData(e.target);
+            const expenseData = {
+                subject: formData.get('subject'),
+                amount: Number.parseFloat(formData.get('amount')),
+                highest_approval_level: formData.get('highest_approval_level'),
+                statement: formData.get('statement'),
+                status: 'pending',
+                employee_id: currentUser.id,
+                employee_name: currentUser.profile.full_name
+            };
+
+            await db.createExpenseRequest(expenseData);
+            alert(i18nManager.get('requestSubmitted'));
+            e.target.reset();
+            ui.showView('expense-requests');
+            await loadDashboardData();
+
+        } catch (error) {
+            console.error('Expense submit error:', error);
+            alert(i18nManager.get('errorSubmit') + error.message);
+        } finally {
+            ui.setLoading(false);
         }
     });
 }
@@ -732,6 +807,188 @@ async function handleProfileDelete(id) {
         await loadDashboardData();
     } catch (error) {
         alert(i18nManager.get('errorDeleteProfile') + error.message);
+    } finally {
+        ui.setLoading(false);
+    }
+}
+
+async function showExpenseDetails(expenseId) {
+    ui.setLoading(true);
+    try {
+        const { data: exp, error } = await supabaseClient
+            .from('expense_requests')
+            .select('*, profiles:employee_id (full_name, role, job_title, department)')
+            .eq('id', expenseId)
+            .single();
+
+        if (error) throw error;
+
+        const { data: approvals } = await supabaseClient
+            .from('expense_approvals_log')
+            .select('*, profiles:user_id (full_name, role)')
+            .eq('request_id', expenseId)
+            .order('created_at', { ascending: true });
+
+        const container = document.getElementById('detailsContent');
+        const role = currentUser.profile.role;
+        const statusClass = `badge-${exp.status}`;
+        
+        let actionsHtml = '';
+        const level = exp.highest_approval_level;
+
+        // 1. Manager Approval
+        if (role === 'manager' && (exp.status === 'pending' || exp.status === 'rejected_by_manager')) {
+            actionsHtml = `
+                <div class="card mt-4 border-primary">
+                    <div class="card-header bg-primary text-white">${i18nManager.currentLang === 'ar' ? 'اعتماد المدير المباشر' : 'Manager Approval'}</div>
+                    <div class="card-body">
+                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
+                        <button class="btn btn-success expense-action-btn" data-action="manager_approved">${i18nManager.currentLang === 'ar' ? 'اعتماد' : 'Approve'}</button>
+                        <button class="btn btn-danger expense-action-btn" data-action="rejected_by_manager">${i18nManager.get('rejected')}</button>
+                    </div>
+                </div>
+            `;
+        }
+        // 2. Finance Approval
+        else if (role === 'finance' && (exp.status === 'manager_approved' || exp.status === 'rejected_by_finance') && (level === 'finance' || level === 'general_manager')) {
+            actionsHtml = `
+                <div class="card mt-4 border-success">
+                    <div class="card-header bg-success text-white">${i18nManager.get('financeApproval')}</div>
+                    <div class="card-body">
+                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
+                        <button class="btn btn-primary expense-action-btn" data-action="finance_approved">${i18nManager.get('approve')}</button>
+                        <button class="btn btn-danger expense-action-btn" data-action="rejected_by_finance">${i18nManager.get('rejected')}</button>
+                    </div>
+                </div>
+            `;
+        }
+        // 3. GM Approval
+        else if (role === 'general_manager' && (exp.status === 'finance_approved' || exp.status === 'rejected_by_gm') && level === 'general_manager') {
+            actionsHtml = `
+                <div class="card mt-4 border-dark">
+                    <div class="card-header bg-dark text-white">${i18nManager.currentLang === 'ar' ? 'اعتماد المدير العام' : 'GM Approval'}</div>
+                    <div class="card-body">
+                        <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
+                        <button class="btn btn-dark expense-action-btn" data-action="gm_approved">${i18nManager.get('approve')}</button>
+                        <button class="btn btn-danger expense-action-btn" data-action="rejected_by_gm">${i18nManager.get('rejected')}</button>
+                    </div>
+                </div>
+            `;
+        }
+        // 4. Accountant Payment
+        else if (role === 'accountant' && exp.status !== 'paid' && exp.status !== 'received' && exp.status !== 'completed') {
+            const isReady = (level === 'manager' && exp.status === 'manager_approved') ||
+                            (level === 'finance' && exp.status === 'finance_approved') ||
+                            (level === 'general_manager' && exp.status === 'gm_approved');
+            
+            if (isReady) {
+                actionsHtml = `
+                    <div class="card mt-4 border-warning">
+                        <div class="card-header bg-warning text-dark fw-bold">${i18nManager.get('payAmount')}</div>
+                        <div class="card-body">
+                            <textarea id="actionComments" class="form-control mb-3" placeholder="${i18nManager.get('addComments')}"></textarea>
+                            <button class="btn btn-warning expense-action-btn" data-action="paid">${i18nManager.get('payAmount')}</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        // 5. Staff Receipt
+        else if (exp.status === 'paid' && currentUser.id === exp.employee_id) {
+            actionsHtml = `
+                <div class="card mt-4 border-success">
+                    <div class="card-header bg-success text-white fw-bold">${i18nManager.get('receiveAmount')}</div>
+                    <div class="card-body">
+                        <p>${i18nManager.currentLang === 'ar' ? 'يرجى تأكيد استلام المبلغ من العهده' : 'Please confirm receiving the amount from petty cash'}</p>
+                        <button class="btn btn-success expense-action-btn" data-action="received">${i18nManager.get('receiveAmount')}</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">${i18nManager.get('expenseRequests')} #${exp.id.substring(0, 8)}</h5>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="ui.showView('expense-requests')">${i18nManager.get('closing')}</button>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted small fw-bold">${i18nManager.get('subject').toUpperCase()}</h6>
+                            <p class="h5 fw-bold">${exp.subject}</p>
+                            <h6 class="text-muted small fw-bold mt-3">${i18nManager.get('statement').toUpperCase()}</h6>
+                            <p>${exp.statement}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted small fw-bold">${i18nManager.get('requester').toUpperCase()}</h6>
+                            <p>${exp.employee_name}<br><small class="text-muted">${exp.profiles?.job_title || ''}</small></p>
+                            <h6 class="text-muted small fw-bold mt-2">${i18nManager.get('approvalLevel').toUpperCase()}</h6>
+                            <span class="badge bg-info">${i18nManager.get(exp.highest_approval_level).toUpperCase()}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted small fw-bold">${i18nManager.get('status').toUpperCase()}</h6>
+                            <span class="badge ${statusClass}">${i18nManager.get(exp.status).toUpperCase()}</span>
+                            <h6 class="text-muted small fw-bold mt-2">${i18nManager.get('amount').toUpperCase()}</h6>
+                            <p class="h5 fw-bold text-primary">${Number(exp.amount).toFixed(2)} AED</p>
+                        </div>
+                    </div>
+
+                    <!-- Audit Log -->
+                    <div class="mb-4">
+                        <h6 class="text-muted small fw-bold">${i18nManager.currentLang === 'ar' ? 'سجل الاعتمادات' : 'APPROVAL LOG'}</h6>
+                        <div class="list-group list-group-flush border rounded">
+                            ${approvals && approvals.length > 0 ? approvals.map(app => `
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold text-dark">${app.profiles?.full_name || 'System'}</span>
+                                        <small class="text-muted">${new Date(app.created_at).toLocaleString()}</small>
+                                    </div>
+                                    <div class="small">
+                                        <span class="badge ${app.action.includes('rejected') ? 'bg-danger' : 'bg-success'} me-2">
+                                            ${i18nManager.get(app.action)}
+                                        </span>
+                                        <span class="text-secondary italic">${app.comments || ''}</span>
+                                    </div>
+                                </div>
+                            `).join('') : `<div class="list-group-item text-muted small">${i18nManager.currentLang === 'ar' ? 'لا توجد اعتمادات سابقة' : 'No approvals yet'}</div>`}
+                        </div>
+                    </div>
+
+                    ${actionsHtml}
+                </div>
+            </div>
+        `;
+        ui.showView('request-details');
+
+        // Handle expense action buttons
+        container.querySelectorAll('.expense-action-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const action = btn.dataset.action;
+                const comments = document.getElementById('actionComments')?.value || '';
+                
+                ui.setLoading(true);
+                try {
+                    let nextStatus = action;
+                    if (action === 'received') nextStatus = 'completed';
+                    
+                    await db.updateExpenseStatus(expenseId, nextStatus);
+                    await db.logExpenseApproval(expenseId, currentUser.id, action, comments);
+                    
+                    alert(i18nManager.get('requestProcessed'));
+                    ui.showView('expense-requests');
+                    await loadDashboardData();
+                } catch (e) {
+                    alert(i18nManager.get('error') + e.message);
+                } finally {
+                    ui.setLoading(false);
+                }
+            });
+        });
+
+    } catch (e) {
+        console.error(e);
+        alert(i18nManager.get('errorLoadingDetails'));
     } finally {
         ui.setLoading(false);
     }
