@@ -6,7 +6,7 @@ const ui = {
         if (viewId === 'user-management' && role !== 'admin') {
             viewId = 'overview';
         }
-        if (viewId === 'all-requests' && !['admin', 'it_procurement', 'finance'].includes(role)) {
+        if (viewId === 'all-requests' && !['admin', 'it_procurement', 'finance', 'general_manager'].includes(role)) {
             viewId = 'overview';
         }
 
@@ -151,7 +151,7 @@ const ui = {
         if (links.admin) links.admin.classList.toggle('d-none', role !== 'admin');
         
         if (links.all) {
-            const canSeeAll = ['admin', 'it_procurement', 'finance'].includes(role);
+            const canSeeAll = ['admin', 'it_procurement', 'finance', 'general_manager'].includes(role);
             links.all.classList.toggle('d-none', !canSeeAll);
         }
 

@@ -190,7 +190,10 @@ function setupEventListeners() {
     });
 
     document.getElementById('allRequestsFilterType')?.addEventListener('change', () => {
-        renderFilteredAllRequests();
+        const role = currentUser?.profile?.role;
+        if (role === 'it_procurement' || role === 'finance' || role === 'admin' || role === 'general_manager') {
+            renderFilteredAllRequests();
+        }
     });
 
     document.getElementById('showCreateProfileBtn')?.addEventListener('click', () => ui.toggleProfileForm(true));
