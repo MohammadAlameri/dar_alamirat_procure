@@ -31,6 +31,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 3. Event Listeners
     setupEventListeners();
+
+    // 4. Handle Persisted Sidebar State (Desktop)
+    if (globalThis.innerWidth > 992) {
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed) {
+            document.getElementById('sidebar')?.classList.add('collapsed');
+            document.getElementById('main-content')?.classList.add('sidebar-collapsed');
+            const icon = document.getElementById('collapseIcon');
+            if (icon) {
+                icon.setAttribute('data-lucide', 'chevron-right');
+                lucide.createIcons();
+            }
+        }
+    }
 });
 
 async function loadDashboardData() {
@@ -152,9 +166,54 @@ function setupEventListeners() {
         });
     });
 
-    // Sidebar Toggle
+    // Sidebar Toggle (Mobile & Desktop)
     document.getElementById('sidebarToggle')?.addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('show');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        
+        if (globalThis.innerWidth <= 992) {
+            // Mobile: Toggle slide-in
+            sidebar.classList.toggle('show');
+        } else {
+            // Desktop: Toggle collapse (expand if it was collapsed)
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('sidebar-collapsed');
+            
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+            
+            // Sync the chevron icon in the sidebar
+            const icon = document.getElementById('collapseIcon');
+            if (icon) {
+                icon.setAttribute('data-lucide', isCollapsed ? 'chevron-right' : 'chevron-left');
+                lucide.createIcons();
+            }
+        }
+    });
+
+    // Dedicated Collapse Button (Inside Sidebar)
+    document.getElementById('collapseSidebar')?.addEventListener('click', () => {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        
+        if (globalThis.innerWidth <= 992) {
+            // Mobile: Click hide button inside should close the drawer
+            sidebar.classList.remove('show');
+        } else {
+            // Desktop: Toggle collapse
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('sidebar-collapsed');
+            
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+            
+            // Update icon
+            const icon = document.getElementById('collapseIcon');
+            if (icon) {
+                icon.setAttribute('data-lucide', isCollapsed ? 'chevron-right' : 'chevron-left');
+                lucide.createIcons();
+            }
+        }
     });
 
     // Language Switcher
@@ -938,7 +997,17 @@ async function showExpenseDetails(expenseId) {
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">${i18nManager.get('expenseRequests')} #${exp.id.substring(0, 8)}</h5>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="ui.showView('expense-requests')">${i18nManager.get('closing')}</button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-info" id="printExpenseRequestBtn">
+                            <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'طباعة الطلب' : 'Print Request'}
+                        </button>
+                        ${['paid', 'completed', 'received'].includes(exp.status) ? `
+                            <button class="btn btn-sm btn-outline-success" id="printExpenseReceiptBtn">
+                                <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'طباعة سند الاستلام' : 'Print Receipt'}
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-sm btn-outline-secondary" onclick="ui.showView('expense-requests')">${i18nManager.get('closing')}</button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="row mb-4">
@@ -988,6 +1057,15 @@ async function showExpenseDetails(expenseId) {
             </div>
         `;
         ui.showView('request-details');
+
+        // Handle Print Buttons for Expense
+        document.getElementById('printExpenseRequestBtn')?.addEventListener('click', () => {
+            ui.printExpenseRequest(exp, approvals || []);
+        });
+
+        document.getElementById('printExpenseReceiptBtn')?.addEventListener('click', () => {
+            ui.printExpenseReceipt(exp, approvals || []);
+        });
 
         // Handle expense action buttons
         container.querySelectorAll('.expense-action-btn').forEach(btn => {

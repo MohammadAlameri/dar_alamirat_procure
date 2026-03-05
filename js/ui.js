@@ -421,7 +421,7 @@ const ui = {
         });
 
         container.innerHTML = `
-            <div class="print-content" dir="rtl" style="direction:rtl; text-align:right; font-family: 'Times New Roman', 'Traditional Arabic', serif; color:#000; padding:5mm 10mm; max-width:210mm; margin:0 auto;">
+            <div class="print-content" dir="rtl" style="direction:rtl; text-align:right; font-family: 'Times New Roman', 'Traditional Arabic', serif; color:#000; padding:2mm 10mm; max-width:210mm; margin:0 auto;">
                 
                 <!-- Header -->
                 <div style="border:1.5px solid #000; padding:5px; margin-bottom:5px;">
@@ -429,7 +429,7 @@ const ui = {
                         <div style="font-size:22px; font-weight:900; color:#000;">DAR ALAMIRAT</div>
                         <div style="font-size:16px; font-weight:bold;">دار الاميرات</div>
                     </div>
-                    <div style="text-align:center; font-size:16px; font-weight:bold; margin-bottom:8px;">نموذج طلب شــــــراء</div>
+                    <div style="text-align:center; font-size:16px; font-weight:bold; margin-bottom:5px;">نموذج طلب شــــــراء</div>
                     
                     <div style="display:flex; align-items:center; margin-bottom:4px;">
                         <span style="font-weight:bold; font-size:13px; white-space:nowrap; margin-left:8px;">الموضوع :</span>
@@ -628,13 +628,13 @@ const ui = {
         }
 
         container.innerHTML = `
-            <div class="print-content" dir="rtl" style="direction:rtl; text-align:right; font-family: 'Times New Roman', 'Traditional Arabic', serif; color:#000; padding:10mm; max-width:210mm; margin:0 auto; font-size:16px;">
+            <div class="print-content" dir="rtl" style="direction:rtl; text-align:right; font-family: 'Times New Roman', 'Traditional Arabic', serif; color:#000; padding:2mm 10mm; max-width:210mm; margin:0 auto; font-size:16px;">
                 
                 <!-- Main Outer Box -->
                 <div style="padding: 10px; position:relative;">
                     
                     <!-- Header -->
-                    <div style="text-align:center; margin-bottom: 30px; position:relative;">
+                    <div style="text-align:center; margin-bottom: 15px; position:relative;">
                         <div style="display:inline-block; text-align:center; color: #4a77b4;">
                             <h1 style="margin:0; font-family: 'Arial', sans-serif; font-weight:900; font-size:36px; display:flex; align-items:center; justify-content:center; gap:10px;">
                                 <span>دار الاميرات</span>
@@ -642,7 +642,7 @@ const ui = {
                             </h1>
                             <div style="font-size:16px; font-weight:bold; letter-spacing:2px; font-family: 'Arial', sans-serif;">DAR ALAMIRAT</div>
                         </div>
-                        <h2 style="margin:20px 0 0 0; font-weight:bold; font-size:26px; text-decoration:underline;">استلام عهدة اصل</h2>
+                        <h2 style="margin:10px 0 0 0; font-weight:bold; font-size:26px; text-decoration:underline;">استلام عهدة اصل</h2>
                     </div>
 
                     <!-- Dates -->
@@ -652,39 +652,39 @@ const ui = {
                     </div>
 
                     <!-- Table 1: Receiver Info -->
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:25px; border: 1.5px solid #000; font-size:16px; text-align:center;">
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:15px; border: 1.5px solid #000; font-size:16px; text-align:center;">
                         <tr>
-                            <td colspan="6" style="background:#e6e6e6; font-weight:bold; padding:10px; border: 1.5px solid #000; border-bottom: 2px solid #000;">بيانات المستلم</td>
+                            <td colspan="6" style="background:#e6e6e6; font-weight:bold; padding:8px; border: 1.5px solid #000; border-bottom: 2px solid #000;">بيانات المستلم</td>
                         </tr>
                         <tr>
-                            <td style="border: 1.5px solid #000; padding:10px; width:15%;">اسم الموظف</td>
-                            <td style="border: 1.5px solid #000; padding:10px; width:35%; text-align:right; padding-right:15px;">${staffName}</td>
-                            <td style="border: 1.5px solid #000; padding:10px; width:10%;">الإدارة</td>
-                            <td style="border: 1.5px solid #000; padding:10px; width:15%; text-align:right; padding-right:15px;">${dept}</td>
-                            <td style="border: 1.5px solid #000; padding:10px; width:10%;">المسمى الوظيفي</td>
-                            <td style="border: 1.5px solid #000; padding:10px; width:15%; text-align:right; padding-right:15px;">${staffTitle}</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:15%;">اسم الموظف</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:35%; text-align:right; padding-right:15px;">${staffName}</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:10%;">الإدارة</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:15%; text-align:right; padding-right:15px;">${dept}</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:10%;">المسمى الوظيفي</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:15%; text-align:right; padding-right:15px;">${staffTitle}</td>
                         </tr>
                     </table>
 
                     <!-- Table 2: Items -->
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:25px; border: 1.5px solid #000; font-size:16px; text-align:center;">
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:15px; border: 1.5px solid #000; font-size:16px; text-align:center;">
                         <tr>
-                            <td colspan="5" style="background:#e6e6e6; font-weight:bold; padding:10px; border: 1.5px solid #000; border-bottom: 2px solid #000;">بيانات العهدة</td>
+                            <td colspan="5" style="background:#e6e6e6; font-weight:bold; padding:8px; border: 1.5px solid #000; border-bottom: 2px solid #000;">بيانات العهدة</td>
                         </tr>
                         <tr>
-                            <th style="border: 1.5px solid #000; padding:10px; width:5%;">م</th>
-                            <th style="border: 1.5px solid #000; padding:10px; width:45%;">الوصف</th>
-                            <th style="border: 1.5px solid #000; padding:10px; width:15%;">النوع</th>
-                            <th style="border: 1.5px solid #000; padding:10px; width:10%;">الكمية</th>
-                            <th style="border: 1.5px solid #000; padding:10px; width:25%;">ملاحظة</th>
+                            <th style="border: 1.5px solid #000; padding:8px; width:5%;">م</th>
+                            <th style="border: 1.5px solid #000; padding:8px; width:45%;">الوصف</th>
+                            <th style="border: 1.5px solid #000; padding:8px; width:15%;">النوع</th>
+                            <th style="border: 1.5px solid #000; padding:8px; width:10%;">الكمية</th>
+                            <th style="border: 1.5px solid #000; padding:8px; width:25%;">ملاحظة</th>
                         </tr>
                         ${itemsHtml}
                     </table>
 
                     <!-- Table 3: Declaration -->
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:25px; border: 1.5px solid #000; font-size:16px;">
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:15px; border: 1.5px solid #000; font-size:16px;">
                         <tr>
-                            <td style="background:#e6e6e6; font-weight:bold; padding:10px; border: 1.5px solid #000; text-align:center; border-bottom: 2px solid #000;">إقرار</td>
+                            <td style="background:#e6e6e6; font-weight:bold; padding:8px; border: 1.5px solid #000; text-align:center; border-bottom: 2px solid #000;">إقرار</td>
                         </tr>
                         <tr>
                             <td style="border: 1.5px solid #000; padding:20px; line-height:2.2;">
@@ -731,6 +731,333 @@ const ui = {
                 <!-- Bottom Footer -->
                 <div style="margin-top:15px; text-align:center; font-size:12px; color:#555;">
                     الأصل: ملف الموظف | نسخة: المستلم | نسخة: إدارة تقنية المعلومات
+                </div>
+            </div>
+        `;
+
+        window.print();
+    },
+
+    printExpenseRequest(exp, approvals = []) {
+        const container = document.getElementById('print-container');
+        if (!container) {
+            alert(i18nManager.get('errorPrintContainer'));
+            return;
+        }
+
+        // Format dates
+        let hijriDate = '';
+        try {
+            const date = new Date(exp.created_at);
+            hijriDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day: 'numeric', month: 'numeric', year: 'numeric'}).format(date).replace(/[هـ]/g, '').trim() + ' هـ';
+        } catch(e) {
+            hijriDate = new Date(exp.created_at).toLocaleDateString('ar') + ' هـ';
+        }
+        const gregorianDate = new Date(exp.created_at).toLocaleDateString('en-GB');
+
+        // Employee info
+        const employeeName = exp.employee_name || '';
+        const employeeTitle = exp.profiles?.job_title || '';
+        const employeeDept = exp.profiles?.department || '';
+
+        // Amount
+        const amount = exp.amount ? Number(exp.amount).toFixed(2) : '0.00';
+
+        // Approval level label
+        const levelLabels = {
+            manager: 'المدير المباشر',
+            finance: 'الادارة المالية',
+            general_manager: 'المدير العام'
+        };
+        const levelLabel = levelLabels[exp.highest_approval_level] || exp.highest_approval_level;
+
+        // Find approvals by action
+        const managerApproval = approvals.find(a => a.action === 'manager_approved');
+        const financeApproval = approvals.find(a => a.action === 'finance_approved');
+        const gmApproval = approvals.find(a => a.action === 'gm_approved');
+        const paidApproval = approvals.find(a => a.action === 'paid');
+
+        const getApproverName = (approval) => approval?.profiles?.full_name || '';
+        const getApprovalDate = (approval) => {
+            if (!approval) return '&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;١٤هـ';
+            try {
+                return new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(new Date(approval.created_at)).replace(/[هـ]/g, '').trim() + ' هـ';
+            } catch(e) { return ''; }
+        };
+
+        container.innerHTML = `
+            <div class="print-content" dir="rtl" style="direction:rtl; text-align:right; font-family: 'Times New Roman', 'Traditional Arabic', serif; color:#000; padding:2mm 10mm; max-width:210mm; margin:0 auto;">
+                
+                <!-- Header -->
+                <div style="border:1.5px solid #000; padding:5px; margin-bottom:5px;">
+                    <div style="text-align:center; border-bottom:1.5px solid #000; padding-bottom:5px; margin-bottom:5px;">
+                        <div style="font-size:22px; font-weight:900; color:#000;">DAR ALAMIRAT</div>
+                        <div style="font-size:16px; font-weight:bold;">دار الاميرات</div>
+                    </div>
+                    <div style="text-align:center; font-size:16px; font-weight:bold; margin-bottom:5px;">نموذج طلب صرف مصاريف</div>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:12px;">
+                        <span>التاريخ: ${hijriDate}</span>
+                        <span>Date: ${gregorianDate}</span>
+                    </div>
+                </div>
+
+                <!-- Employee Info Section -->
+                <div style="border:1.5px solid #000; margin-top:8px; padding:6px;">
+                    <div style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:5px; background:#f2f2f2; padding:4px;">بيانات الموظف مقدم الطلب</div>
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                        <tr>
+                            <td style="padding:4px; width:15%; font-weight:bold; border:1px solid #000;">اسم الموظف</td>
+                            <td style="padding:4px; width:35%; border:1px solid #000;">${employeeName}</td>
+                            <td style="padding:4px; width:15%; font-weight:bold; border:1px solid #000;">المسمى الوظيفي</td>
+                            <td style="padding:4px; width:35%; border:1px solid #000;">${employeeTitle}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:4px; font-weight:bold; border:1px solid #000;">الإدارة / القسم</td>
+                            <td style="padding:4px; border:1px solid #000;">${employeeDept}</td>
+                            <td style="padding:4px; font-weight:bold; border:1px solid #000;">رقم الطلب</td>
+                            <td style="padding:4px; border:1px solid #000;">#${exp.id.substring(0, 8)}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Expense Details Section -->
+                <div style="border:1.5px solid #000; margin-top:8px; padding:6px;">
+                    <div style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:5px; background:#f2f2f2; padding:4px;">تفاصيل المصروف</div>
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                        <tr>
+                            <td style="padding:6px; width:15%; font-weight:bold; border:1px solid #000;">الموضوع</td>
+                            <td colspan="3" style="padding:6px; border:1px solid #000;">${exp.subject || ''}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:6px; font-weight:bold; border:1px solid #000;">البيان</td>
+                            <td colspan="3" style="padding:6px; border:1px solid #000; min-height:40px;">${exp.statement || ''}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:6px; font-weight:bold; border:1px solid #000;">المبلغ المطلوب</td>
+                            <td style="padding:6px; border:1px solid #000; font-weight:bold; font-size:14px;">${amount} ريال</td>
+                            <td style="padding:6px; font-weight:bold; border:1px solid #000;">أعلى مستوى اعتماد</td>
+                            <td style="padding:6px; border:1px solid #000;">${levelLabel}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Requester Signature -->
+                <div style="border:1.5px solid #000; margin-top:8px; padding:6px;">
+                    <div style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:5px;">الموظف مقدم الطلب :</div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; flex-wrap:wrap; gap:3px;">
+                        <span>الاسم <span style="border-bottom:1px dotted #000; min-width:140px; display:inline-block;">${employeeName}</span></span>
+                        <span>الوظيفة : <span style="border-bottom:1px dotted #000; min-width:140px; display:inline-block;">${employeeTitle}</span></span>
+                        <span>التوقيع .....................</span>
+                        <span>التاريخ: ${hijriDate}</span>
+                    </div>
+                </div>
+
+                <!-- Section: Manager Approval -->
+                <div style="border:1.5px solid #000; margin-top:8px; padding:6px;">
+                    <div style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:5px;">اعتماد المدير المباشر :</div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; flex-wrap:wrap; gap:3px;">
+                        <span>الاسم <span style="border-bottom:1px dotted #000; min-width:140px; display:inline-block;">${getApproverName(managerApproval)}</span></span>
+                        <span>التوقيع .....................</span>
+                        <span>التاريخ:&nbsp; ${getApprovalDate(managerApproval)}</span>
+                    </div>
+                    ${managerApproval?.comments ? `<div style="font-size:11px; margin-top:4px; color:#333;">ملاحظات: ${managerApproval.comments}</div>` : ''}
+                </div>
+
+                <!-- Section: Finance Approval (if level is finance or GM) -->
+                ${exp.highest_approval_level === 'finance' || exp.highest_approval_level === 'general_manager' ? `
+                <div style="border:1.5px solid #000; margin-top:8px; padding:6px;">
+                    <div style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:5px;">الإدارة المالية :</div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; flex-wrap:wrap; gap:3px;">
+                        <span>الاسم : <span style="border-bottom:1px dotted #000; min-width:180px; display:inline-block;">${getApproverName(financeApproval)}</span></span>
+                        <span>التوقيع ...........................</span>
+                        <span>التاريخ ${getApprovalDate(financeApproval)}</span>
+                    </div>
+                    ${financeApproval?.comments ? `<div style="font-size:11px; margin-top:4px; color:#333;">ملاحظات: ${financeApproval.comments}</div>` : ''}
+                </div>
+                ` : ''}
+
+                <!-- Section: GM Approval (if level is GM) -->
+                ${exp.highest_approval_level === 'general_manager' ? `
+                <div style="border:1.5px solid #000; margin-top:8px; padding:6px;">
+                    <div style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:5px;">اعتماد المدير العام :</div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; flex-wrap:wrap; gap:3px;">
+                        <span>الاسم : <span style="border-bottom:1px dotted #000; min-width:180px; display:inline-block;">${getApproverName(gmApproval)}</span></span>
+                        <span>التوقيع ...........................</span>
+                        <span>التاريخ ${getApprovalDate(gmApproval)}</span>
+                    </div>
+                    ${gmApproval?.comments ? `<div style="font-size:11px; margin-top:4px; color:#333;">ملاحظات: ${gmApproval.comments}</div>` : ''}
+                </div>
+                ` : ''}
+
+                <!-- Section: Accountant / Payment -->
+                <div style="border:1.5px solid #000; margin-top:8px; padding:6px;">
+                    <div style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:5px;">محاسب العهدة (الصرف) :</div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; flex-wrap:wrap; gap:3px;">
+                        <span>الاسم : <span style="border-bottom:1px dotted #000; min-width:180px; display:inline-block;">${getApproverName(paidApproval)}</span></span>
+                        <span>المبلغ المصروف : <span style="font-weight:bold; border-bottom:1px solid #000;">${amount}</span> ريال</span>
+                        <span>التوقيع ...........................</span>
+                        <span>التاريخ ${getApprovalDate(paidApproval)}</span>
+                    </div>
+                    ${paidApproval?.comments ? `<div style="font-size:11px; margin-top:4px; color:#333;">ملاحظات: ${paidApproval.comments}</div>` : ''}
+                </div>
+
+                <!-- Instructions -->
+                <div style="margin-top:10px; font-size:10px; line-height:1.5;">
+                    <strong>تعليمات يجب مراعاتها :</strong><br>
+                    1. لن ُيقبل أي طلب صرف مصاريف غير مستوفي للبيانات المذكورة أعلاه.<br>
+                    2. يجب تقديم المستندات المؤيدة للمبلغ المطلوب (فواتير، ايصالات، ..الخ).<br>
+                    3. الصرف على حسب مستوى الاعتماد المحدد في الطلب.<br>
+                    4. يتم صرف المبلغ من العهدة بعد اكتمال جميع الاعتمادات المطلوبة.
+                </div>
+            </div>
+        `;
+
+        globalThis.print();
+    },
+
+    printExpenseReceipt(exp, approvals = []) {
+        const container = document.getElementById('print-container');
+        if (!container) return;
+
+        // Dates
+        const dateObj = new Date(exp.updated_at || exp.created_at);
+        const daysAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const dayOfWeek = daysAr[dateObj.getDay()];
+        let hijriDate = '';
+        try {
+            hijriDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(dateObj).replace(/[هـ]/g, '').trim() + ' هـ';
+        } catch(e) { hijriDate = dateObj.toLocaleDateString('ar') + ' هـ'; }
+        const gregorianDate = dateObj.toLocaleDateString('en-GB');
+        const topDateG = new Date(exp.created_at).toLocaleDateString('en-GB');
+        let timeStr = dateObj.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+
+        // Employee info
+        const employeeName = exp.employee_name || '';
+        const employeeTitle = exp.profiles?.job_title || '';
+        const employeeDept = exp.profiles?.department || '';
+        const amount = exp.amount ? Number(exp.amount).toFixed(2) : '0.00';
+
+        // Find accountant who paid
+        const paidApproval = approvals.find(a => a.action === 'paid');
+        const accountantName = paidApproval?.profiles?.full_name || '...........................................';
+        let paidDate = '';
+        if (paidApproval) {
+            try { paidDate = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {day:'numeric',month:'numeric',year:'numeric'}).format(new Date(paidApproval.created_at)).replace(/[هـ]/g, '').trim() + ' هـ'; } catch(e) { paidDate = ''; }
+        }
+        const paidGregorianDate = paidApproval ? new Date(paidApproval.created_at).toLocaleDateString('en-GB') : '';
+
+        // Received confirmation
+        const receivedApproval = approvals.find(a => a.action === 'received');
+        const isReceived = exp.status === 'completed' || !!receivedApproval;
+
+        container.innerHTML = `
+            <div class="print-content" dir="rtl" style="direction:rtl; text-align:right; font-family: 'Times New Roman', 'Traditional Arabic', serif; color:#000; padding:2mm 10mm; max-width:210mm; margin:0 auto; font-size:16px;">
+                
+                <!-- Main Outer Box -->
+                <div style="padding: 10px; position:relative;">
+                    
+                    <!-- Header -->
+                    <div style="text-align:center; margin-bottom: 15px; position:relative;">
+                        <div style="display:inline-block; text-align:center; color: #4a77b4;">
+                            <h1 style="margin:0; font-family: 'Arial', sans-serif; font-weight:900; font-size:36px; display:flex; align-items:center; justify-content:center; gap:10px;">
+                                <span>دار الاميرات</span>
+                                <span style="font-size:46px;">DA</span>
+                            </h1>
+                            <div style="font-size:16px; font-weight:bold; letter-spacing:2px; font-family: 'Arial', sans-serif;">DAR ALAMIRAT</div>
+                        </div>
+                        <h2 style="margin:10px 0 0 0; font-weight:bold; font-size:26px; text-decoration:underline;">سند استلام مبلغ مصاريف</h2>
+                    </div>
+
+                    <!-- Dates -->
+                    <div style="display:flex; justify-content:space-between; margin-bottom:20px; font-weight:bold; font-size:16px;">
+                        <div>التاريخ: .... / .... / .... 14هـ</div>
+                        <div>التاريخ: ${topDateG}</div>
+                    </div>
+
+                    <!-- Table 1: Employee Info -->
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:15px; border: 1.5px solid #000; font-size:16px; text-align:center;">
+                        <tr>
+                            <td colspan="6" style="background:#e6e6e6; font-weight:bold; padding:8px; border: 1.5px solid #000; border-bottom: 2px solid #000;">بيانات المستلم</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1.5px solid #000; padding:8px; width:15%;">اسم الموظف</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:35%; text-align:right; padding-right:15px;">${employeeName}</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:10%;">الإدارة</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:15%; text-align:right; padding-right:15px;">${employeeDept}</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:10%;">المسمى الوظيفي</td>
+                            <td style="border: 1.5px solid #000; padding:8px; width:15%; text-align:right; padding-right:15px;">${employeeTitle}</td>
+                        </tr>
+                    </table>
+
+                    <!-- Table 2: Expense Details -->
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:15px; border: 1.5px solid #000; font-size:16px; text-align:center;">
+                        <tr>
+                            <td colspan="4" style="background:#e6e6e6; font-weight:bold; padding:8px; border: 1.5px solid #000; border-bottom: 2px solid #000;">تفاصيل المصروف</td>
+                        </tr>
+                        <tr>
+                            <th style="border: 1.5px solid #000; padding:8px; width:15%;">الموضوع</th>
+                            <td colspan="3" style="border: 1.5px solid #000; padding:8px; text-align:right; padding-right:15px;">${exp.subject}</td>
+                        </tr>
+                        <tr>
+                            <th style="border: 1.5px solid #000; padding:8px;">البيان</th>
+                            <td colspan="3" style="border: 1.5px solid #000; padding:8px; text-align:right; padding-right:15px;">${exp.statement || ''}</td>
+                        </tr>
+                        <tr>
+                            <th style="border: 1.5px solid #000; padding:8px;">المبلغ</th>
+                            <td style="border: 1.5px solid #000; padding:8px; font-weight:bold; font-size:18px;">${amount} ريال</td>
+                            <th style="border: 1.5px solid #000; padding:8px;">رقم الطلب</th>
+                            <td style="border: 1.5px solid #000; padding:8px;">#${exp.id.substring(0, 8)}</td>
+                        </tr>
+                    </table>
+
+                    <!-- Table 3: Declaration -->
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:15px; border: 1.5px solid #000; font-size:16px;">
+                        <tr>
+                            <td style="background:#e6e6e6; font-weight:bold; padding:8px; border: 1.5px solid #000; text-align:center; border-bottom: 2px solid #000;">إقرار باستلام المبلغ</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1.5px solid #000; padding:20px; line-height:2.2;">
+                                أقر أنا الموقع أدناه / <strong>${employeeName}</strong> بأنني استلمت مبلغ وقدره <strong>${amount}</strong> ريال وذلك بموجب طلب صرف مصاريف رقم <strong>#${exp.id.substring(0, 8)}</strong> عن <strong>${exp.subject}</strong> وذلك في يوم / <strong>${dayOfWeek}</strong> الموافق <strong>${gregorianDate}</strong> / <strong>${hijriDate}</strong> في تمام الساعة <strong>${timeStr}</strong>.
+                                <br><br>
+                                وأتعهد بصرف المبلغ في الغرض المخصص له وتقديم المستندات المؤيدة خلال المدة المحددة.
+                                <div style="display:flex; justify-content:space-between; margin-top:35px; font-weight:bold; padding:0 30px;">
+                                    <div>المستلم/ <span style="font-weight:normal; text-decoration:underline;">${employeeName}</span></div>
+                                    <div>التوقيع/ ...........................................</div>
+                                </div>
+                                <br>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Table 4: Payment Officer Details -->
+                    <table style="width:100%; border-collapse:collapse; border: 1.5px solid #000; font-size:16px;">
+                        <tr>
+                            <td style="background:#e6e6e6; font-weight:bold; padding:10px; border: 1.5px solid #000; text-align:center; border-bottom: 2px solid #000;">خاص بمسؤول الصرف (محاسب العهدة)</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1.5px solid #000; padding:20px; line-height:2.2;">
+                                <div style="display:flex; justify-content:flex-start; gap:80px; font-weight:bold; margin-bottom:20px;">
+                                    <div>تم صرف المبلغ بحالة ( ${isReceived ? '✔' : '&nbsp;&nbsp;&nbsp;'} ) نعم</div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:25px; font-weight:bold;">
+                                    <div>تم الصرف في يوم/ <strong>${paidApproval ? daysAr[new Date(paidApproval.created_at).getDay()] : '............'}</strong></div>
+                                    <div style="flex-grow:1; text-align:center;">الموافق <strong>${paidGregorianDate || '.... / .... / ....'}</strong> / <strong>${paidDate || '.... / .... / .... هـ'}</strong></div>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; margin-top:35px; font-weight:bold; padding:0 30px;">
+                                    <div>مسؤول الصرف: <span style="font-weight:normal; text-decoration:underline;">${accountantName}</span></div>
+                                    <div>التوقيع: ...........................................</div>
+                                </div>
+                                <br>
+                            </td>
+                        </tr>
+                    </table>
+
+                </div> <!-- End Main Box -->
+                
+                <!-- Bottom Footer -->
+                <div style="margin-top:15px; text-align:center; font-size:12px; color:#555;">
+                    الأصل: ملف الموظف | نسخة: المستلم | نسخة: الإدارة المالية
                 </div>
             </div>
         `;

@@ -148,7 +148,10 @@ const i18n = {
         type: "Type",
         procure: "Procure",
         expense: "Expense",
-        all: "All"
+        all: "All",
+        printExpenseRequest: "Print Request",
+        printExpenseReceipt: "Print Receipt",
+        approve: "Approve"
     },
     ar: {
         title: "دار الأميرات للمشتريات",
@@ -299,7 +302,10 @@ const i18n = {
         type: "النوع",
         procure: "مشتريات",
         expense: "مصروف",
-        all: "الكل"
+        all: "الكل",
+        printExpenseRequest: "طباعة الطلب",
+        printExpenseReceipt: "طباعة سند الاستلام",
+        approve: "موافقة"
     }
 };
 

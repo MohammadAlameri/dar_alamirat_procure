@@ -294,7 +294,7 @@ body {
     z-index: 10000;
 }
 
-/* Responsive adjustments */
+/* Sidebar Responsive Toggle View */
 @media (max-width: 992px) {
     #sidebar {
         margin-inline-start: calc(-1 * var(--sidebar-width));
@@ -307,6 +307,27 @@ body {
         margin-inline-start: 0;
         padding: 1rem;
     }
+}
+
+/* Sidebar Collapsed State (Large Screens) */
+@media (min-width: 993px) {
+    #sidebar.collapsed {
+        transform: translateX(calc(-1 * var(--sidebar-width)));
+    }
+    [dir="rtl"] #sidebar.collapsed {
+        transform: translateX(var(--sidebar-width));
+    }
+    #main-content.sidebar-collapsed {
+        margin-inline-start: 0;
+    }
+    
+    /* Show menu button in header when sidebar is collapsed on desktop */
+    #main-content.sidebar-collapsed #sidebarToggle {
+        display: block !important;
+    }
+}
+
+@media (max-width: 992px) {
     .top-header {
         top: 0;
         border-radius: 0;
