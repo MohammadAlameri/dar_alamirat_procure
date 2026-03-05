@@ -43,6 +43,10 @@
             <a class="nav-link" href="#" data-view="my-requests" id="link-my-requests">
                 <i data-lucide="file-text"></i> <span data-i18n="myRequests">My Requests</span>
             </a>
+            <a class="nav-link" href="#" data-view="expense-requests" id="link-expenses">
+                <i data-lucide="banknote"></i> <span data-i18n="expenseRequests">Expense Requests</span>
+            </a>
+            
             <a class="nav-link" href="#" data-view="pending-approvals" id="link-approvals">
                 <i data-lucide="check-square"></i> <span data-i18n="pendingApprovals">Pending Approvals</span>
             </a>
@@ -51,10 +55,6 @@
             </a>
             
             <hr class="sidebar-divider mx-4">
-            
-            <a class="nav-link" href="#" data-view="expense-requests" id="link-expenses">
-                <i data-lucide="banknote"></i> <span data-i18n="expenseRequests">Expense Requests</span>
-            </a>
 
             <a class="nav-link d-none" href="#" data-view="user-management" id="link-admin">
                 <i data-lucide="users"></i> <span data-i18n="userManagement">User Management</span>
@@ -147,21 +147,28 @@
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <span data-i18n="recentRequests">Recent Purchase Requests</span>
-                                <button class="btn btn-sm btn-primary" id="createNewBtn">
-                                    <i data-lucide="plus" style="width: 14px;"></i> <span data-i18n="newRequest">New Request</span>
-                                </button>
+                                <span data-i18n="recentRequests">Recent Requests</span>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-primary" id="createNewBtn">
+                                        <i data-lucide="plus" style="width: 14px;"></i> <span data-i18n="newRequest">New Procure Request</span>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" id="dashCreateExpenseBtn">
+                                        <i data-lucide="plus" style="width: 14px;"></i> <span data-i18n="newExpenseRequest">New Expense Request</span>
+                                    </button>
+                                </div>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle mb-0">
                                         <thead>
                                             <tr>
-                                                <th class="ps-4" data-i18n="requestId">Request ID</th>
+                                                <th class="ps-4" data-i18n="requestId">ID</th>
+                                                <th data-i18n="type">Type</th>
                                                 <th data-i18n="subject">Subject</th>
                                                 <th data-i18n="requester">Requester</th>
                                                 <th data-i18n="status">Status</th>
                                                 <th data-i18n="date">Date</th>
+                                                <th data-i18n="totalPrice">Total</th>
                                                 <th class="text-end pe-4" data-i18n="action">Action</th>
                                             </tr>
                                         </thead>
@@ -281,9 +288,11 @@
                                 <thead>
                                     <tr>
                                         <th data-i18n="id">ID</th>
+                                        <th data-i18n="type">Type</th>
                                         <th data-i18n="subject">Subject</th>
+                                        <th data-i18n="requester">Requester</th>
                                         <th data-i18n="status">Status</th>
-                                        <th data-i18n="created">Created</th>
+                                        <th data-i18n="date">Date</th>
                                         <th data-i18n="totalPrice">Total</th>
                                         <th data-i18n="action">Actions</th>
                                     </tr>
@@ -304,9 +313,11 @@
                                 <thead>
                                     <tr>
                                         <th data-i18n="id">ID</th>
-                                        <th data-i18n="requester">Requester</th>
+                                        <th data-i18n="type">Type</th>
                                         <th data-i18n="subject">Subject</th>
-                                        <th data-i18n="currentStatus">Current Status</th>
+                                        <th data-i18n="requester">Requester</th>
+                                        <th data-i18n="status">Status</th>
+                                        <th data-i18n="date">Date</th>
                                         <th data-i18n="totalPrice">Total</th>
                                         <th data-i18n="action">Actions</th>
                                     </tr>
@@ -416,16 +427,23 @@
             </div>
             <div class="view-content d-none" id="view-all-requests">
                 <div class="card">
-                    <div class="card-header" data-i18n="allRequests">All Purchase Requests</div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
+                            <div class="p-3 border-bottom d-flex align-items-center gap-3">
+                                <label class="fw-bold" data-i18n="type" for="allRequestsFilterType">Type:</label>
+                                <select id="allRequestsFilterType" class="form-select form-select-sm" style="width: 150px;">
+                                    <option value="all" data-i18n="all">All</option>
+                                    <option value="procure" data-i18n="procure">Procure</option>
+                                    <option value="expense" data-i18n="expense">Expense</option>
+                                </select>
+                            </div>
                             <table class="table table-hover mb-0">
                                 <thead>
                                     <tr>
                                         <th data-i18n="id">ID</th>
-                                        <th data-i18n="requester">Requester</th>
+                                        <th data-i18n="type">Type</th>
                                         <th data-i18n="subject">Subject</th>
+                                        <th data-i18n="requester">Requester</th>
                                         <th data-i18n="status">Status</th>
+                                        <th data-i18n="date">Date</th>
                                         <th data-i18n="totalPrice">Total</th>
                                         <th data-i18n="action">Actions</th>
                                     </tr>
@@ -441,7 +459,7 @@
             <div class="view-content d-none" id="view-expense-requests">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <span data-i18n="expenseRequests">Expense Requests</span>
+                        <span data-i18n="myExpenseRequests">My Expense Requests</span>
                         <button class="btn btn-sm btn-primary" id="createNewExpenseBtn">
                             <i data-lucide="plus" style="width: 14px;"></i> <span data-i18n="newExpenseRequest">New Expense Request</span>
                         </button>

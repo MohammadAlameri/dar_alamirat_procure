@@ -44,70 +44,73 @@ async function loadDashboardData() {
         requests = await db.getRequests();
     }
 
-    // Update stats - Robust Grouping for Dashboard
-    const statTotal = requests.length;
-    const statPending = requests.filter(r => ['pending', 'manager_approved', 'it_approved', 'finance_approved', 'purchased'].includes(r.status)).length;
-    const statApproved = requests.filter(r => r.status === 'completed').length;
-    const statRejected = requests.filter(r => r.status && r.status.toLowerCase().includes('rejected')).length;
+    ui.renderRequestsTable('myRequestsTable', requests.filter(r => r.created_by === currentUser.id), role);
+    
+    // Filter "Pending Approvals" logic moved to unified section below
+
+
+    // --- Expense Data Loading ---
+    let expenses = await db.getExpenseRequests();
+    expenses = expenses.map(e => ({ ...e, type: 'expense' }));
+    requests = requests.map(r => ({ ...r, type: 'procure' }));
+
+    // Combined recent for dashboard
+    const combinedRecent = [...requests, ...expenses]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    // Update stats - include both? User just asked to "differentiate between them"
+    // Let's keep stats for procure but maybe show unified recents.
+    const statTotal = requests.length + expenses.length;
+    const statPendingProcure = requests.filter(r => ['pending', 'manager_approved', 'it_approved', 'finance_approved', 'purchased'].includes(r.status)).length;
+    const statPendingExpense = expenses.filter(e => !['completed', 'paid', 'received'].includes(e.status) && !e.status.includes('rejected')).length;
+    const statApproved = requests.filter(r => r.status === 'completed').length + expenses.filter(e => e.status === 'completed').length;
+    const statRejected = [...requests, ...expenses].filter(r => r.status && r.status.toLowerCase().includes('rejected')).length;
 
     document.getElementById('stat-total').innerText = statTotal;
-    document.getElementById('stat-pending').innerText = statPending;
+    document.getElementById('stat-pending').innerText = statPendingProcure + statPendingExpense;
     document.getElementById('stat-approved').innerText = statApproved;
     document.getElementById('stat-rejected').innerText = statRejected;
 
     // Render tables
-    ui.renderRequestsTable('recentRequestsTable', requests.slice(0, 5), role);
+    ui.renderRequestsTable('recentRequestsTable', combinedRecent.slice(0, 10), role);
     ui.renderRequestsTable('myRequestsTable', requests.filter(r => r.created_by === currentUser.id), role);
+    ui.renderExpensesTable('expenseRequestsTable', expenses.filter(e => e.employee_id === currentUser.id), role);
     
-    // Filter "Pending Approvals" based on role and current status
+    // Unified Pending Approvals
+    let pendingProcure = [];
     if (role === 'manager') {
-        ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'pending' || r.status === 'rejected_by_manager'), role);
+        pendingProcure = requests.filter(r => r.status === 'pending' || r.status === 'rejected_by_manager');
     } else if (role === 'it_procurement') {
-        const itPending = requests.filter(r => r.status === 'manager_approved' || r.status === 'finance_approved' || r.status === 'received_by_staff' || r.status === 'rejected_by_it' || r.status === 'rejected_by_it_purchase');
-        ui.renderRequestsTable('pendingApprovalsTable', itPending, role);
+        pendingProcure = requests.filter(r => r.status === 'manager_approved' || r.status === 'finance_approved' || r.status === 'received_by_staff' || r.status === 'rejected_by_it' || r.status === 'rejected_by_it_purchase');
     } else if (role === 'finance') {
-        ui.renderRequestsTable('pendingApprovalsTable', requests.filter(r => r.status === 'it_approved' || r.status === 'rejected_by_finance'), role);
+        pendingProcure = requests.filter(r => r.status === 'it_approved' || r.status === 'rejected_by_finance');
     }
 
-    // --- Expense Data Loading ---
-    let expenses = await db.getExpenseRequests();
-    
-    // Update dashboard stats with expenses too? 
-    // Or maybe keep them separate. The request just says "stat-total" which seems to be for purchase.
-    // Let's at least render the tables.
-    ui.renderExpensesTable('expenseRequestsTable', expenses, role);
-    
-    // Process Pendings for Expense as well
     let pendingExpenses = [];
     if (role === 'manager') {
         pendingExpenses = expenses.filter(e => e.status === 'pending' || e.status === 'rejected_by_manager');
     } else if (role === 'finance') {
-        pendingExpenses = expenses.filter(e => e.highest_approval_level !== 'manager' && (e.status === 'manager_approved' || e.status === 'rejected_by_finance'));
+        pendingExpenses = expenses.filter(e => (e.highest_approval_level === 'finance' || e.highest_approval_level === 'general_manager') && (e.status === 'manager_approved' || e.status === 'rejected_by_finance'));
     } else if (role === 'general_manager') {
         pendingExpenses = expenses.filter(e => e.highest_approval_level === 'general_manager' && (e.status === 'finance_approved' || e.status === 'rejected_by_gm'));
     } else if (role === 'accountant') {
-        // Ready for payment after all required approvals
         pendingExpenses = expenses.filter(e => {
-            if (e.status === 'paid') return false;
+            if (e.status === 'paid' || e.status === 'completed' || e.status === 'received') return false;
             if (e.highest_approval_level === 'manager' && e.status === 'manager_approved') return true;
             if (e.highest_approval_level === 'finance' && e.status === 'finance_approved') return true;
             if (e.highest_approval_level === 'general_manager' && e.status === 'gm_approved') return true;
             return false;
         });
     }
-    
-    // Append or merge? Let's just append to the pendingApprovalsTable or handle separately if needed.
-    // For now, let's merge with purchase requests for the sidebar count or just render them.
-    // If we want a unified pending list:
-    // This requires a minor refactor of renderRequestsTable or just a custom one.
-    // Let's just add them to the relevant view if it's the pending-approvals view.
-    // But since the IDs are different, we need a way to distinguish.
-    
-    // --- End Expense Loading ---
 
-    if (role === 'it_procurement' || role === 'finance' || role === 'admin') {
-        ui.renderRequestsTable('allRequestsTable', requests, role);
-    }
+    const unifiedPending = [...pendingProcure, ...pendingExpenses]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    ui.renderRequestsTable('pendingApprovalsTable', unifiedPending, role);
+
+    // Unified All Requests with Filtering
+    globalAllRequests = [...requests, ...expenses].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    renderFilteredAllRequests();
+    // --- End Unified Data Loading ---
 
     if (role === 'admin') {
         try {
@@ -180,6 +183,14 @@ function setupEventListeners() {
 
     document.getElementById('createNewExpenseBtn')?.addEventListener('click', () => {
         ui.showView('create-expense');
+    });
+
+    document.getElementById('dashCreateExpenseBtn')?.addEventListener('click', () => {
+        ui.showView('create-expense');
+    });
+
+    document.getElementById('allRequestsFilterType')?.addEventListener('change', () => {
+        renderFilteredAllRequests();
     });
 
     document.getElementById('showCreateProfileBtn')?.addEventListener('click', () => ui.toggleProfileForm(true));
@@ -442,6 +453,20 @@ function setupEventListeners() {
             ui.setLoading(false);
         }
     });
+}
+
+let globalAllRequests = [];
+
+function renderFilteredAllRequests() {
+    const filterType = document.getElementById('allRequestsFilterType')?.value || 'all';
+    let filtered = globalAllRequests;
+    
+    if (filterType !== 'all') {
+        filtered = globalAllRequests.filter(r => r.type === filterType);
+    }
+    
+    const role = currentUser?.profile?.role;
+    ui.renderRequestsTable('allRequestsTable', filtered, role);
 }
 
 async function showRequestDetails(requestId) {

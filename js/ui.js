@@ -52,25 +52,32 @@ const ui = {
         tbody.innerHTML = '';
 
         if (!requests || requests.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">${i18nManager.get('noRequestsFound')}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">${i18nManager.get('noRequestsFound')}</td></tr>`;
             return;
         }
 
         requests.forEach(req => {
             const date = req.created_at ? new Date(req.created_at).toLocaleDateString() : '-';
             const statusClass = `badge-${req.status}`;
-            // Use profile name, or raw requested_by_name, or 'System'
-            const userName = req.profiles?.full_name || req.requested_by_name || 'System';
+            const userName = req.profiles?.full_name || req.requested_by_name || req.employee_name || 'System';
+            const isExpense = req.type === 'expense';
+            const typeLabel = i18nManager.get(isExpense ? 'expense' : 'procure');
+            const typeBadgeClass = isExpense ? 'bg-info' : 'bg-primary';
+            const detailBtnClass = isExpense ? 'view-expense-details-btn' : 'view-details-btn';
+            const total = req.amount || req.total_amount || 0;
+            const displayTotal = Number(total).toFixed(2);
             
             tbody.innerHTML += `
                 <tr>
                     <td class="ps-4 fw-medium text-primary">#${req.id.substring(0, 8)}</td>
+                    <td><span class="badge ${typeBadgeClass}">${typeLabel}</span></td>
                     <td>${req.subject}</td>
                     <td>${userName}</td>
                     <td><span class="badge ${statusClass}">${i18nManager.get(req.status)}</span></td>
                     <td>${date}</td>
+                    <td>${displayTotal}</td>
                     <td class="text-end pe-4">
-                        <button class="btn btn-sm btn-outline-primary view-details-btn" data-id="${req.id}">
+                        <button class="btn btn-sm btn-outline-primary ${detailBtnClass}" data-id="${req.id}">
                             ${i18nManager.get('action') || 'Action'}
                         </button>
                     </td>
