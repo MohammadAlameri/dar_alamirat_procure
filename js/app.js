@@ -50,21 +50,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadDashboardData() {
     const role = currentUser.profile.role;
     let requests = [];
+    const filters = {};
 
-    if (role === 'employee' || role === 'manager') {
-        // RLS handles the security; we just fetch what the user is allowed to see
-        requests = await db.getRequests();
-    } else {
-        requests = await db.getRequests();
+    if (role === 'employee') {
+        filters.userId = currentUser.id;
     }
+    // For managers and other roles, we rely on RLS to return the correct set of records.
 
-    ui.renderRequestsTable('myRequestsTable', requests.filter(r => r.created_by === currentUser.id), role);
-    
-    // Filter "Pending Approvals" logic moved to unified section below
-
+    requests = await db.getRequests(filters);
+    console.log("DEBUG: Fetched requests:", requests.length);
 
     // --- Expense Data Loading ---
-    let expenses = await db.getExpenseRequests();
+    let expenses = await db.getExpenseRequests(filters);
+    console.log("DEBUG: Fetched expenses:", expenses.length);
     expenses = expenses.map(e => ({ ...e, type: 'expense' }));
     requests = requests.map(r => ({ ...r, type: 'procure' }));
 
@@ -87,8 +85,22 @@ async function loadDashboardData() {
 
     // Render tables
     ui.renderRequestsTable('recentRequestsTable', combinedRecent.slice(0, 10), role);
-    ui.renderRequestsTable('myRequestsTable', requests.filter(r => r.created_by === currentUser.id), role);
-    ui.renderExpensesTable('expenseRequestsTable', expenses.filter(e => e.employee_id === currentUser.id), role);
+    // For managers, 'requests' already contains their own + their staff's (due to RLS or previous db calls).
+    // We want to show all of those in "My Requests" (or "Staff & My Requests").
+    // For employees, we stay restricted.
+    const myRequests = (role === 'manager' || role === 'admin' || role === 'it_procurement' || role === 'finance') 
+        ? requests 
+        : requests.filter(r => r.created_by === currentUser.id);
+        
+    const myExpenses = (role === 'manager' || role === 'admin' || role === 'finance' || role === 'accountant') 
+        ? expenses 
+        : expenses.filter(e => e.employee_id === currentUser.id);
+
+    console.log(`DEBUG: [${role}] myRequests count:`, myRequests.length);
+    console.log(`DEBUG: [${role}] myExpenses count:`, myExpenses.length);
+
+    ui.renderRequestsTable('myRequestsTable', myRequests, role);
+    ui.renderExpensesTable('expenseRequestsTable', myExpenses, role);
     
     // Unified Pending Approvals
     let pendingProcure = [];
@@ -650,7 +662,7 @@ async function showRequestDetails(requestId) {
             `;
         }
         // 5. Staff Receipt Step: purchased -> received_by_staff
-        else if (req.status === 'purchased' && currentUser.id === req.created_by) {
+        else if ((req.status === 'purchased' || req.status === 'rejected_by_staff') && currentUser.id === req.created_by) {
             actionsHtml = `
                 <div class="card mt-4 border-warning">
                     <div class="card-header bg-warning text-dark fw-bold">${i18nManager.get('staffReceipt')}</div>

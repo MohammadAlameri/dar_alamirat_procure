@@ -22,7 +22,7 @@ const db = {
             .from('purchase_requests')
             .select(`
                 *,
-                profiles:created_by (full_name, role),
+                profiles:created_by (full_name, role, manager_id),
                 request_items (*)
             `)
             .order('created_at', { ascending: false });
@@ -155,14 +155,20 @@ const db = {
     },
 
     // --- Expense Request Methods ---
-    async getExpenseRequests() {
-        const { data, error } = await supabaseClient
+    async getExpenseRequests(filters = {}) {
+        let query = supabaseClient
             .from('expense_requests')
             .select(`
                 *,
-                profiles:employee_id (full_name, role)
+                profiles:employee_id (full_name, role, manager_id)
             `)
             .order('created_at', { ascending: false });
+
+        if (filters.userId) {
+            query = query.eq('employee_id', filters.userId);
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
         return data;
     },
