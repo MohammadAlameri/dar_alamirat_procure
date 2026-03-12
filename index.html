@@ -65,6 +65,10 @@
                 <i data-lucide="users"></i> <span data-i18n="userManagement">User Management</span>
             </a>
 
+            <a class="nav-link d-none" href="#" data-view="product-management" id="link-products">
+                <i data-lucide="package"></i> <span data-i18n="productManagement">Product Management</span>
+            </a>
+
             <div class="px-4 mt-4">
                 <button class="btn btn-sm w-100 sidebar-lang-btn" id="langSwitchBtn">
                     <i data-lucide="languages"></i>
@@ -225,6 +229,7 @@
                                 <table class="table table-bordered" id="itemsTable">
                                     <thead class="bg-light">
                                         <tr>
+                                            <th data-i18n="category">Category</th>
                                             <th data-i18n="description">Description (Product & Model)</th>
                                             <th data-i18n="specs">Specs</th>
                                             <th data-i18n="unit">Unit</th>
@@ -240,7 +245,18 @@
                                     <tbody id="itemsBody">
                                         <!-- Row placeholder -->
                                         <tr>
-                                            <td><input type="text" class="form-control" name="product_name[]" required></td>
+                                            <td>
+                                                <select class="form-select category-select" name="category_id[]" required>
+                                                    <option value="" disabled selected data-i18n="selectCategory">Select Category</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <div class="position-relative">
+                                                    <input type="text" class="form-control product-search" name="product_name[]" required autocomplete="off" data-i18n="searchProduct" placeholder="Search Product...">
+                                                    <input type="hidden" name="product_id[]" class="product-id-input">
+                                                    <div class="product-results dropdown-menu w-100"></div>
+                                                </div>
+                                            </td>
                                             <td><input type="text" class="form-control" name="specifications[]"></td>
                                             <td><input type="text" class="form-control" name="unit[]" placeholder="pcs"></td>
                                             <td><input type="number" class="form-control qty-input" name="quantity[]" value="1" min="1" required></td>
@@ -254,7 +270,8 @@
                                     </tbody>
                                     <tfoot>
                                         <tr>
-                                            <td colspan="5" class="text-end fw-bold" data-i18n="grandTotalLabel">Grand Total:</td>
+                                        <tr>
+                                            <td colspan="6" class="text-end fw-bold" data-i18n="grandTotalLabel">Grand Total:</td>
                                             <td><input type="number" id="grandTotal" class="form-control fw-bold" readonly value="0.00"></td>
                                             <td></td>
                                             <td></td>
@@ -304,7 +321,7 @@
                                         <th data-i18n="status">Status</th>
                                         <th data-i18n="date">Date</th>
                                         <th data-i18n="totalPrice">Total</th>
-                                        <th data-i18n="action">Actions</th>
+                                        <th class="text-end pe-4" data-i18n="action">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="myRequestsTable"></tbody>
@@ -329,7 +346,7 @@
                                         <th data-i18n="status">Status</th>
                                         <th data-i18n="date">Date</th>
                                         <th data-i18n="totalPrice">Total</th>
-                                        <th data-i18n="action">Actions</th>
+                                        <th class="text-end pe-4" data-i18n="action">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="pendingApprovalsTable"></tbody>
@@ -338,6 +355,128 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Product & Category Management -->
+            <div class="view-content d-none" id="view-product-management">
+                <!-- List Section -->
+                <div id="pm-list-section">
+                    <div class="row">
+                        <!-- Categories Management -->
+                        <div class="col-md-5 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span data-i18n="categories">Categories</span>
+                                    <button class="btn btn-sm btn-primary" id="addCategoryBtn">
+                                        <i data-lucide="plus" style="width: 14px;"></i> <span data-i18n="addCategory">Add</span>
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th class="ps-4" data-i18n="name">Name</th>
+                                                    <th class="text-end pe-4" data-i18n="action">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="categoriesTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Products Management -->
+                        <div class="col-md-7 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span data-i18n="products">Products</span>
+                                    <div class="d-flex gap-2">
+                                        <select id="filterCategoryDropdown" class="form-select form-select-sm" style="width: 150px;">
+                                            <option value="all" data-i18n="allCategories">All Categories</option>
+                                        </select>
+                                        <button class="btn btn-sm btn-primary" id="addProductBtn">
+                                            <i data-lucide="plus" style="width: 14px;"></i> <span data-i18n="addProduct">Add Product</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th class="ps-4" data-i18n="productName">Product Name</th>
+                                                    <th data-i18n="category">Category</th>
+                                                    <th class="text-end pe-4" data-i18n="action">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="productsTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+               </div>
+
+            <!-- Category Modal -->
+            <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="categoryFormTitle" data-i18n="addCategory">Add Category</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="categoryForm">
+                                <input type="hidden" id="category_id">
+                                <div class="mb-3">
+                                    <label class="form-label" for="category_name_input" data-i18n="categoryName">Category Name</label>
+                                    <input type="text" class="form-control" id="category_name_input" required>
+                                </div>
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                                    <button type="submit" class="btn btn-primary" data-i18n="save">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Modal -->
+            <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="productFormTitle" data-i18n="addProduct">Add Product</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="productForm">
+                                <input type="hidden" id="pm_product_id">
+                                <div class="mb-3">
+                                    <label class="form-label" for="pm_product_category" data-i18n="category">Category</label>
+                                    <select class="form-select" id="pm_product_category" required>
+                                        <option value="" disabled selected data-i18n="selectCategory">Select Category</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="pm_product_name" data-i18n="productName">Product Name</label>
+                                    <input type="text" class="form-control" id="pm_product_name" required>
+                                </div>
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                                    <button type="submit" class="btn btn-primary" data-i18n="save">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+
             <div class="view-content d-none" id="view-user-management">
                 <!-- Profile List View -->
                 <div id="profile-list-section">
@@ -368,72 +507,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Create/Edit Profile Form View (Hidden by default) -->
-                <div id="profile-form-section" class="d-none">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <span id="profileFormTitle" data-i18n="createUser">Create New Profile</span>
-                                    <button class="btn btn-sm btn-outline-secondary" id="cancelProfileBtn" data-i18n="closing">Cancel</button>
-                                </div>
-                                <div class="card-body">
-                                    <form id="createUserForm">
-                                        <input type="hidden" name="profile_id" id="profile_id">
-                                        <div class="mb-3">
-                                            <label class="form-label" for="full_name" data-i18n="fullName">Full Name</label>
-                                            <input type="text" class="form-control" id="full_name" name="full_name" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label" for="email" data-i18n="email">Email Address</label>
-                                            <input type="email" class="form-control" id="email" name="email" required>
-                                        </div>
-                                        <div class="mb-3" id="passwordGroup">
-                                            <label class="form-label" for="password" data-i18n="password">Password</label>
-                                            <div class="input-group">
-                                                <input type="password" class="form-control" id="password" name="password" minlength="6">
-                                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                                    <i data-lucide="eye"></i>
-                                                </button>
-                                            </div>
-                                            <small class="text-muted d-none" id="passwordHint">Leave blank to keep current password</small>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label" for="job_title" data-i18n="jobTitle">Job Title</label>
-                                            <input type="text" class="form-control" id="job_title" name="job_title">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label" for="department" data-i18n="department">Department</label>
-                                            <input type="text" class="form-control" id="department" name="department">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label" for="role" data-i18n="role">Role</label>
-                                            <select class="form-select" id="role" name="role" required>
-                                                <option value="employee" selected data-i18n="employee">Employee</option>
-                                                <option value="manager" data-i18n="manager">Manager</option>
-                                                <option value="it_procurement" data-i18n="it_procurement">IT / Procurement</option>
-                                                <option value="finance" data-i18n="finance">Finance</option>
-                                                <option value="accountant" data-i18n="accountant">Petty Cash Mgr</option>
-                                                <option value="general_manager" data-i18n="general_manager">General Manager</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3" id="managerGroup">
-                                            <label class="form-label" for="manager_id" data-i18n="directManager">Direct Manager</label>
-                                            <select class="form-select" id="manager_id" name="manager_id">
-                                                <option value="" data-i18n="none">-- None --</option>
-                                            </select>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary w-100" id="createUserBtn" data-i18n="submit">Save Profile</button>
-                                    </form>
-                                    <div id="createUserAlert" class="mt-3 d-none">
-                                        <div class="alert alert-info"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="view-content d-none" id="view-all-requests">
                 <div class="card">
@@ -455,7 +528,7 @@
                                         <th data-i18n="status">Status</th>
                                         <th data-i18n="date">Date</th>
                                         <th data-i18n="totalPrice">Total</th>
-                                        <th data-i18n="action">Actions</th>
+                                        <th class="text-end pe-4" data-i18n="action">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="allRequestsTable"></tbody>
@@ -543,6 +616,129 @@
                     <div class="card-header" data-i18n="reports">Reports</div>
                     <div class="card-body">
                         <p class="text-muted">Report generation and analytics placeholder.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Modal -->
+            <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="categoryFormTitle" data-i18n="addCategory">Add Category</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="categoryForm">
+                                <input type="hidden" id="category_id">
+                                <div class="mb-3">
+                                    <label class="form-label" for="category_name_input" data-i18n="categoryName">Category Name</label>
+                                    <input type="text" class="form-control" id="category_name_input" required>
+                                </div>
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                                    <button type="submit" class="btn btn-primary" data-i18n="save">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Modal -->
+            <div class="modal fade" id="productModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="productFormTitle" data-i18n="addProduct">Add Product</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="productForm">
+                                <input type="hidden" id="pm_product_id">
+                                <div class="mb-3">
+                                    <label class="form-label" for="pm_product_category" data-i18n="category">Category</label>
+                                    <select class="form-select" id="pm_product_category" required>
+                                        <option value="" disabled selected data-i18n="selectCategory">Select Category</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="pm_product_name" data-i18n="productName">Product Name</label>
+                                    <input type="text" class="form-control" id="pm_product_name" required>
+                                </div>
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                                    <button type="submit" class="btn btn-primary" data-i18n="save">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Modal -->
+            <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="profileFormTitle" data-i18n="createUser">Create New Profile</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="createUserForm">
+                                <input type="hidden" name="profile_id" id="profile_id">
+                                <div class="mb-3">
+                                    <label class="form-label" for="full_name" data-i18n="fullName">Full Name</label>
+                                    <input type="text" class="form-control" id="full_name" name="full_name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="email" data-i18n="email">Email Address</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="mb-3" id="passwordGroup">
+                                    <label class="form-label" for="password" data-i18n="password">Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="password" name="password" minlength="6">
+                                        <button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn">
+                                            <i data-lucide="eye"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted d-none" id="passwordHint">Leave blank to keep current password</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="job_title" data-i18n="jobTitle">Job Title</label>
+                                    <input type="text" class="form-control" id="job_title" name="job_title">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="department" data-i18n="department">Department</label>
+                                    <input type="text" class="form-control" id="department" name="department">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="role" data-i18n="role">Role</label>
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="employee" selected data-i18n="employee">Employee</option>
+                                        <option value="manager" data-i18n="manager">Manager</option>
+                                        <option value="it_procurement" data-i18n="it_procurement">IT / Procurement</option>
+                                        <option value="finance" data-i18n="finance">Finance</option>
+                                        <option value="accountant" data-i18n="accountant">Petty Cash Mgr</option>
+                                        <option value="general_manager" data-i18n="general_manager">General Manager</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3" id="managerGroup">
+                                    <label class="form-label" for="manager_id" data-i18n="directManager">Direct Manager</label>
+                                    <select class="form-select" id="manager_id" name="manager_id">
+                                        <option value="" data-i18n="none">-- None --</option>
+                                    </select>
+                                </div>
+                                <div class="text-end mt-4">
+                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                                    <button type="submit" class="btn btn-primary" id="createUserBtn" data-i18n="submit">Save Profile</button>
+                                </div>
+                            </form>
+                            <div id="createUserAlert" class="mt-3 d-none">
+                                <div class="alert alert-info"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -30,7 +30,8 @@ const ui = {
             'pending-approvals': i18nManager.get('pendingApprovals'),
             'reports': i18nManager.get('reports'),
             'user-management': i18nManager.get('userManagement'),
-            'expense-requests': i18nManager.get('expenseRequests')
+            'expense-requests': i18nManager.get('expenseRequests'),
+            'product-management': i18nManager.get('productManagement')
         };
         document.getElementById('currentViewTitle').innerText = titleMap[viewId] || i18nManager.get('requestDetails');
         
@@ -145,7 +146,8 @@ const ui = {
             admin: document.getElementById('link-admin'),
             approvals: document.getElementById('link-approvals'),
             all: document.getElementById('link-all-requests'),
-            reports: document.getElementById('link-reports')
+            reports: document.getElementById('link-reports'),
+            products: document.getElementById('link-products')
         };
 
         if (links.admin) links.admin.classList.toggle('d-none', role !== 'admin');
@@ -161,6 +163,7 @@ const ui = {
         }
 
         if (links.reports) links.reports.classList.add('d-none');
+        if (links.products) links.products.classList.toggle('d-none', role !== 'admin');
     },
 
     resetPurchaseRequestForm() {
@@ -188,7 +191,19 @@ const ui = {
         if (!tbody) return;
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="text" class="form-control" name="product_name[]" required></td>
+            <td>
+                <select class="form-select category-select" name="category_id[]" required>
+                    <option value="" disabled selected>${i18nManager.get('selectCategory')}</option>
+                    ${globalCategories ? globalCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('') : ''}
+                </select>
+            </td>
+            <td>
+                <div class="position-relative">
+                    <input type="text" class="form-control product-search" name="product_name[]" required autocomplete="off" placeholder="${i18nManager.get('searchProduct')}">
+                    <input type="hidden" name="product_id[]" class="product-id-input">
+                    <div class="product-results dropdown-menu w-100"></div>
+                </div>
+            </td>
             <td><input type="text" class="form-control" name="specifications[]"></td>
             <td><input type="text" class="form-control" name="unit[]" placeholder="${i18nManager.get('pcs')}"></td>
             <td><input type="number" class="form-control qty-input" name="quantity[]" value="1" min="1" required></td>
@@ -200,7 +215,7 @@ const ui = {
             <td><button type="button" class="btn btn-sm btn-outline-danger remove-row"><i data-lucide="trash-2" style="width: 14px;"></i></button></td>
         `;
         tbody.appendChild(tr);
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     },
 
     calculateTotals() {
@@ -244,7 +259,19 @@ const ui = {
                 req.request_items.forEach(item => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td><input type="text" class="form-control" name="product_name[]" value="${item.product_name || ''}" required></td>
+                        <td>
+                            <select class="form-select category-select" name="category_id[]" required>
+                                <option value="" disabled>${i18nManager.get('selectCategory')}</option>
+                                ${globalCategories.map(c => `<option value="${c.id}" ${item.category_id === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td>
+                            <div class="position-relative">
+                                <input type="text" class="form-control product-search" name="product_name[]" value="${item.product_name || ''}" required autocomplete="off" placeholder="${i18nManager.get('searchProduct')}">
+                                <input type="hidden" name="product_id[]" value="${item.product_id || ''}" class="product-id-input">
+                                <div class="product-results dropdown-menu w-100"></div>
+                            </div>
+                        </td>
                         <td><input type="text" class="form-control" name="specifications[]" value="${item.specifications || ''}"></td>
                         <td><input type="text" class="form-control" name="unit[]" value="${item.unit || ''}" placeholder="${i18nManager.get('pcs')}"></td>
                         <td><input type="number" class="form-control qty-input" name="quantity[]" value="${item.quantity || 1}" min="1" required></td>
@@ -347,13 +374,17 @@ const ui = {
     },
 
     toggleProfileForm(showForm) {
+        const modalEl = document.getElementById('profileModal');
+        if (!modalEl) return;
+        
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) modal = new bootstrap.Modal(modalEl);
+
         if (showForm) {
-            document.getElementById('profile-list-section')?.classList.add('d-none');
-            document.getElementById('profile-form-section')?.classList.remove('d-none');
             this.updateManagerFieldVisibility();
+            modal.show();
         } else {
-            document.getElementById('profile-list-section')?.classList.remove('d-none');
-            document.getElementById('profile-form-section')?.classList.add('d-none');
+            modal.hide();
             document.getElementById('createUserForm')?.reset();
             document.getElementById('profile_id').value = '';
             document.getElementById('passwordHint').classList.add('d-none');
@@ -376,6 +407,128 @@ const ui = {
             opt.innerText = `${m.full_name} (${m.department || ''})`;
             select.appendChild(opt);
         });
+    },
+
+    renderCategoriesTable(categories) {
+        const tbody = document.getElementById('categoriesTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (!categories || categories.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="2" class="text-center py-3 text-muted">No categories</td></tr>`;
+            return;
+        }
+        categories.forEach(cat => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="ps-4">${cat.name}</td>
+                <td class="text-end pe-4">
+                    <button class="btn btn-sm btn-outline-primary edit-category-btn" data-id="${cat.id}" data-name="${cat.name}">
+                        <i data-lucide="edit-3" style="width:14px;"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger delete-category-btn" data-id="${cat.id}">
+                        <i data-lucide="trash-2" style="width:14px;"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    },
+
+    renderProductsTable(products) {
+        const tbody = document.getElementById('productsTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (!products || products.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-3 text-muted">No products</td></tr>`;
+            return;
+        }
+        products.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="ps-4">${p.name}</td>
+                <td>${p.categories?.name || '-'}</td>
+                <td class="text-end pe-4">
+                    <button class="btn btn-sm btn-outline-primary edit-product-btn" data-id="${p.id}" data-name="${p.name}" data-catid="${p.category_id}">
+                        <i data-lucide="edit-3" style="width:14px;"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger delete-product-btn" data-id="${p.id}">
+                        <i data-lucide="trash-2" style="width:14px;"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    },
+
+    toggleCategoryForm(show) {
+        const modalEl = document.getElementById('categoryModal');
+        if (!modalEl) return;
+        
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) modal = new bootstrap.Modal(modalEl);
+
+        if (show) {
+            modal.show();
+        } else {
+            modal.hide();
+            document.getElementById('categoryForm').reset();
+            document.getElementById('category_id').value = '';
+            document.getElementById('categoryFormTitle').innerText = i18nManager.get('addCategory');
+            document.getElementById('categoryFormTitle').setAttribute('data-i18n', 'addCategory');
+        }
+    },
+
+    toggleProductForm(show) {
+        const modalEl = document.getElementById('productModal');
+        if (!modalEl) return;
+        
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) modal = new bootstrap.Modal(modalEl);
+
+        if (show) {
+            modal.show();
+        } else {
+            modal.hide();
+            document.getElementById('productForm').reset();
+            document.getElementById('pm_product_id').value = '';
+            document.getElementById('productFormTitle').innerText = i18nManager.get('addProduct');
+            document.getElementById('productFormTitle').setAttribute('data-i18n', 'addProduct');
+        }
+    },
+
+    populateCategorySelects(categories) {
+        const selects = document.querySelectorAll('.category-select, #filterCategoryDropdown, #pm_product_category');
+        selects.forEach(select => {
+            const isFilter = select.id === 'filterCategoryDropdown';
+            const currentValue = select.value;
+            select.innerHTML = isFilter ? `<option value="all" data-i18n="allCategories">${i18nManager.get('allCategories')}</option>` : `<option value="" disabled selected data-i18n="selectCategory">${i18nManager.get('selectCategory')}</option>`;
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.id;
+                opt.innerText = cat.name;
+                select.appendChild(opt);
+            });
+            if (currentValue) select.value = currentValue;
+        });
+    },
+
+    showNotification(message, type = 'info') {
+        const container = document.getElementById('notification-container');
+        if (!container) return;
+        const div = document.createElement('div');
+        div.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show shadow-sm`;
+        div.role = 'alert';
+        div.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        container.appendChild(div);
+        setTimeout(() => {
+            div.classList.remove('show');
+            setTimeout(() => div.remove(), 150);
+        }, 5000);
     },
 
     printRequest(req, approvals = []) {

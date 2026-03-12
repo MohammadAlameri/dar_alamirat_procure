@@ -1,5 +1,7 @@
 // Main App Controller
 let currentUser = null;
+var globalCategories = [];
+var globalProducts = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Check Auth 
@@ -154,6 +156,22 @@ async function loadDashboardData() {
             console.error('Error loading profiles:', error);
         }
     }
+
+    // Load Categories & Products (Global)
+    try {
+        const { data: cats } = await supabaseClient.from('categories').select('*').order('name');
+        globalCategories = cats || [];
+        ui.populateCategorySelects(globalCategories);
+        
+        if (role === 'admin') {
+            ui.renderCategoriesTable(globalCategories);
+            const { data: prods } = await supabaseClient.from('products').select('*, categories(name)').order('name');
+            globalProducts = prods || [];
+            ui.renderProductsTable(globalProducts);
+        }
+    } catch (err) {
+        console.error("Error loading categories/products:", err);
+    }
 }
 
 function setupEventListeners() {
@@ -249,6 +267,184 @@ function setupEventListeners() {
         });
     }
 
+    // Product & Category Listeners
+    document.getElementById('addCategoryBtn')?.addEventListener('click', () => {
+        ui.toggleCategoryForm(true);
+    });
+
+    document.getElementById('addProductBtn')?.addEventListener('click', () => {
+        ui.toggleProductForm(true);
+        const filterVal = document.getElementById('filterCategoryDropdown').value;
+        if (filterVal !== 'all') {
+            document.getElementById('pm_product_category').value = filterVal;
+        }
+    });
+
+    document.querySelectorAll('.cancel-pm-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            ui.toggleCategoryForm(false);
+            ui.toggleProductForm(false);
+        });
+    });
+
+    // Category Form Submit
+    document.getElementById('categoryForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('category_id').value;
+        const name = document.getElementById('category_name_input').value;
+        
+        ui.setLoading(true);
+        try {
+            if (id) {
+                await supabaseClient.from('categories').update({ name }).eq('id', id);
+            } else {
+                await supabaseClient.from('categories').insert([{ name }]);
+            }
+            ui.showNotification(i18nManager.get('savedSuccessfully'), 'success');
+            ui.toggleCategoryForm(false);
+            await loadDashboardData();
+        } catch (err) {
+            ui.showNotification(err.message, 'error');
+        } finally {
+            ui.setLoading(false);
+        }
+    });
+
+    // Product Form Submit
+    document.getElementById('productForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('pm_product_id').value;
+        const name = document.getElementById('pm_product_name').value;
+        const category_id = document.getElementById('pm_product_category').value;
+        
+        ui.setLoading(true);
+        try {
+            if (id) {
+                await supabaseClient.from('products').update({ name, category_id }).eq('id', id);
+            } else {
+                await supabaseClient.from('products').insert([{ name, category_id }]);
+            }
+            ui.showNotification(i18nManager.get('savedSuccessfully'), 'success');
+            ui.toggleProductForm(false);
+            await loadDashboardData();
+        } catch (err) {
+            ui.showNotification(err.message, 'error');
+        } finally {
+            ui.setLoading(false);
+        }
+    });
+
+    document.getElementById('view-product-management')?.addEventListener('click', async (e) => {
+        const editCat = e.target.closest('.edit-category-btn');
+        const deleteCat = e.target.closest('.delete-category-btn');
+        const editProd = e.target.closest('.edit-product-btn');
+        const deleteProd = e.target.closest('.delete-product-btn');
+
+        if (editCat) {
+            const { id, name } = editCat.dataset;
+            ui.toggleCategoryForm(true);
+            document.getElementById('category_id').value = id;
+            document.getElementById('category_name_input').value = name;
+            document.getElementById('categoryFormTitle').innerText = i18nManager.get('editCategory');
+            document.getElementById('categoryFormTitle').removeAttribute('data-i18n');
+        }
+        if (deleteCat) {
+            if (confirm(i18nManager.get('confirmDeleteCategory'))) {
+                ui.setLoading(true);
+                await supabaseClient.from('categories').delete().eq('id', deleteCat.dataset.id);
+                await loadDashboardData();
+                ui.setLoading(false);
+            }
+        }
+        if (editProd) {
+            const { id, name, catid } = editProd.dataset;
+            ui.toggleProductForm(true);
+            document.getElementById('pm_product_id').value = id;
+            document.getElementById('pm_product_name').value = name;
+            document.getElementById('pm_product_category').value = catid;
+            document.getElementById('productFormTitle').innerText = i18nManager.get('editProduct');
+            document.getElementById('productFormTitle').removeAttribute('data-i18n');
+        }
+        if (deleteProd) {
+            if (confirm(i18nManager.get('confirmDeleteProduct'))) {
+                ui.setLoading(true);
+                await supabaseClient.from('products').delete().eq('id', deleteProd.dataset.id);
+                await loadDashboardData();
+                ui.setLoading(false);
+            }
+        }
+    });
+
+    document.getElementById('filterCategoryDropdown')?.addEventListener('change', async (e) => {
+        const catId = e.target.value;
+        let query = supabaseClient.from('products').select('*, categories(name)').order('name');
+        if (catId !== 'all') query = query.eq('category_id', catId);
+        const { data } = await query;
+        ui.renderProductsTable(data);
+    });
+
+    // Product Search Logic
+    document.getElementById('itemsTable')?.addEventListener('input', async (e) => {
+        if (e.target.classList.contains('product-search')) {
+            const searchInput = e.target;
+            const queryText = searchInput.value.trim();
+            const row = searchInput.closest('tr');
+            const catSelect = row.querySelector('.category-select');
+            const catId = catSelect.value;
+            const resultsDiv = row.querySelector('.product-results');
+
+            if (!catId) {
+                ui.showNotification(i18nManager.get('selectCategory'), 'warning');
+                return;
+            }
+
+            if (queryText.length < 2) {
+                resultsDiv.innerHTML = '';
+                resultsDiv.classList.remove('show');
+                return;
+            }
+
+            const { data } = await supabaseClient
+                .from('products')
+                .select('*')
+                .eq('category_id', catId)
+                .ilike('name', `%${queryText}%`)
+                .limit(5);
+
+            resultsDiv.innerHTML = '';
+            if (data && data.length > 0) {
+                data.forEach(p => {
+                    const item = document.createElement('a');
+                    item.className = 'dropdown-item';
+                    item.href = '#';
+                    item.innerText = p.name;
+                    item.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        searchInput.value = p.name;
+                        row.querySelector('.product-id-input').value = p.id;
+                        resultsDiv.innerHTML = '';
+                        resultsDiv.classList.remove('show');
+                    });
+                    resultsDiv.appendChild(item);
+                });
+                resultsDiv.classList.add('show');
+            } else {
+                resultsDiv.innerHTML = `<span class="dropdown-item disabled">${i18nManager.get('newProduct')}</span>`;
+                resultsDiv.classList.add('show');
+            }
+        }
+    });
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.position-relative')) {
+            document.querySelectorAll('.product-results').forEach(el => {
+                el.innerHTML = '';
+                el.classList.remove('show');
+            });
+        }
+    });
+
     // Buttons
     document.getElementById('createNewBtn').addEventListener('click', () => {
         ui.resetPurchaseRequestForm();
@@ -286,12 +482,16 @@ function setupEventListeners() {
     });
 
     document.getElementById('showCreateProfileBtn')?.addEventListener('click', () => ui.toggleProfileForm(true));
-    document.getElementById('cancelProfileBtn')?.addEventListener('click', () => ui.toggleProfileForm(false));
+
+    // Modal Reset Logic (listen for Bootstrap hidden event)
+    document.getElementById('profileModal')?.addEventListener('hidden.bs.modal', () => ui.toggleProfileForm(false));
+    document.getElementById('categoryModal')?.addEventListener('hidden.bs.modal', () => ui.toggleCategoryForm(false));
+    document.getElementById('productModal')?.addEventListener('hidden.bs.modal', () => ui.toggleProductForm(false));
 
     // Password Toggle
-    document.getElementById('togglePassword')?.addEventListener('click', () => {
+    document.getElementById('togglePasswordBtn')?.addEventListener('click', () => {
         const passwordInput = document.getElementById('password');
-        const icon = document.querySelector('#togglePassword i');
+        const icon = document.querySelector('#togglePasswordBtn i');
         if (passwordInput.type === 'password') {
             passwordInput.type = 'text';
             icon.dataset.lucide = 'eye-off';
@@ -391,7 +591,7 @@ function setupEventListeners() {
 
                 if (alertDiv) {
                     alertDiv.className = 'alert alert-success';
-                    alertDiv.innerText = i18nManager.get('profileCreated') || 'Action completed successfully!';
+                    alertDiv.innerText = i18nManager.get('savedSuccessfully');
                 }
                 if (alertEl) alertEl.classList.remove('d-none');
                 
@@ -404,7 +604,7 @@ function setupEventListeners() {
                 console.error('Profile action error:', error);
                 if (alertDiv) {
                     alertDiv.className = 'alert alert-danger';
-                    alertDiv.innerText = 'Error: ' + error.message;
+                    alertDiv.innerText = i18nManager.get('error') + error.message;
                 }
                 if (alertEl) alertEl.classList.remove('d-none');
             } finally {
@@ -461,6 +661,8 @@ function setupEventListeners() {
 
             const items = [];
             const productNames = formData.getAll('product_name[]');
+            const productIds = formData.getAll('product_id[]');
+            const categoryIds = formData.getAll('category_id[]');
             const specs = formData.getAll('specifications[]');
             const units = formData.getAll('unit[]');
             const qties = formData.getAll('quantity[]');
@@ -471,6 +673,8 @@ function setupEventListeners() {
 
             for (let i = 0; i < productNames.length; i++) {
                 items.push({
+                    product_id: productIds[i] || null,
+                    category_id: categoryIds[i] || null,
                     product_name: productNames[i],
                     specifications: specs[i],
                     unit: units[i],
@@ -484,6 +688,15 @@ function setupEventListeners() {
 
             const editId = formData.get('edit_request_id');
             if (editId) {
+                // If staff changes something, reset status and delete previous approvals
+                const { data: previousReq } = await supabaseClient.from('purchase_requests').select('status, created_by').eq('id', editId).single();
+                
+                if (previousReq.created_by === currentUser.id) {
+                    requestData.status = 'pending'; // Reset to pending
+                    // Delete old approvals log for this request to restart workflow
+                    await supabaseClient.from('approvals_log').delete().eq('request_id', editId);
+                }
+
                 await db.updateRequestFull(editId, requestData, items);
                 ui.showNotification(i18nManager.get('requestUpdated'), 'success');
             } else {
@@ -801,6 +1014,7 @@ async function showRequestDetails(requestId) {
                     <table class="table table-sm table-bordered">
                         <thead class="bg-light">
                             <tr>
+                                <th>${i18nManager.get('category')}</th>
                                 <th>${i18nManager.get('itemDescription')}</th>
                                 <th>${i18nManager.get('specs')}</th>
                                 <th>${i18nManager.get('unit')}</th>
@@ -810,16 +1024,37 @@ async function showRequestDetails(requestId) {
                             </tr>
                         </thead>
                         <tbody>
-                            ${req.request_items.map(item => `
-                                <tr>
-                                    <td>${item.product_name}</td>
-                                    <td>${item.specifications || '-'}</td>
-                                    <td>${item.unit}</td>
-                                    <td>${item.quantity}</td>
-                                    <td>${item.unit_price.toFixed(2)}</td>
-                                    <td>${(item.quantity * item.unit_price).toFixed(2)}</td>
-                                </tr>
-                            `).join('')}
+                            ${req.request_items.map(item => {
+                                const isApprover = (role === 'manager' || role === 'it_procurement' || role === 'admin');
+                                const canEditProduct = isApprover && req.status !== 'completed' && req.status !== 'purchased';
+                                
+                                return `
+                                    <tr data-item-id="${item.id}">
+                                        <td>
+                                            ${canEditProduct ? `
+                                                <select class="form-select form-select-sm detail-category-select">
+                                                    <option value="">--</option>
+                                                    ${globalCategories.map(c => `<option value="${c.id}" ${item.category_id === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                                                </select>
+                                            ` : (globalCategories.find(c => c.id === item.category_id)?.name || '-')}
+                                        </td>
+                                        <td>
+                                            ${canEditProduct ? `
+                                                <div class="position-relative">
+                                                    <input type="text" class="form-control form-control-sm detail-product-search" value="${item.product_name}" autocomplete="off">
+                                                    <input type="hidden" class="detail-product-id" value="${item.product_id || ''}">
+                                                    <div class="product-results dropdown-menu w-100"></div>
+                                                </div>
+                                            ` : item.product_name}
+                                        </td>
+                                        <td>${item.specifications || '-'}</td>
+                                        <td>${item.unit}</td>
+                                        <td>${item.quantity}</td>
+                                        <td>${item.unit_price.toFixed(2)}</td>
+                                        <td>${(item.quantity * item.unit_price).toFixed(2)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                     </table>
 
@@ -908,6 +1143,75 @@ async function showRequestDetails(requestId) {
                     ui.showNotification(i18nManager.get('error') + e.message, 'error');
                 } finally {
                     ui.setLoading(false);
+                }
+            });
+        });
+
+        // Handle Inline Product/Category Changes in Details
+        container.querySelectorAll('.detail-category-select, .detail-product-search').forEach(el => {
+            el.addEventListener('change', async (e) => {
+                const tr = e.target.closest('tr');
+                const itemId = tr.dataset.itemId;
+                const catId = tr.querySelector('.detail-category-select')?.value;
+                const prodId = tr.querySelector('.detail-product-id')?.value;
+                const prodName = tr.querySelector('.detail-product-search')?.value;
+
+                try {
+                    const { error } = await supabaseClient.from('request_items').update({
+                        category_id: catId || null,
+                        product_id: prodId || null,
+                        product_name: prodName
+                    }).eq('id', itemId);
+                    
+                    if (error) throw error;
+
+                    // Log the change
+                    await db.logApproval(requestId, currentUser.id, 'item_updated', `Item updated: ${prodName} (ID: ${prodId || 'New'})`);
+                    ui.showNotification(i18nManager.get('requestUpdated') || 'Item updated', 'success');
+                } catch (err) {
+                    console.error("Update item error:", err);
+                    ui.showNotification('Update failed: ' + err.message, 'error');
+                }
+            });
+        });
+
+        // Also add search behavior for detail-product-search
+        container.querySelectorAll('.detail-product-search').forEach(searchInput => {
+            searchInput.addEventListener('input', async (e) => {
+                const queryText = searchInput.value.trim();
+                const tr = searchInput.closest('tr');
+                const catIdSelect = tr.querySelector('.detail-category-select');
+                if (!catIdSelect) return;
+                const catId = catIdSelect.value;
+                const resultsDiv = tr.querySelector('.product-results');
+
+                if (!catId || !resultsDiv) return;
+                if (queryText.length < 2) { resultsDiv.classList.remove('show'); return; }
+
+                const { data } = await supabaseClient.from('products')
+                    .select('*')
+                    .eq('category_id', catId)
+                    .ilike('name', `%${queryText}%`)
+                    .limit(5);
+
+                resultsDiv.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(p => {
+                        const item = document.createElement('a');
+                        item.className = 'dropdown-item';
+                        item.href = '#';
+                        item.innerText = p.name;
+                        item.addEventListener('click', (ev) => {
+                            ev.preventDefault();
+                            searchInput.value = p.name;
+                            tr.querySelector('.detail-product-id').value = p.id;
+                            resultsDiv.classList.remove('show');
+                            // Trigger change manually
+                            searchInput.dispatchEvent(new Event('change'));
+                        });
+                        resultsDiv.appendChild(item);
+                    });
+                    resultsDiv.classList.add('show');
                 }
             });
         });
@@ -1041,7 +1345,7 @@ async function showExpenseDetails(expenseId) {
                         </button>
                         ${['paid', 'completed', 'received'].includes(exp.status) ? `
                             <button class="btn btn-sm btn-outline-success" id="printExpenseReceiptBtn">
-                                <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.currentLang === 'ar' ? 'طباعة سند الاستلام' : 'Print Receipt'}
+                                <i data-lucide="printer" style="width:14px;"></i> ${i18nManager.get('printExpenseReceipt')}
                             </button>
                         ` : ''}
                         <button class="btn btn-sm btn-outline-secondary" onclick="resetAndBackToExpenses()">${i18nManager.get('closing')}</button>

@@ -383,6 +383,19 @@ body {
 [dir="rtl"] .border-start-0 { border-right: 0 !important; border-left: 1px solid #dee2e6 !important; }
 [dir="rtl"] .border-end-0 { border-left: 0 !important; border-right: 1px solid #dee2e6 !important; }
 
+/* Modal RTL Fixes */
+[dir="rtl"] .modal-header .btn-close {
+    margin-left: 0;
+    margin-right: auto;
+}
+[dir="rtl"] .modal-footer > * {
+    margin-left: .5rem;
+    margin-right: 0;
+}
+[dir="rtl"] .modal-title {
+    flex-grow: 1;
+}
+
 /* Print Specific Styles */
 @media print {
     body {
