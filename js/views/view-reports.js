@@ -95,7 +95,7 @@ function renderReportTable(data, type) {
                 <td class="fw-bold">${r.subject}</td>
                 <td>${r.profiles?.full_name || '-'}</td>
                 <td><span class="badge badge-${r.status} small">${i18nManager.get(r.status)}</span></td>
-                <td class="text-end pe-4 fw-bold">${r.total_price.toLocaleString()}</td>
+                <td class="text-end pe-4 fw-bold">${(r.total_amount || 0).toLocaleString()}</td>
             </tr>
         `).join('') || `<tr><td colspan="5" class="text-center py-4 text-muted">${i18nManager.get('noRequestsFound')}</td></tr>`;
     } else {
@@ -112,7 +112,7 @@ function renderReportTable(data, type) {
                 <td class="fw-bold">${r.subject}</td>
                 <td>${r.profiles?.full_name || '-'}</td>
                 <td><span class="badge badge-${r.status} small">${i18nManager.get(r.status)}</span></td>
-                <td class="text-end pe-4 fw-bold">${r.amount.toLocaleString()}</td>
+                <td class="text-end pe-4 fw-bold">${(r.amount || 0).toLocaleString()}</td>
             </tr>
         `).join('') || `<tr><td colspan="5" class="text-center py-4 text-muted">${i18nManager.get('noRequestsFound')}</td></tr>`;
     }
@@ -126,7 +126,7 @@ function updateReportStats(data, type) {
     if (!countEl || !amountEl || !completedEl) return;
 
     const count = data.length;
-    const totalAmount = data.reduce((sum, r) => sum + (type === 'procure' ? (r.total_price || 0) : (r.amount || 0)), 0);
+    const totalAmount = data.reduce((sum, r) => sum + (type === 'procure' ? (r.total_amount || 0) : (r.amount || 0)), 0);
     const completedCount = data.filter(r => ['completed', 'received', 'paid'].includes(r.status)).length;
 
     countEl.innerText = count;
@@ -144,37 +144,49 @@ function exportReportToCsv() {
     let headers = [];
     let rows = [];
 
+    // Helper to escape CSV fields
+    const escape = (val) => {
+        if (val === null || val === undefined) return '""';
+        const str = String(val).replace(/"/g, '""');
+        return `"${str}"`;
+    };
+
     if (type === 'procure') {
         headers = ['Date', 'Subject', 'Requester', 'Status', 'Total Price'];
         rows = currentReportData.map(r => [
             new Date(r.created_at).toLocaleDateString(),
-            r.subject,
-            r.profiles?.full_name || '',
-            r.status,
-            r.total_price
+            escape(r.subject),
+            escape(r.profiles?.full_name),
+            escape(r.status),
+            r.total_amount || 0
         ]);
     } else {
         headers = ['Date', 'Subject', 'Requester', 'Status', 'Amount'];
         rows = currentReportData.map(r => [
             new Date(r.created_at).toLocaleDateString(),
-            r.subject,
-            r.profiles?.full_name || '',
-            r.status,
-            r.amount
+            escape(r.subject),
+            escape(r.profiles?.full_name),
+            escape(r.status),
+            r.amount || 0
         ]);
     }
 
-    let csvContent = "data:text/csv;charset=utf-8," 
-        + headers.join(",") + "\n"
+    let csvContent = headers.join(",") + "\n"
         + rows.map(e => e.join(",")).join("\n");
 
-    const encodedUri = encodeURI(csvContent);
+    // Add UTF-8 BOM so Excel opens it with the correct encoding for Arabic
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.style.display = 'none';
+    link.setAttribute("href", url);
     link.setAttribute("download", `report_${type}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
 
 // Event Listeners
