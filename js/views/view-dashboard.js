@@ -68,6 +68,9 @@ async function loadDashboardData() {
         pendingProcure = requests.filter(r => r.status === 'manager_approved' || r.status === 'finance_approved' || r.status === 'received_by_staff' || r.status === 'rejected_by_it' || r.status === 'rejected_by_it_purchase');
     } else if (role === 'finance') {
         pendingProcure = requests.filter(r => r.status === 'it_approved' || r.status === 'rejected_by_finance');
+    } else if (role === 'employee') {
+        // Staff sees requests that they need to receipt or have rejected
+        pendingProcure = requests.filter(r => r.created_by === currentUser.id && (r.status === 'purchased' || r.status === 'rejected_by_staff'));
     }
 
     let pendingExpenses = [];

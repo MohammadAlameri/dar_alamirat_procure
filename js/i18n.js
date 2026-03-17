@@ -217,7 +217,11 @@ const i18n = {
         generate: "Generate",
         export: "Export",
         noDataToDisplay: "No data to display. Select filters and click Generate.",
-        totalAmount: "Total Amount"
+        totalAmount: "Total Amount",
+        userAlreadyAssigned: "User already has permissions in this branch. Do you want to update them?",
+        item_updated: "Item Updated",
+        staff_accepted: "Received by Staff",
+        staff_rejected: "Rejected by Staff"
     },
     ar: {
         title: "دار الأميرات للمشتريات",
@@ -437,7 +441,11 @@ const i18n = {
         generate: "توليد",
         export: "تصدير",
         noDataToDisplay: "لا توجد بيانات للعرض. حدد الفلاتر واضغط لتوليد التقرير.",
-        totalAmount: "إجمالي المبلغ"
+        totalAmount: "إجمالي المبلغ",
+        userAlreadyAssigned: "المستخدم لديه بالفعل صلاحيات في هذا الفرع. هل تريد تحديث الصلاحيات؟",
+        item_updated: "تحديث الصنف",
+        staff_accepted: "تم الاستلام من الموظف",
+        staff_rejected: "تم الرفض من الموظف"
     }
 };
 

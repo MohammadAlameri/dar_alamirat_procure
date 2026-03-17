@@ -177,10 +177,30 @@ document.getElementById('userBranchForm')?.addEventListener('submit', async (e) 
     const accessLevel = document.getElementById('ub_access_level').value;
 
     try {
-        await db.assignUserToBranch(userId, branchId, accessLevel);
-        ui.showNotification("User assigned to branch", "success");
+        // Check if user already has access to this branch
+        const { data: existing } = await supabaseClient
+            .from('user_branches')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('branch_id', branchId)
+            .maybeSingle();
+
+        if (existing) {
+            if (confirm(i18nManager.get('userAlreadyAssigned'))) {
+                await supabaseClient
+                    .from('user_branches')
+                    .update({ access_level: accessLevel })
+                    .eq('id', existing.id);
+                ui.showNotification(i18nManager.get('updatedSuccessfully'), "success");
+            } else {
+                return;
+            }
+        } else {
+            await db.assignUserToBranch(userId, branchId, accessLevel);
+            ui.showNotification(i18nManager.get('createdSuccessfully'), "success");
+        }
         await ui.refreshAssignedUsers(branchId);
     } catch (err) {
-        ui.showNotification("Error assigning user: " + err.message, "error");
+        ui.showNotification("Error: " + err.message, "error");
     }
 });

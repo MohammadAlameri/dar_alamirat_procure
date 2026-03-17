@@ -187,11 +187,17 @@ async function showRequestDetails(requestId) {
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <h6 class="text-muted small fw-bold">${i18nManager.get('subject').toUpperCase()}</h6>
-                            <p class="h5 fw-bold">${req.subject}</p>
+                            ${canApprove && req.status !== 'completed' && req.status !== 'purchased' ? `
+                                <input type="text" id="detail-subject" class="form-control form-control-sm h5 fw-bold mb-3" value="${req.subject}">
+                            ` : `<p class="h5 fw-bold">${req.subject}</p>`}
+                            
                             <h6 class="text-muted small fw-bold mt-3">${i18nManager.get('branch').toUpperCase()}</h6>
                             <p class="fw-bold text-dark">${branchName}</p>
+                            
                             <h6 class="text-muted small fw-bold mt-3">${i18nManager.get('justification').split('(')[0].trim().toUpperCase()}</h6>
-                            <p>${req.justification || i18nManager.get('noJustification')}</p>
+                            ${canApprove && req.status !== 'completed' && req.status !== 'purchased' ? `
+                                <textarea id="detail-justification" class="form-control form-control-sm mb-3" rows="3">${req.justification || ''}</textarea>
+                            ` : `<p>${req.justification || i18nManager.get('noJustification')}</p>`}
                         </div>
                         <div class="col-md-3">
                             <h6 class="text-muted small fw-bold">${i18nManager.get('requester').toUpperCase()}</h6>
@@ -228,20 +234,28 @@ async function showRequestDetails(requestId) {
                     <div class="mb-4">
                         <h6 class="text-muted small fw-bold">${i18nManager.get('approvalLog').toUpperCase()}</h6>
                         <div class="list-group list-group-flush border rounded">
-                            ${approvals && approvals.length > 0 ? approvals.map(app => `
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between">
-                                        <span class="fw-bold text-dark">${app.profiles?.full_name || 'System'}</span>
-                                        <small class="text-muted">${new Date(app.created_at).toLocaleString(i18nManager.currentLang === 'ar' ? 'ar-SA' : 'en-US')}</small>
+                            ${approvals && approvals.length > 0 ? approvals.map(app => {
+                                // Clean up comments to remove sensitive IDs if they exist (historical data)
+                                let displayComments = app.comments || i18nManager.get('noComments');
+                                if (typeof displayComments === 'string') {
+                                    displayComments = displayComments.replace(/\(ID:\s*[a-f0-9-]+\)/gi, '').trim();
+                                }
+                                
+                                return `
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold text-dark">${app.profiles?.full_name || 'System'}</span>
+                                            <small class="text-muted">${new Date(app.created_at).toLocaleString(i18nManager.currentLang === 'ar' ? 'ar-SA' : 'en-US')}</small>
+                                        </div>
+                                        <div class="small">
+                                            <span class="badge ${app.action.includes('rejected') ? 'bg-danger' : 'bg-success'} me-2">
+                                                ${i18nManager.get(app.action) || app.action}
+                                            </span>
+                                            <span class="text-secondary italic">${displayComments}</span>
+                                        </div>
                                     </div>
-                                    <div class="small">
-                                        <span class="badge ${app.action.includes('rejected') ? 'bg-danger' : 'bg-success'} me-2">
-                                            ${i18nManager.get(app.action) || app.action}
-                                        </span>
-                                        <span class="text-secondary italic">${app.comments || i18nManager.get('noComments')}</span>
-                                    </div>
-                                </div>
-                            `).join('') : `<div class="list-group-item text-muted small">${i18nManager.get('noLogEntries')}</div>`}
+                                `;
+                            }).join('') : `<div class="list-group-item text-muted small">${i18nManager.get('noLogEntries')}</div>`}
                         </div>
                     </div>
 
@@ -263,7 +277,7 @@ async function showRequestDetails(requestId) {
                                 const canEditProduct = isApprover && req.status !== 'completed' && req.status !== 'purchased';
                                 
                                 return `
-                                    <tr data-item-id="${item.id}">
+                                    <tr data-item-id="${item.id}" class="request-item-row">
                                         <td>
                                             ${canEditProduct ? `
                                                 <select class="form-select form-select-sm detail-category-select">
@@ -281,11 +295,27 @@ async function showRequestDetails(requestId) {
                                                 </div>
                                             ` : item.product_name}
                                         </td>
-                                        <td>${item.specifications || '-'}</td>
-                                        <td>${item.unit}</td>
-                                        <td>${item.quantity}</td>
-                                        <td>${item.unit_price.toFixed(2)}</td>
-                                        <td>${(item.quantity * item.unit_price).toFixed(2)}</td>
+                                        <td>
+                                            ${canEditProduct ? `
+                                                <input type="text" class="form-control form-control-sm detail-specs" value="${item.specifications || ''}">
+                                            ` : (item.specifications || '-')}
+                                        </td>
+                                        <td>
+                                            ${canEditProduct ? `
+                                                <input type="text" class="form-control form-control-sm detail-unit" value="${item.unit || ''}">
+                                            ` : item.unit}
+                                        </td>
+                                        <td>
+                                            ${canEditProduct ? `
+                                                <input type="number" class="form-control form-control-sm detail-qty" value="${item.quantity}" min="1">
+                                            ` : item.quantity}
+                                        </td>
+                                        <td>
+                                            ${canEditProduct ? `
+                                                <input type="number" step="0.01" class="form-control form-control-sm detail-price" value="${item.unit_price.toFixed(2)}">
+                                            ` : item.unit_price.toFixed(2)}
+                                        </td>
+                                        <td class="detail-row-total">${(item.quantity * item.unit_price).toFixed(2)}</td>
                                     </tr>
                                 `;
                             }).join('')}
@@ -311,30 +341,76 @@ async function showRequestDetails(requestId) {
             ui.loadRequestForEdit(req);
         });
 
-        // Handle action buttons
         container.querySelectorAll('.action-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const action = btn.dataset.action;
                 const comments = document.getElementById('actionComments').value;
                 const updates = {};
                 
-                if (action === 'it_approved') {
-                    const suggestedSuppliers = document.getElementById('suggestedSuppliers')?.value || '';
-                    if (suggestedSuppliers) {
-                        updates.suggested_suppliers = suggestedSuppliers;
-                    }
-                }
-
-                if (action === 'finance_approved') {
-                    updates.budget_line_item = document.getElementById('budget_line').value;
-                    updates.commitment_number = document.getElementById('commitment_no').value;
-                    updates.amount_in_words = comments;
-                }
-
                 ui.setLoading(true);
                 try {
+                    // 1. Update main request fields if they have inputs
+                    const subjectIn = document.getElementById('detail-subject');
+                    const justificationIn = document.getElementById('detail-justification');
+                    if (subjectIn) updates.subject = subjectIn.value;
+                    if (justificationIn) updates.justification = justificationIn.value;
+
+                    // 2. Update items (collect all data first)
+                    const itemRows = container.querySelectorAll('.request-item-row');
+                    const itemsToUpdate = [];
+                    let newGrandTotal = 0;
+                    
+                    for (const row of itemRows) {
+                        const itemId = row.dataset.itemId;
+                        const catInput = row.querySelector('.detail-category-select');
+                        
+                        if (catInput) {
+                            const qty = parseFloat(row.querySelector('.detail-qty').value) || 0;
+                            const price = parseFloat(row.querySelector('.detail-price').value) || 0;
+                            newGrandTotal += (qty * price);
+
+                            itemsToUpdate.push({
+                                id: itemId,
+                                request_id: requestId,
+                                category_id: catInput.value || null,
+                                product_id: row.querySelector('.detail-product-id').value || null,
+                                product_name: row.querySelector('.detail-product-search').value,
+                                specifications: row.querySelector('.detail-specs').value,
+                                unit: row.querySelector('.detail-unit').value,
+                                quantity: qty,
+                                unit_price: price
+                            });
+                        } else {
+                            newGrandTotal += parseFloat(row.querySelector('.detail-row-total').innerText) || 0;
+                        }
+                    }
+
+                    // Perform batch updates for items
+                    if (itemsToUpdate.length > 0) {
+                        const { error: itemsErr } = await supabaseClient.from('request_items').upsert(itemsToUpdate);
+                        if (itemsErr) throw itemsErr;
+                    }
+
+                    // 3. Set standard status updates and the new total
+                    updates.total_amount = newGrandTotal;
+
+                    if (action === 'it_approved') {
+                        const suggestedSuppliers = document.getElementById('suggestedSuppliers')?.value || '';
+                        if (suggestedSuppliers) {
+                            updates.suggested_suppliers = suggestedSuppliers;
+                        }
+                    }
+
+                    if (action === 'finance_approved') {
+                        updates.budget_line_item = document.getElementById('budget_line').value;
+                        updates.commitment_number = document.getElementById('commitment_no').value;
+                        updates.amount_in_words = comments;
+                    }
+
+                    // 4. Update the request status and all collected fields
                     await db.updateRequestStatus(requestId, action, updates);
                     await db.logApproval(requestId, currentUser.id, action, comments);
+                    
                     ui.showNotification(i18nManager.get('requestProcessed'), 'success');
                     ui.showView('overview');
                     await loadDashboardData();
@@ -381,30 +457,43 @@ async function showRequestDetails(requestId) {
             });
         });
 
-        // Handle Inline Product/Category Changes in Details
-        container.querySelectorAll('.detail-category-select, .detail-product-search').forEach(el => {
-            el.addEventListener('change', async (e) => {
+        // Handle Inline Row Total Calculation AND sync with memory object (req.request_items)
+        container.querySelectorAll('#detail-subject, #detail-justification, .detail-category-select, .detail-product-search, .detail-specs, .detail-unit, .detail-qty, .detail-price').forEach(el => {
+            el.addEventListener('input', (e) => {
+                // Sync main fields
+                if (el.id === 'detail-subject') req.subject = el.value;
+                if (el.id === 'detail-justification') req.justification = el.value;
+
                 const tr = e.target.closest('tr');
+                if (!tr) return; // Not an item field
+
                 const itemId = tr.dataset.itemId;
-                const catId = tr.querySelector('.detail-category-select')?.value;
-                const prodId = tr.querySelector('.detail-product-id')?.value;
-                const prodName = tr.querySelector('.detail-product-search')?.value;
+                const item = req.request_items.find(i => i.id === itemId);
+                if (!item) return;
 
-                try {
-                    const { error } = await supabaseClient.from('request_items').update({
-                        category_id: catId || null,
-                        product_id: prodId || null,
-                        product_name: prodName
-                    }).eq('id', itemId);
-                    
-                    if (error) throw error;
+                // Sync UI to memory object 'item'
+                if (el.classList.contains('detail-category-select')) item.category_id = el.value;
+                if (el.classList.contains('detail-product-search')) item.product_name = el.value;
+                if (el.classList.contains('detail-product-id')) item.product_id = el.value;
+                if (el.classList.contains('detail-specs')) item.specifications = el.value;
+                if (el.classList.contains('detail-unit')) item.unit = el.value;
+                if (el.classList.contains('detail-qty')) item.quantity = parseFloat(el.value) || 0;
+                if (el.classList.contains('detail-price')) item.unit_price = parseFloat(el.value) || 0;
 
-                    // Log the change
-                    await db.logApproval(requestId, currentUser.id, 'item_updated', `Item updated: ${prodName} (ID: ${prodId || 'New'})`);
-                    ui.showNotification(i18nManager.get('requestUpdated') || 'Item updated', 'success');
-                } catch (err) {
-                    console.error("Update item error:", err);
-                    ui.showNotification('Update failed: ' + err.message, 'error');
+                // Update Row Total in UI
+                const rowTotal = (item.quantity * item.unit_price).toFixed(2);
+                tr.querySelector('.detail-row-total').innerText = rowTotal;
+                
+                // Update Grand Total in the UI text and memory object
+                let sum = 0;
+                req.request_items.forEach(i => {
+                    sum += (i.quantity * i.unit_price);
+                });
+                req.total_amount = sum;
+
+                const totalDisplay = container.querySelector('.text-primary.h5.fw-bold');
+                if (totalDisplay) {
+                    totalDisplay.innerText = sum.toFixed(2) + ' AED';
                 }
             });
         });
@@ -438,10 +527,13 @@ async function showRequestDetails(requestId) {
                         item.addEventListener('click', (ev) => {
                             ev.preventDefault();
                             searchInput.value = p.name;
-                            tr.querySelector('.detail-product-id').value = p.id;
+                            const idInput = tr.querySelector('.detail-product-id');
+                            idInput.value = p.id;
                             resultsDiv.classList.remove('show');
-                            // Trigger change manually
-                            searchInput.dispatchEvent(new Event('change'));
+
+                            // Manually trigger input event on both search and id input to sync memory
+                            searchInput.dispatchEvent(new Event('input'));
+                            idInput.dispatchEvent(new Event('input'));
                         });
                         resultsDiv.appendChild(item);
                     });

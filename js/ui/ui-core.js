@@ -87,7 +87,7 @@ Object.assign(window.ui, {
         }
 
         if (links.approvals) {
-            const canApprove = ['admin', 'it_procurement', 'finance', 'manager', 'general_manager', 'accountant'].includes(role);
+            const canApprove = ['admin', 'it_procurement', 'finance', 'manager', 'general_manager', 'accountant', 'employee'].includes(role);
             links.approvals.classList.toggle('d-none', !canApprove);
         }
 

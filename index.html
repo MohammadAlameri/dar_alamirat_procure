@@ -32,7 +32,8 @@
 
     <!-- Sidebar -->
     <aside id="sidebar">
-        <div class="px-3 pt-3 mb-2 d-flex justify-content-between align-items-center">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
                 <i data-lucide="shopping-cart" class="text-white me-2" style="width: 24px;"></i>
                 <h5 class="fw-bold mb-0 logo-text">Dar Alamirat</h5>
@@ -41,54 +42,58 @@
                 <i data-lucide="chevron-left" id="collapseIcon"></i>
             </button>
         </div>
-        <nav class="nav flex-column">
-            <a class="nav-link active" href="#" data-view="overview">
-                <i data-lucide="layout-dashboard"></i> <span data-i18n="dashboard">Dashboard</span>
-            </a>
-            <a class="nav-link" href="#" data-view="my-requests" id="link-my-requests">
-                <i data-lucide="file-text"></i> <span data-i18n="myRequests">My Requests</span>
-            </a>
-            <a class="nav-link" href="#" data-view="expense-requests" id="link-expenses">
-                <i data-lucide="banknote"></i> <span data-i18n="expenseRequests">Expense Requests</span>
-            </a>
-            
-            <a class="nav-link" href="#" data-view="pending-approvals" id="link-approvals">
-                <i data-lucide="check-square"></i> <span data-i18n="pendingApprovals">Pending Approvals</span>
-            </a>
-            <a class="nav-link" href="#" data-view="all-requests" id="link-all-requests">
-                <i data-lucide="list"></i> <span data-i18n="allRequests">All Requests</span>
-            </a>
-            <a class="nav-link" href="#" data-view="reports" id="link-reports">
-                <i data-lucide="bar-chart-2"></i> <span data-i18n="reports">Reports</span>
-            </a>
-            
-            <hr class="sidebar-divider mx-4">
 
-            <a class="nav-link d-none" href="#" data-view="user-management" id="link-admin">
-                <i data-lucide="users"></i> <span data-i18n="userManagement">User Management</span>
-            </a>
+        <!-- Sidebar Content (Scrollable) -->
+        <div class="sidebar-content flex-grow-1 overflow-y-auto" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;">
+            <nav class="nav flex-column">
+                <a class="nav-link active" href="#" data-view="overview">
+                    <i data-lucide="layout-dashboard"></i> <span data-i18n="dashboard">Dashboard</span>
+                </a>
+                <a class="nav-link" href="#" data-view="my-requests" id="link-my-requests">
+                    <i data-lucide="file-text"></i> <span data-i18n="myRequests">My Requests</span>
+                </a>
+                <a class="nav-link" href="#" data-view="expense-requests" id="link-expenses">
+                    <i data-lucide="banknote"></i> <span data-i18n="expenseRequests">Expense Requests</span>
+                </a>
+                
+                <a class="nav-link" href="#" data-view="pending-approvals" id="link-approvals">
+                    <i data-lucide="check-square"></i> <span data-i18n="pendingApprovals">Pending Approvals</span>
+                </a>
+                <a class="nav-link" href="#" data-view="all-requests" id="link-all-requests">
+                    <i data-lucide="list"></i> <span data-i18n="allRequests">All Requests</span>
+                </a>
+                <a class="nav-link d-none" href="#" data-view="reports" id="link-reports">
+                    <i data-lucide="bar-chart-2"></i> <span data-i18n="reports">Reports</span>
+                </a>
+                
+                <hr class="sidebar-divider mx-4">
 
-            <a class="nav-link d-none" href="#" data-view="branch-management" id="link-branches">
-                <i data-lucide="building"></i> <span data-i18n="branchManagement">Branch Management</span>
-            </a>
+                <a class="nav-link d-none" href="#" data-view="user-management" id="link-admin">
+                    <i data-lucide="users"></i> <span data-i18n="userManagement">User Management</span>
+                </a>
 
-            <a class="nav-link d-none" href="#" data-view="product-management" id="link-products">
-                <i data-lucide="package"></i> <span data-i18n="productManagement">Product Management</span>
-            </a>
+                <a class="nav-link d-none" href="#" data-view="branch-management" id="link-branches">
+                    <i data-lucide="building"></i> <span data-i18n="branchManagement">Branch Management</span>
+                </a>
 
-            <div class="px-4 mt-4">
+                <a class="nav-link d-none" href="#" data-view="product-management" id="link-products">
+                    <i data-lucide="package"></i> <span data-i18n="productManagement">Product Management</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer (Fixed) -->
+        <div class="sidebar-footer pt-3 pb-3">
+            <div class="px-4 mb-3">
                 <button class="btn btn-sm w-100 sidebar-lang-btn" id="langSwitchBtn">
                     <i data-lucide="languages"></i>
                     <span id="langText">العربية</span>
                 </button>
             </div>
-
-            <div class="mt-auto pt-4">
-                <a class="nav-link text-danger" href="#" id="logoutBtn">
-                    <i data-lucide="log-out"></i> <span data-i18n="signOut">Sign Out</span>
-                </a>
-            </div>
-        </nav>
+            <a class="nav-link text-danger" href="#" id="logoutBtn">
+                <i data-lucide="log-out"></i> <span data-i18n="signOut">Sign Out</span>
+            </a>
+        </div>
     </aside>
 
     <!-- Main Content -->

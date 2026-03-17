@@ -35,10 +35,50 @@ body {
     color: var(--sidebar-text);
     transition: all var(--transition-speed);
     z-index: 1000;
-    padding-top: 2rem;
     display: flex;
     flex-direction: column;
     box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+}
+
+#sidebar::-webkit-scrollbar,
+#sidebar .sidebar-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+#sidebar::-webkit-scrollbar-thumb,
+#sidebar .sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+#sidebar::-webkit-scrollbar-track,
+#sidebar .sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+#sidebar .sidebar-header {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#sidebar .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 1rem;
+    scrollbar-width: thin;
+}
+
+.sidebar-divider {
+    opacity: 0.15;
+    margin: 1rem 0;
+    border-top: 1px solid #fff;
+}
+
+#sidebar .sidebar-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 #sidebar .nav-link {
