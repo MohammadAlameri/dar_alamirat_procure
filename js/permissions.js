@@ -20,9 +20,21 @@ window.permissions = {
         }
         this._userBranches = data || [];
         
-        // Auto-select first "full" branch, or first branch
-        const fullBranch = this._userBranches.find(b => b.access_level === 'full');
-        this._currentBranchId = fullBranch ? fullBranch.branch_id : (this._userBranches[0]?.branch_id || null);
+        // Try to restore from localStorage, otherwise auto-select first "full" branch, or first branch
+        const savedBranchId = localStorage.getItem(`selectedBranch_${userId}`);
+        const branchExists = savedBranchId && this._userBranches.some(b => b.branch_id === savedBranchId);
+
+        if (branchExists) {
+            this._currentBranchId = savedBranchId;
+        } else {
+            const fullBranch = this._userBranches.find(b => b.access_level === 'full');
+            this._currentBranchId = fullBranch ? fullBranch.branch_id : (this._userBranches[0]?.branch_id || null);
+            
+            // Save the default selection if it exists
+            if (this._currentBranchId && userId) {
+                localStorage.setItem(`selectedBranch_${userId}`, this._currentBranchId);
+            }
+        }
     },
 
     // Get all branches the user has access to
@@ -38,6 +50,9 @@ window.permissions = {
     // Set current branch (e.g. from branch selector dropdown)
     setCurrentBranch(branchId) {
         this._currentBranchId = branchId;
+        if (currentUser && currentUser.id) {
+            localStorage.setItem(`selectedBranch_${currentUser.id}`, branchId);
+        }
     },
 
     // Get access level for a specific branch

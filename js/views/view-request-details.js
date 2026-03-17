@@ -326,6 +326,10 @@ async function showRequestDetails(requestId) {
                 </div>
             </div>
         `;
+        // Track changes for logging
+        const changedItemIds = new Set();
+        let mainFieldsModified = false;
+
         ui.showView('request-details');
 
         // Handle Print Buttons
@@ -409,6 +413,17 @@ async function showRequestDetails(requestId) {
 
                     // 4. Update the request status and all collected fields
                     await db.updateRequestStatus(requestId, action, updates);
+
+                    // 5. Log modified items if any
+                    if (changedItemIds.size > 0) {
+                        for (const itemId of changedItemIds) {
+                            const item = req.request_items.find(i => i.id === itemId);
+                            if (item) {
+                                await db.logApproval(requestId, currentUser.id, 'item_updated', `${i18nManager.get('item_updated')}: ${item.product_name}`);
+                            }
+                        }
+                    }
+
                     await db.logApproval(requestId, currentUser.id, action, comments);
                     
                     ui.showNotification(i18nManager.get('requestProcessed'), 'success');
@@ -461,13 +476,18 @@ async function showRequestDetails(requestId) {
         container.querySelectorAll('#detail-subject, #detail-justification, .detail-category-select, .detail-product-search, .detail-specs, .detail-unit, .detail-qty, .detail-price').forEach(el => {
             el.addEventListener('input', (e) => {
                 // Sync main fields
-                if (el.id === 'detail-subject') req.subject = el.value;
-                if (el.id === 'detail-justification') req.justification = el.value;
+                if (el.id === 'detail-subject' || el.id === 'detail-justification') {
+                    mainFieldsModified = true;
+                    if (el.id === 'detail-subject') req.subject = el.value;
+                    if (el.id === 'detail-justification') req.justification = el.value;
+                }
 
                 const tr = e.target.closest('tr');
                 if (!tr) return; // Not an item field
 
                 const itemId = tr.dataset.itemId;
+                changedItemIds.add(itemId);
+                
                 const item = req.request_items.find(i => i.id === itemId);
                 if (!item) return;
 
