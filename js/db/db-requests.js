@@ -1,13 +1,23 @@
 window.db = window.db || {};
 
 window.db.getRequests = async function(filters = {}) {
-    let query = supabaseClient
-        .from('purchase_requests')
-        .select(`
+    let selectStr = `
+        *,
+        profiles:created_by (full_name, role, manager_id),
+        request_items (*)
+    `;
+
+    if (filters.categoryId) {
+        selectStr = `
             *,
             profiles:created_by (full_name, role, manager_id),
-            request_items (*)
-        `)
+            request_items!inner (*)
+        `;
+    }
+
+    let query = supabaseClient
+        .from('purchase_requests')
+        .select(selectStr)
         .order('created_at', { ascending: false });
 
     if (filters.userId) {
@@ -20,7 +30,7 @@ window.db.getRequests = async function(filters = {}) {
         query = query.eq('branch_id', filters.branchId);
     }
     if (filters.categoryId) {
-        query = query.eq('category_id', filters.categoryId);
+        query = query.eq('request_items.category_id', filters.categoryId);
     }
     if (filters.dateFrom) {
         query = query.gte('created_at', filters.dateFrom);
