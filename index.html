@@ -58,11 +58,18 @@
             <a class="nav-link" href="#" data-view="all-requests" id="link-all-requests">
                 <i data-lucide="list"></i> <span data-i18n="allRequests">All Requests</span>
             </a>
+            <a class="nav-link" href="#" data-view="reports" id="link-reports">
+                <i data-lucide="bar-chart-2"></i> <span data-i18n="reports">Reports</span>
+            </a>
             
             <hr class="sidebar-divider mx-4">
 
             <a class="nav-link d-none" href="#" data-view="user-management" id="link-admin">
                 <i data-lucide="users"></i> <span data-i18n="userManagement">User Management</span>
+            </a>
+
+            <a class="nav-link d-none" href="#" data-view="branch-management" id="link-branches">
+                <i data-lucide="building"></i> <span data-i18n="branchManagement">Branch Management</span>
             </a>
 
             <a class="nav-link d-none" href="#" data-view="product-management" id="link-products">
@@ -96,6 +103,11 @@
             </div>
             <div class="d-flex align-items-center">
                 
+                <div class="me-3" id="branchSelectorContainer">
+                    <select class="form-select form-select-sm" id="branchSelector">
+                        <!-- Populated via JS -->
+                    </select>
+                </div>
                 <div class="text-end me-3 d-none d-sm-block">
                     <div class="fw-bold mb-0" id="userName">User Name</div>
                     <div class="small text-muted" id="userRole">Role</div>
@@ -473,6 +485,91 @@
                         </div>
                     </div>
                 </div>
+            <!-- Branch Modal -->
+            <div class="modal fade" id="branchModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="branchFormTitle" data-i18n="addBranch">Add Branch</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="branchForm">
+                                <input type="hidden" id="branch_id_input">
+                                <div class="mb-3">
+                                    <label class="form-label" for="branch_name_input" data-i18n="branchName">Branch Name (EN)</label>
+                                    <input type="text" class="form-control" id="branch_name_input" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="branch_name_ar_input" data-i18n="branchNameAr">Branch Name (AR)</label>
+                                    <input type="text" class="form-control" id="branch_name_ar_input" required dir="rtl">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="branch_code_input" data-i18n="branchCode">Branch Code</label>
+                                    <input type="text" class="form-control" id="branch_code_input" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="branch_address_input" data-i18n="address">Address</label>
+                                    <textarea class="form-control" id="branch_address_input" rows="2"></textarea>
+                                </div>
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                                    <button type="submit" class="btn btn-primary" data-i18n="save">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Branch Modal -->
+            <div class="modal fade" id="userBranchModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" data-i18n="assignUserToBranch">Assign User to Branch</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="userBranchForm">
+                                <input type="hidden" id="ub_branch_id">
+                                <div class="mb-3">
+                                    <label class="form-label" for="ub_user_select" data-i18n="user">User</label>
+                                    <select class="form-select" id="ub_user_select" required>
+                                        <option value="" disabled selected>Select User</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="ub_access_level" data-i18n="accessLevel">Access Level</label>
+                                    <select class="form-select" id="ub_access_level" required>
+                                        <option value="full" data-i18n="fullAccess">Full Access (Edit/Approve)</option>
+                                        <option value="view" data-i18n="viewOnly">View Only</option>
+                                    </select>
+                                </div>
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                                    <button type="submit" class="btn btn-primary" data-i18n="assign">Assign</button>
+                                </div>
+                            </form>
+                            <hr>
+                            <h6 class="fw-bold mb-3" data-i18n="assignedUsers">Assigned Users</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Level</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="assignedUsersTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             </div>
 
             </div>
@@ -504,6 +601,34 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="view-content d-none" id="view-branch-management">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span data-i18n="manageBranches">Manage Branches</span>
+                        <button class="btn btn-primary btn-sm" id="showCreateBranchBtn" onclick="ui.showBranchModal()">
+                            <i data-lucide="plus"></i> <span data-i18n="addBranch">Add Branch</span>
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4" data-i18n="branchName">Branch Name</th>
+                                        <th data-i18n="branchCode">Code</th>
+                                        <th data-i18n="location">Location</th>
+                                        <th class="text-end pe-4" data-i18n="action">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="branchesTableBody">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -612,10 +737,108 @@
             </div>
 
             <div class="view-content d-none" id="view-reports">
-                <div class="card">
-                    <div class="card-header" data-i18n="reports">Reports</div>
+                <!-- Report Filters -->
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <i data-lucide="filter" class="me-2" style="width: 18px;"></i>
+                        <span data-i18n="reportFilters">Report Filters</span>
+                    </div>
                     <div class="card-body">
-                        <p class="text-muted">Report generation and analytics placeholder.</p>
+                        <form id="reportFilterForm">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold" data-i18n="reportType">Report Type</label>
+                                    <select class="form-select form-select-sm" id="rep_type">
+                                        <option value="procure" data-i18n="procure">Procure Request</option>
+                                        <option value="expense" data-i18n="expense">Expense Request</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold" data-i18n="branch">Branch</label>
+                                    <select class="form-select form-select-sm" id="rep_branch">
+                                        <option value="all" data-i18n="all">All Branches</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold" data-i18n="requester">Staff / Requester</label>
+                                    <select class="form-select form-select-sm" id="rep_staff">
+                                        <option value="all" data-i18n="all">All Staff</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold" data-i18n="status">Status</label>
+                                    <select class="form-select form-select-sm" id="rep_status">
+                                        <option value="all" data-i18n="all">All Statuses</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold" data-i18n="fromDate">From Date</label>
+                                    <input type="date" class="form-control form-control-sm" id="rep_date_from">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold" data-i18n="toDate">To Date</label>
+                                    <input type="date" class="form-control form-control-sm" id="rep_date_to">
+                                </div>
+                                <div class="col-md-3 procure-only">
+                                    <label class="form-label small fw-bold" data-i18n="category">Category</label>
+                                    <select class="form-select form-select-sm" id="rep_category">
+                                        <option value="all" data-i18n="all">All Categories</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end gap-2">
+                                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                                        <i data-lucide="search" class="me-1"></i> <span data-i18n="generate">Generate</span>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success btn-sm" id="exportCsvBtn">
+                                        <i data-lucide="download" class="me-1"></i> <span data-i18n="export">Export</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Report Summary Stats -->
+                <div class="row g-3 mb-4" id="reportStats">
+                    <div class="col-md-4">
+                        <div class="card text-center py-3 border-primary shadow-sm">
+                            <h6 class="text-muted small mb-1" data-i18n="totalRequests">TOTAL REQUESTS</h6>
+                            <h3 class="fw-bold mb-0" id="repStat_count">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center py-3 border-success shadow-sm">
+                            <h6 class="text-muted small mb-1" data-i18n="totalAmount">TOTAL AMOUNT</h6>
+                            <h3 class="fw-bold mb-0 text-success" id="repStat_amount">0.00</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center py-3 border-warning shadow-sm">
+                            <h6 class="text-muted small mb-1" data-i18n="completed">COMPLETED</h6>
+                            <h3 class="fw-bold mb-0 text-warning" id="repStat_completed">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Table -->
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="reportTable">
+                                <thead class="bg-light">
+                                    <tr id="reportTableHead">
+                                        <!-- Dynamic headers -->
+                                    </tr>
+                                </thead>
+                                <tbody id="reportTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5 text-muted" data-i18n="noDataToDisplay">
+                                            Select filters and click Generate
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -754,10 +977,34 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/i18n.js"></script>
-    <script src="js/supabase.js"></script>
+    <!-- DB & Auth -->
+    <script src="js/config.js"></script>
+    <script src="js/db/db-core.js"></script>
+    <script src="js/db/db-profiles.js"></script>
+    <script src="js/db/db-requests.js"></script>
+    <script src="js/db/db-expenses.js"></script>
+    <script src="js/db/db-branches.js"></script>
+    <script src="js/permissions.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/ui.js"></script>
+    <!-- UI Helpers -->
+    <script src="js/ui/ui-core.js"></script>
+    <script src="js/ui/ui-tables.js"></script>
+    <script src="js/ui/ui-forms.js"></script>
+    <script src="js/ui/ui-modals.js"></script>
+    <!-- Views -->
+    <script src="js/views/view-dashboard.js"></script>
+    <script src="js/views/view-request-details.js"></script>
+    <script src="js/views/view-expense-details.js"></script>
+    <script src="js/views/view-profiles.js"></script>
+    <script src="js/views/view-branches.js"></script>
+    <script src="js/views/view-reports.js"></script>
+    <!-- Print templates -->
+    <script src="js/print/print-purchase.js"></script>
+    <script src="js/print/print-receipt.js"></script>
+    <script src="js/print/print-expense.js"></script>
+    <script src="js/print/print-expense-receipt.js"></script>
+    <!-- I18n and App -->
+    <script src="js/i18n.js"></script>
     <script src="js/app.js"></script>
     <script>
         i18nManager.init();
