@@ -29,5 +29,17 @@
   "procurementSystem": "Procurement Management System",
   "pleaseFillAllFields": "Please fill all fields",
   "invalidCredentials": "Invalid login credentials",
-  "unexpectedError": "An unexpected error occurred"
+  "unexpectedError": "An unexpected error occurred",
+  "expenseRequests": "Expense Requests",
+  "branchManagement": "Branch Management",
+  "productManagement": "Product Management",
+  "manageProfiles": "Manage Profiles",
+  "roles": "Roles",
+  "name": "Name",
+  "email": "Email",
+  "department": "Department",
+  "jobTitle": "Job Title",
+  "admin": "Administration",
+  "menu": "Menu",
+  "approvals": "Approvals"
 }

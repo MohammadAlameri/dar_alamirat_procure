@@ -29,5 +29,17 @@
   "procurementSystem": "نظام إدارة المشتريات",
   "pleaseFillAllFields": "يرجى ملء جميع الحقول",
   "invalidCredentials": "بيانات تسجيل الدخول غير صحيحة",
-  "unexpectedError": "حدث خطأ غير متوقع"
+  "unexpectedError": "حدث خطأ غير متوقع",
+  "expenseRequests": "طلبات النثرية",
+  "branchManagement": "إدارة الفروع",
+  "productManagement": "إدارة المنتجات",
+  "manageProfiles": "إدارة الملفات الشخصية",
+  "roles": "الأدوار",
+  "name": "الاسم",
+  "email": "البريد الإلكتروني",
+  "department": "القسم",
+  "jobTitle": "المسمى الوظيفي",
+  "admin": "الإدارة",
+  "menu": "القائمة",
+  "approvals": "الموافقات"
 }
