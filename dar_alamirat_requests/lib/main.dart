@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'core/theme/app_theme.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/constants/app_constants.dart';
-import 'features/auth/presentation/pages/login_page.dart';
+import 'core/navigation/app_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,8 +44,9 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Dar Alamirat Procurement',
+      routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       locale: _locale,
@@ -59,7 +60,6 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const LoginPage(),
     );
   }
 }

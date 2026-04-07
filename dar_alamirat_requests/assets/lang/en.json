@@ -26,5 +26,8 @@
   "rememberMe": "Remember me",
   "noAccount": "Don't have an account?",
   "contactAdmin": "Contact Admin",
-  "procurementSystem": "Procurement Management System"
+  "procurementSystem": "Procurement Management System",
+  "pleaseFillAllFields": "Please fill all fields",
+  "invalidCredentials": "Invalid login credentials",
+  "unexpectedError": "An unexpected error occurred"
 }

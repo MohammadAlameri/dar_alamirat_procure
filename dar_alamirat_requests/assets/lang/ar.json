@@ -26,5 +26,8 @@
   "rememberMe": "تذكرني",
   "noAccount": "ليس لديك حساب؟",
   "contactAdmin": "اتصل بالمسؤول",
-  "procurementSystem": "نظام إدارة المشتريات"
+  "procurementSystem": "نظام إدارة المشتريات",
+  "pleaseFillAllFields": "يرجى ملء جميع الحقول",
+  "invalidCredentials": "بيانات تسجيل الدخول غير صحيحة",
+  "unexpectedError": "حدث خطأ غير متوقع"
 }
