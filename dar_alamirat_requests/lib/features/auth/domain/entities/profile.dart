@@ -4,7 +4,8 @@ enum UserRole {
   it_procurement,
   finance,
   admin,
-  general_manager;
+  general_manager,
+  accountant;
 
   static UserRole fromString(String role) {
     switch (role.toLowerCase()) {
@@ -20,6 +21,8 @@ enum UserRole {
         return UserRole.admin;
       case 'general_manager':
         return UserRole.general_manager;
+      case 'accountant':
+        return UserRole.accountant;
       default:
         return UserRole.employee;
     }

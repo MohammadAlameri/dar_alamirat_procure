@@ -12,7 +12,7 @@ class ProfileModel extends Profile {
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
-      id: json['id'],
+      id: json['id'] ?? '',
       fullName: json['full_name'] ?? '',
       email: json['email'] ?? '',
       jobTitle: json['job_title'],

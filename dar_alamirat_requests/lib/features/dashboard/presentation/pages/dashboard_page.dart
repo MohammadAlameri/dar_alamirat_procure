@@ -7,6 +7,13 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../main.dart';
 import '../../../auth/domain/entities/profile.dart';
 import '../../../auth/data/models/profile_model.dart';
+import '../../../management/domain/entities/branch.dart';
+import '../../../management/data/models/branch_model.dart';
+import '../../../purchase_request/domain/entities/purchase_request.dart';
+import '../../../purchase_request/data/models/purchase_request_model.dart';
+import '../../../expense_request/domain/entities/expense_request.dart';
+import '../../../expense_request/data/models/expense_request_model.dart';
+import 'package:intl/intl.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -19,6 +26,16 @@ class _DashboardPageState extends State<DashboardPage> {
   int _selectedIndex = 0;
   Profile? _profile;
   bool _isLoading = true;
+  List<UserBranch> _userBranches = [];
+  Branch? _selectedBranch;
+  List<PurchaseRequest> _purchaseRequests = [];
+  List<ExpenseRequest> _expenseRequests = [];
+  
+  // Stats
+  int _totalCount = 0;
+  int _pendingCount = 0;
+  int _approvedCount = 0;
+  int _rejectedCount = 0;
 
   @override
   void initState() {
@@ -35,15 +52,121 @@ class _DashboardPageState extends State<DashboardPage> {
             .select()
             .eq('id', user.id)
             .single();
+        final profile = ProfileModel.fromJson(data);
+        
         setState(() {
-          _profile = ProfileModel.fromJson(data);
-          _isLoading = false;
+          _profile = profile;
         });
+
+        // Load branches
+        await _loadUserBranches(user.id);
+        
+        // Initial data fetch
+        await _fetchDashboardData();
       } catch (e) {
         debugPrint('Error loading profile: $e');
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> _loadUserBranches(String userId) async {
+    try {
+      final data = await Supabase.instance.client
+          .from('user_branches')
+          .select('*, branches(*)')
+          .eq('user_id', userId);
+      
+      final branches = (data as List).map((e) => UserBranchModel.fromJson(e)).toList();
+      
+      setState(() {
+        _userBranches = branches;
+        if (_userBranches.isNotEmpty) {
+          // Try to find first "full" access branch, otherwise first branch
+          final fullBranch = _userBranches.where((b) => b.accessLevel == 'full').firstOrNull;
+          _selectedBranch = fullBranch?.branch ?? _userBranches.first.branch;
+        }
+      });
+    } catch (e) {
+      debugPrint('Error loading user branches: $e');
+    }
+  }
+
+  Future<void> _fetchDashboardData() async {
+    if (_profile == null) return;
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      final role = _profile!.role;
+      final userId = _profile!.id;
+      final branchId = _selectedBranch?.id;
+
+      // 1. Fetch Purchase Requests
+      var purchaseQuery = Supabase.instance.client
+          .from('purchase_requests')
+          .select('*, profiles:created_by(id, full_name, email, role, manager_id)');
+
+      if (branchId != null) {
+        purchaseQuery = purchaseQuery.eq('branch_id', branchId);
+      }
+      if (role == UserRole.employee) {
+        purchaseQuery = purchaseQuery.eq('created_by', userId);
+      }
+      
+      final purchaseData = await purchaseQuery.order('created_at', ascending: false);
+      final purchases = (purchaseData as List).map((e) => PurchaseRequestModel.fromJson(e)).toList();
+
+      // 2. Fetch Expense Requests
+      var expenseQuery = Supabase.instance.client
+          .from('expense_requests')
+          .select('*, profiles:employee_id(id, full_name, email, role, manager_id)');
+
+      if (branchId != null) {
+        expenseQuery = expenseQuery.eq('branch_id', branchId);
+      }
+      if (role == UserRole.employee) {
+        expenseQuery = expenseQuery.eq('employee_id', userId);
+      }
+
+      final expenseData = await expenseQuery.order('created_at', ascending: false);
+      final expenses = (expenseData as List).map((e) => ExpenseRequestModel.fromJson(e)).toList();
+
+      setState(() {
+        _purchaseRequests = purchases;
+        _expenseRequests = expenses;
+        _calculateStats();
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error fetching dashboard data: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _calculateStats() {
+    // Mirroring website logic
+    _totalCount = _purchaseRequests.length + _expenseRequests.length;
+    
+    // Pending PR: 'pending', 'manager_approved', 'it_approved', 'finance_approved', 'purchased'
+    final pendingPR = _purchaseRequests.where((r) => 
+      ['pending', 'manager_approved', 'it_approved', 'finance_approved', 'purchased'].contains(r.status)
+    ).length;
+    
+    // Pending Expense: not 'completed', 'paid', 'received' AND not 'rejected'
+    final pendingExp = _expenseRequests.where((e) => 
+      !['completed', 'paid', 'received'].contains(e.status) && !e.status.toLowerCase().contains('rejected')
+    ).length;
+    
+    _pendingCount = pendingPR + pendingExp;
+    
+    // Approved
+    _approvedCount = _purchaseRequests.where((r) => r.status == 'completed').length + 
+                     _expenseRequests.where((e) => e.status == 'completed').length;
+    
+    // Rejected
+    _rejectedCount = _purchaseRequests.where((r) => r.status.toLowerCase().contains('rejected')).length + 
+                     _expenseRequests.where((e) => e.status.toLowerCase().contains('rejected')).length;
   }
 
   void _showMenu() {
@@ -142,6 +265,31 @@ class _DashboardPageState extends State<DashboardPage> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
+        actions: [
+          if (_userBranches.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: DropdownButton<Branch>(
+                value: _selectedBranch,
+                underline: const SizedBox(),
+                icon: const Icon(LucideIcons.building, size: 18),
+                items: _userBranches.map((ub) {
+                  return DropdownMenuItem<Branch>(
+                    value: ub.branch,
+                    child: Text(ub.branch?.name ?? 'Branch', style: const TextStyle(fontSize: 14)),
+                  );
+                }).toList(),
+                onChanged: (Branch? newValue) {
+                  if (newValue != null && newValue.id != _selectedBranch?.id) {
+                    setState(() {
+                      _selectedBranch = newValue;
+                    });
+                    _fetchDashboardData();
+                  }
+                },
+              ),
+            ),
+        ],
       ),
       body: _getBody(),
       bottomNavigationBar: _buildFloatingBottomNavbar(l10n, isManager),
@@ -242,10 +390,10 @@ class _DashboardPageState extends State<DashboardPage> {
             crossAxisSpacing: 16,
             childAspectRatio: 1.4,
             children: [
-              _buildStatCard(l10n.translate('totalRequests'), '0', LucideIcons.fileText, Colors.blue),
-              _buildStatCard(l10n.translate('pendingReview'), '0', LucideIcons.clock, Colors.orange),
-              _buildStatCard(l10n.translate('approved'), '0', LucideIcons.checkCircle, Colors.green),
-              _buildStatCard(l10n.translate('rejected'), '0', LucideIcons.xCircle, Colors.red),
+              _buildStatCard(l10n.translate('totalRequests'), _totalCount.toString(), LucideIcons.fileText, Colors.blue),
+              _buildStatCard(l10n.translate('pendingReview'), _pendingCount.toString(), LucideIcons.clock, Colors.orange),
+              _buildStatCard(l10n.translate('approved'), _approvedCount.toString(), LucideIcons.checkCircle, Colors.green),
+              _buildStatCard(l10n.translate('rejected'), _rejectedCount.toString(), LucideIcons.xCircle, Colors.red),
             ],
           ),
           const SizedBox(height: 32),
@@ -257,15 +405,59 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
           const SizedBox(height: 16),
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(40.0),
-              child: Center(child: Text('No requests found', style: TextStyle(color: Colors.grey))),
-            ),
-          ),
+          _buildRecentRequestsList(),
           const SizedBox(height: 100), // Space for floating navbar
         ],
       ),
+    );
+  }
+
+  Widget _buildRecentRequestsList() {
+    final combined = [..._purchaseRequests.map((r) => _UnifiedRequest(r.id, r.subject, r.status, r.createdAt, r.totalAmount, 'procure', r.profile?.fullName ?? 'Unknown')), 
+                      ..._expenseRequests.map((e) => _UnifiedRequest(e.id, e.subject, e.status, e.createdAt, e.amount, 'expense', e.profile?.fullName ?? 'Unknown'))];
+    
+    combined.sort((a, b) => b.date.compareTo(a.date));
+    final recent = combined.take(10).toList();
+
+    if (recent.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(40.0),
+          child: Center(child: Text('No requests found', style: TextStyle(color: Colors.grey))),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: recent.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final item = recent[index];
+        return ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: CircleAvatar(
+            backgroundColor: item.type == 'procure' ? Colors.blue.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+            child: Icon(
+              item.type == 'procure' ? LucideIcons.shoppingCart : LucideIcons.banknote,
+              size: 16,
+              color: item.type == 'procure' ? Colors.blue : Colors.orange,
+            ),
+          ),
+          title: Text(item.subject, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          subtitle: Text('${item.requester} • ${DateFormat('MMM dd, yyyy').format(item.date)}', style: const TextStyle(fontSize: 12)),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('${item.amount.toStringAsFixed(2)} AED', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const SizedBox(height: 4),
+              _buildStatusBadge(item.status),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -288,4 +480,38 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
+
+  Widget _buildStatusBadge(String status) {
+    Color color = Colors.grey;
+    if (status.contains('approved')) color = Colors.green;
+    else if (status.contains('rejected')) color = Colors.red;
+    else if (status == 'pending') color = Colors.orange;
+    else if (status == 'completed') color = Colors.blue;
+    else if (status == 'purchased') color = Colors.deepPurple;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Text(
+        status.replaceAll('_', ' ').toUpperCase(),
+        style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}
+
+class _UnifiedRequest {
+  final String id;
+  final String subject;
+  final String status;
+  final DateTime date;
+  final double amount;
+  final String type;
+  final String requester;
+
+  _UnifiedRequest(this.id, this.subject, this.status, this.date, this.amount, this.type, this.requester);
 }
