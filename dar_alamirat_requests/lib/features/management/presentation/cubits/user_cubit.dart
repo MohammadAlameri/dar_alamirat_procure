@@ -1,50 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../auth/domain/entities/profile.dart';
-import '../../data/repositories/user_repository.dart';
+import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
+import 'package:dar_alamirat_requests/features/management/data/repositories/user_repository.dart';
 
-// Events
-abstract class UserEvent {}
+part 'user_state.dart';
 
-class LoadUsers extends UserEvent {}
-
-class UpdateUser extends UserEvent {
-  final String id;
-  final String? fullName;
-  final String? email;
-  final UserRole? role;
-  final String? managerId;
-  final bool? isActive;
-
-  UpdateUser({
-    required this.id,
-    this.fullName,
-    this.email,
-    this.role,
-    this.managerId,
-    this.isActive,
-  });
-}
-
-// States
-abstract class UserState {}
-
-class UserInitial extends UserState {}
-
-class UserLoading extends UserState {}
-
-class UserLoaded extends UserState {
-  final List<Profile> users;
-
-  UserLoaded({required this.users});
-}
-
-class UserError extends UserState {
-  final String message;
-
-  UserError({required this.message});
-}
-
-// Cubit
 class UserCubit extends Cubit<UserState> {
   final UserRepository _repository;
 
@@ -54,7 +13,7 @@ class UserCubit extends Cubit<UserState> {
     if (isClosed) return;
     emit(UserLoading());
     try {
-      final users = await _repository.fetchUsers();
+      final users = await _repository.fetchAllProfiles();
       if (!isClosed) {
         emit(UserLoaded(users: users));
       }
@@ -71,20 +30,77 @@ class UserCubit extends Cubit<UserState> {
     String? email,
     UserRole? role,
     String? managerId,
-    bool? isActive,
+    String? jobTitle,
+    String? department,
   }) async {
+    if (isClosed) return;
+    emit(UserLoading());
     try {
-      await _repository.updateUser(
-        id: id,
-        fullName: fullName,
-        email: email,
-        role: role,
-        managerId: managerId,
-        isActive: isActive,
-      );
-      loadUsers();
+      final updates = <String, dynamic>{};
+      if (fullName != null) updates['full_name'] = fullName;
+      if (email != null) updates['email'] = email;
+      if (role != null) updates['role'] = role.name;
+      if (jobTitle != null) updates['job_title'] = jobTitle;
+      if (department != null) updates['department'] = department;
+      if (managerId != null) updates['manager_id'] = managerId;
+
+      await _repository.updateProfile(id, updates);
+      if (!isClosed) {
+        final users = await _repository.fetchAllProfiles();
+        emit(UserLoaded(users: users));
+      }
     } catch (e) {
-      emit(UserError(message: e.toString()));
+      if (!isClosed) {
+        emit(UserError(message: e.toString()));
+      }
+    }
+  }
+
+  Future<void> deleteUser(String id) async {
+    if (isClosed) return;
+    emit(UserLoading());
+    try {
+      await _repository.deleteProfile(id);
+      if (!isClosed) {
+        final users = await _repository.fetchAllProfiles();
+        emit(UserLoaded(users: users));
+      }
+    } catch (e) {
+      if (!isClosed) {
+        emit(UserError(message: e.toString()));
+      }
+    }
+  }
+
+  Future<void> createUser({
+    required String email,
+    required String password,
+    required String fullName,
+    required String role,
+    String? jobTitle,
+    String? department,
+    String? managerId,
+  }) async {
+    if (isClosed) return;
+    emit(UserLoading());
+    try {
+      await _repository.createUser(
+        email: email,
+        password: password,
+        fullName: fullName,
+        role: role,
+        jobTitle: jobTitle,
+        department: department,
+        managerId: managerId,
+      );
+      if (!isClosed) {
+        final users = await _repository.fetchAllProfiles();
+        emit(UserLoaded(users: users));
+      }
+    } catch (e) {
+      if (!isClosed) {
+        emit(UserError(message: e.toString()));
+      }
     }
   }
 }

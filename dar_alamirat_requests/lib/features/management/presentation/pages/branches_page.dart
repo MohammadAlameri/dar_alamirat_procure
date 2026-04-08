@@ -6,6 +6,7 @@ import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/branch_repository.dart';
+import 'package:dar_alamirat_requests/features/management/presentation/pages/add_branch_page.dart';
 import '../cubits/branch_cubit.dart';
 
 class BranchesPage extends StatelessWidget {
@@ -109,7 +110,16 @@ class BranchesView extends StatelessWidget {
           right: 20,
           child: FloatingActionButton(
             onPressed: () {
-              // TODO: Show create branch dialog
+              final branchCubit = context.read<BranchCubit>();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider.value(
+                    value: branchCubit,
+                    child: const AddBranchPage(),
+                  ),
+                ),
+              );
             },
             backgroundColor: AppTheme.primaryPink,
             child: const Icon(LucideIcons.plus, color: AppTheme.darkGray),

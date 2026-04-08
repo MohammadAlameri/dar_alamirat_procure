@@ -16,6 +16,8 @@ import '../../../expense_request/data/models/expense_request_model.dart';
 import 'package:intl/intl.dart';
 import 'package:dar_alamirat_requests/features/purchase_request/presentation/pages/purchase_requests_page.dart';
 import 'package:dar_alamirat_requests/features/expense_request/presentation/pages/expense_requests_page.dart';
+import 'package:dar_alamirat_requests/features/purchase_request/presentation/pages/add_purchase_request_page.dart';
+import 'package:dar_alamirat_requests/features/expense_request/presentation/pages/add_expense_request_page.dart';
 import 'package:dar_alamirat_requests/features/dashboard/presentation/pages/approvals_page.dart';
 import 'package:dar_alamirat_requests/features/management/presentation/pages/branches_page.dart';
 import 'package:dar_alamirat_requests/features/management/presentation/pages/user_management_page.dart';
@@ -884,15 +886,43 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
       child: FloatingActionButton(
         onPressed: () {
           if (_selectedIndex == 1) {
-            // TODO: Navigate to create procure request
+            _navigateToAddPurchaseRequest();
           } else if (_selectedIndex == 2) {
-            // TODO: Navigate to create expense request
+            _navigateToAddExpenseRequest();
           } else {
             _showDashboardCreateOptions();
           }
         },
         backgroundColor: AppTheme.primaryPink,
         child: const Icon(LucideIcons.plus, color: AppTheme.darkGray),
+      ),
+    );
+  }
+
+  void _navigateToAddPurchaseRequest() {
+    if (_profile == null || _selectedBranch == null) return;
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddPurchaseRequestPage(
+          profile: _profile!,
+          selectedBranch: _selectedBranch,
+        ),
+      ),
+    );
+  }
+
+  void _navigateToAddExpenseRequest() {
+    if (_profile == null || _selectedBranch == null) return;
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddExpenseRequestPage(
+          profile: _profile!,
+          selectedBranch: _selectedBranch,
+        ),
       ),
     );
   }

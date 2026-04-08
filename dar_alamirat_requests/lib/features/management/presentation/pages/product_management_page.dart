@@ -5,6 +5,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/product_repository.dart';
+import 'package:dar_alamirat_requests/features/management/presentation/pages/add_product_category_page.dart';
 import '../cubits/product_cubit.dart';
 
 class ProductManagementPage extends StatelessWidget {
@@ -34,6 +35,33 @@ class _ProductManagementViewState extends State<ProductManagementView>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+  }
+
+  void _showAddOptionsDialog(BuildContext context) {
+    final isProductTab = _tabController.index == 0;
+    final productCubit = context.read<ProductCubit>();
+    
+    if (isProductTab) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BlocProvider.value(
+            value: productCubit,
+            child: const AddProductPage(),
+          ),
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BlocProvider.value(
+            value: productCubit,
+            child: const AddCategoryPage(),
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -70,7 +98,7 @@ class _ProductManagementViewState extends State<ProductManagementView>
           right: 20,
           child: FloatingActionButton(
             onPressed: () {
-              // TODO: Show create dialog based on current tab
+              _showAddOptionsDialog(context);
             },
             backgroundColor: AppTheme.primaryPink,
             child: const Icon(LucideIcons.plus, color: AppTheme.darkGray),

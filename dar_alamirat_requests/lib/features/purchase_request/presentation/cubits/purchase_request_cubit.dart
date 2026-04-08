@@ -120,11 +120,7 @@ class PurchaseRequestCubit extends Cubit<PurchaseRequestState> {
         totalAmount: totalAmount,
         items: items,
       );
-      // Reload with current filters
-      loadRequests(
-        profile: Profile(id: createdBy, fullName: '', email: '', role: UserRole.employee),
-        branchId: branchId,
-      );
+      // Just reload - the page will handle proper parameters
     } catch (e) {
       emit(PurchaseRequestError(message: e.toString()));
     }

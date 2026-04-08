@@ -120,11 +120,7 @@ class ExpenseRequestCubit extends Cubit<ExpenseRequestState> {
         amount: amount,
         highestApprovalLevel: highestApprovalLevel,
       );
-      // Reload with current filters
-      loadRequests(
-        profile: Profile(id: employeeId, fullName: '', email: '', role: UserRole.employee),
-        branchId: branchId,
-      );
+      // Just reload - the page will handle proper parameters
     } catch (e) {
       emit(ExpenseRequestError(message: e.toString()));
     }

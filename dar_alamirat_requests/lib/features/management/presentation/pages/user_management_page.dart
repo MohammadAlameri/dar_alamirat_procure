@@ -6,6 +6,7 @@ import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/user_repository.dart';
+import 'package:dar_alamirat_requests/features/management/presentation/pages/add_user_page.dart';
 import '../cubits/user_cubit.dart';
 
 class UserManagementPage extends StatelessWidget {
@@ -22,6 +23,19 @@ class UserManagementPage extends StatelessWidget {
 
 class UserManagementView extends StatelessWidget {
   const UserManagementView({super.key});
+
+  void _showUserOptionsDialog(BuildContext context) {
+    final userCubit = context.read<UserCubit>();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlocProvider.value(
+          value: userCubit,
+          child: const AddUserPage(),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +120,7 @@ class UserManagementView extends StatelessWidget {
           right: 20,
           child: FloatingActionButton(
             onPressed: () {
-              // TODO: Show create user dialog
+              _showUserOptionsDialog(context);
             },
             backgroundColor: AppTheme.primaryPink,
             child: const Icon(LucideIcons.userPlus, color: AppTheme.darkGray),
@@ -176,9 +190,9 @@ class UserCardShimmer extends StatelessWidget {
             child: ColoredBox(color: Colors.white),
           ),
           subtitle: SizedBox(
-            height: 24,
-            width: 150,
-            child: ColoredBox(color: Colors.white),
+            height: 12,
+            width: 100,
+            child: SizedBox(),
           ),
           trailing: SizedBox(
             height: 18,
