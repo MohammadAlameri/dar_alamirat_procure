@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
@@ -161,25 +162,30 @@ class BranchCardShimmer extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: const ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: Colors.grey,
-        ),
-        title: SizedBox(
-          height: 14,
-          width: double.infinity,
-          child: ColoredBox(color: Colors.grey),
-        ),
-        subtitle: SizedBox(
-          height: 12,
-          width: 100,
-          child: ColoredBox(color: Colors.grey),
-        ),
-        trailing: SizedBox(
-          height: 24,
-          width: 40,
-          child: ColoredBox(color: Colors.grey),
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: const ListTile(
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: CircleAvatar(
+            backgroundColor: Colors.white,
+          ),
+          title: SizedBox(
+            height: 14,
+            child: ColoredBox(
+              color: Colors.white,
+            ),
+          ),
+          subtitle: SizedBox(
+            height: 12,
+            width: 100,
+            child: ColoredBox(color: Colors.white),
+          ),
+          trailing: SizedBox(
+            height: 24,
+            width: 40,
+            child: ColoredBox(color: Colors.white),
+          ),
         ),
       ),
     );
