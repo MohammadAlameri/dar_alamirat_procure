@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
-import 'package:dar_alamirat_requests/features/management/data/models/branch_model.dart';
-import 'package:dar_alamirat_requests/features/expense_request/domain/entities/expense_request.dart';
-import 'package:dar_alamirat_requests/features/expense_request/data/models/expense_request_model.dart';
-
+import 'package:dar_alamirat_requests/features/expense_request/data/repositories/expense_request_repository.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_widgets.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
+import '../cubits/expense_request_cubit.dart';
 
-class ExpenseRequestsPage extends StatefulWidget {
+class ExpenseRequestsPage extends StatelessWidget {
   final Profile profile;
   final Branch? initialBranch;
 
@@ -21,25 +19,50 @@ class ExpenseRequestsPage extends StatefulWidget {
   });
 
   @override
-  State<ExpenseRequestsPage> createState() => ExpenseRequestsPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ExpenseRequestCubit(ExpenseRequestRepository())
+        ..loadRequests(
+          profile: profile,
+          branchId: initialBranch?.id,
+        ),
+      child: ExpenseRequestsView(
+        profile: profile,
+        initialBranch: initialBranch,
+      ),
+    );
+  }
 }
 
-class ExpenseRequestsPageState extends State<ExpenseRequestsPage> {
-  bool _isLoading = true;
-  List<ExpenseRequest> _requests = [];
-  Branch? _selectedBranch;
+class ExpenseRequestsView extends StatefulWidget {
+  final Profile profile;
+  final Branch? initialBranch;
+
+  const ExpenseRequestsView({
+    super.key,
+    required this.profile,
+    this.initialBranch,
+  });
+
+  @override
+  State<ExpenseRequestsView> createState() => _ExpenseRequestsViewState();
+}
+
+class _ExpenseRequestsViewState extends State<ExpenseRequestsView> with AutomaticKeepAliveClientMixin {
   String _selectedStatus = 'all';
-  List<Branch> _availableBranches = [];
+  Branch? _selectedBranch;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
     _selectedBranch = widget.initialBranch;
-    _loadInitialData();
   }
 
   @override
-  void didUpdateWidget(ExpenseRequestsPage oldWidget) {
+  void didUpdateWidget(ExpenseRequestsView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.initialBranch?.id != oldWidget.initialBranch?.id) {
       setState(() {
@@ -49,63 +72,12 @@ class ExpenseRequestsPageState extends State<ExpenseRequestsPage> {
     }
   }
 
-  Future<void> _loadInitialData() async {
-    await _loadBranches();
-    await _fetchRequests();
-  }
-
-  Future<void> _loadBranches() async {
-    try {
-      final data = await Supabase.instance.client
-          .from('user_branches')
-          .select('*, branches(*)')
-          .eq('user_id', widget.profile.id);
-      
-      final userBranches = (data as List).map((e) => UserBranchModel.fromJson(e)).toList();
-      setState(() {
-        _availableBranches = userBranches.map((ub) => ub.branch!).toList();
-        if (_selectedBranch == null && _availableBranches.isNotEmpty) {
-          _selectedBranch = _availableBranches.first;
-        }
-      });
-    } catch (e) {
-      debugPrint('Error loading branches: $e');
-    }
-  }
-
-  Future<void> _fetchRequests() async {
-    setState(() => _isLoading = true);
-    try {
-      final role = widget.profile.role;
-      final userId = widget.profile.id;
-      final branchId = _selectedBranch?.id;
-
-      var query = Supabase.instance.client
-          .from('expense_requests')
-          .select('*, profiles:employee_id(id, full_name, email, role, manager_id)');
-
-      if (branchId != null) {
-        query = query.eq('branch_id', branchId);
-      }
-
-      // Filter by role
-      if (role == UserRole.employee) {
-        query = query.eq('employee_id', userId);
-      }
-      
-      if (_selectedStatus != 'all') {
-        query = query.eq('status', _selectedStatus);
-      }
-
-      final data = await query.order('created_at', ascending: false);
-      setState(() {
-        _requests = (data as List).map((e) => ExpenseRequestModel.fromJson(e)).toList();
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Error fetching expense requests: $e');
-      setState(() => _isLoading = false);
-    }
+  void _fetchRequests() {
+    context.read<ExpenseRequestCubit>().loadRequests(
+          profile: widget.profile,
+          branchId: _selectedBranch?.id,
+          status: _selectedStatus,
+        );
   }
 
   @override
@@ -117,41 +89,69 @@ class ExpenseRequestsPageState extends State<ExpenseRequestsPage> {
       children: [
         _buildFilterList(l10n),
         Expanded(
-          child: _isLoading
-              ? ListView.builder(
+          child: BlocBuilder<ExpenseRequestCubit, ExpenseRequestState>(
+            builder: (context, state) {
+              if (state is ExpenseRequestLoading) {
+                return ListView.builder(
                   padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
                   itemCount: 6,
                   itemBuilder: (context, index) => const RequestCardShimmer(),
-                )
-              : RefreshIndicator(
-                  onRefresh: _fetchRequests,
-                  child: _requests.isEmpty
-                      ? ListView(
-                          padding: const EdgeInsets.only(bottom: 120),
-                          children: [
-                            SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-                            Center(child: Text(l10n.translate('noRequestsFound'))),
-                          ],
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
-                          itemCount: _requests.length,
-                          itemBuilder: (context, index) {
-                            final request = _requests[index];
-                            return RequestCard(
-                              subject: request.subject,
-                              requester: request.profile?.fullName ?? 'Unknown',
-                              date: request.createdAt,
-                              amount: request.amount, // amount instead of totalAmount
-                              status: request.status,
-                              type: 'expense',
-                              onTap: () {
-                                // TODO: Navigate to details
-                              },
-                            );
-                          },
-                        ),
-                ),
+                );
+              }
+
+              if (state is ExpenseRequestLoaded) {
+                if (state.requests.isEmpty) {
+                  return ListView(
+                    padding: const EdgeInsets.only(bottom: 120),
+                    children: [
+                      SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                      Center(child: Text(l10n.translate('noRequestsFound'))),
+                    ],
+                  );
+                }
+
+                return RefreshIndicator(
+                  onRefresh: () async => _fetchRequests(),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                    itemCount: state.requests.length,
+                    itemBuilder: (context, index) {
+                      final request = state.requests[index];
+                      return RequestCard(
+                        subject: request.subject,
+                        requester: request.profile?.fullName ?? 'Unknown',
+                        date: request.createdAt,
+                        amount: request.amount,
+                        status: request.status,
+                        type: 'expense',
+                        onTap: () {
+                          // TODO: Navigate to details
+                        },
+                      );
+                    },
+                  ),
+                );
+              }
+
+              if (state is ExpenseRequestError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Error loading requests'),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: _fetchRequests,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
+          ),
         ),
       ],
     );

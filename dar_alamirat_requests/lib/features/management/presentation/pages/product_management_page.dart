@@ -1,51 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
+import 'package:dar_alamirat_requests/features/management/data/repositories/product_repository.dart';
+import '../cubits/product_cubit.dart';
 
-class ProductManagementPage extends StatefulWidget {
+class ProductManagementPage extends StatelessWidget {
   const ProductManagementPage({super.key});
 
   @override
-  State<ProductManagementPage> createState() => _ProductManagementPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ProductCubit(ProductRepository())..loadProducts(),
+      child: const ProductManagementView(),
+    );
+  }
 }
 
-class _ProductManagementPageState extends State<ProductManagementPage> with SingleTickerProviderStateMixin {
+class ProductManagementView extends StatefulWidget {
+  const ProductManagementView({super.key});
+
+  @override
+  State<ProductManagementView> createState() => _ProductManagementViewState();
+}
+
+class _ProductManagementViewState extends State<ProductManagementView>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  bool _isLoading = true;
-  List<dynamic> _categories = [];
-  List<dynamic> _products = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _fetchData();
-  }
-
-  Future<void> _fetchData() async {
-    setState(() => _isLoading = true);
-    try {
-      final catData = await Supabase.instance.client.from('categories').select('*').order('name');
-      final prodData = await Supabase.instance.client.from('products').select('*, categories(name)').order('name');
-      
-      setState(() {
-        _categories = catData as List;
-        _products = prodData as List;
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Error fetching product data: $e');
-      setState(() => _isLoading = false);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
 
     return Stack(
       children: [
@@ -65,8 +57,8 @@ class _ProductManagementPageState extends State<ProductManagementPage> with Sing
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildProductsList(),
-                  _buildCategoriesList(),
+                  const ProductsTab(),
+                  const CategoriesTab(),
                 ],
               ),
             ),
@@ -76,7 +68,9 @@ class _ProductManagementPageState extends State<ProductManagementPage> with Sing
           bottom: 100,
           right: 20,
           child: FloatingActionButton(
-            onPressed: () {},
+            onPressed: () {
+              // TODO: Show create dialog based on current tab
+            },
             backgroundColor: AppTheme.primaryPink,
             child: const Icon(LucideIcons.plus, color: AppTheme.darkGray),
           ),
@@ -84,39 +78,180 @@ class _ProductManagementPageState extends State<ProductManagementPage> with Sing
       ],
     );
   }
+}
 
-  Widget _buildProductsList() {
-    return ListView.builder(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-      itemCount: _products.length,
-      itemBuilder: (context, index) {
-        final product = _products[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            title: Text(product['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(product['categories']?['name'] ?? 'No Category'),
-            trailing: IconButton(icon: const Icon(LucideIcons.edit, size: 18), onPressed: () {}),
-          ),
-        );
+class ProductsTab extends StatelessWidget {
+  const ProductsTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProductCubit, ProductState>(
+      builder: (context, state) {
+        if (state is ProductLoading) {
+          return ListView(
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+            children: const [
+              ProductCardShimmer(),
+              ProductCardShimmer(),
+              ProductCardShimmer(),
+            ],
+          );
+        }
+
+        if (state is ProductLoaded) {
+          if (state.products.isEmpty) {
+            return const Center(child: Text('No products found'));
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+            itemCount: state.products.length,
+            itemBuilder: (context, index) {
+              final product = state.products[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  title: Text(
+                    product['name'] ?? '',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(product['categories']?['name'] ?? 'No Category'),
+                  trailing: IconButton(
+                    icon: const Icon(LucideIcons.edit, size: 18),
+                    onPressed: () {
+                      // TODO: Edit product
+                    },
+                  ),
+                ),
+              );
+            },
+          );
+        }
+
+        if (state is ProductError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(LucideIcons.alertCircle, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(state.message),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.read<ProductCubit>().loadProducts(),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return const SizedBox.shrink();
       },
     );
   }
+}
 
-  Widget _buildCategoriesList() {
-    return ListView.builder(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-      itemCount: _categories.length,
-      itemBuilder: (context, index) {
-        final category = _categories[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            title: Text(category['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-            trailing: IconButton(icon: const Icon(LucideIcons.edit, size: 18), onPressed: () {}),
-          ),
-        );
+class CategoriesTab extends StatelessWidget {
+  const CategoriesTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProductCubit, ProductState>(
+      builder: (context, state) {
+        if (state is ProductLoading) {
+          return ListView(
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+            children: const [
+              CategoryCardShimmer(),
+              CategoryCardShimmer(),
+              CategoryCardShimmer(),
+            ],
+          );
+        }
+
+        if (state is ProductLoaded) {
+          if (state.categories.isEmpty) {
+            return const Center(child: Text('No categories found'));
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+            itemCount: state.categories.length,
+            itemBuilder: (context, index) {
+              final category = state.categories[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  title: Text(
+                    category['name'] ?? '',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(LucideIcons.edit, size: 18),
+                    onPressed: () {
+                      // TODO: Edit category
+                    },
+                  ),
+                ),
+              );
+            },
+          );
+        }
+
+        return const SizedBox.shrink();
       },
+    );
+  }
+}
+
+class ProductCardShimmer extends StatelessWidget {
+  const ProductCardShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: const ListTile(
+        title: SizedBox(
+          height: 14,
+          width: double.infinity,
+          child: ColoredBox(color: Colors.grey),
+        ),
+        subtitle: SizedBox(
+          height: 12,
+          width: 100,
+          child: ColoredBox(color: Colors.grey),
+        ),
+        trailing: SizedBox(
+          height: 18,
+          width: 18,
+          child: ColoredBox(color: Colors.grey),
+        ),
+      ),
+    );
+  }
+}
+
+class CategoryCardShimmer extends StatelessWidget {
+  const CategoryCardShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: const ListTile(
+        title: SizedBox(
+          height: 14,
+          width: double.infinity,
+          child: ColoredBox(color: Colors.grey),
+        ),
+        trailing: SizedBox(
+          height: 18,
+          width: 18,
+          child: ColoredBox(color: Colors.grey),
+        ),
+      ),
     );
   }
 }

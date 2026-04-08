@@ -29,10 +29,7 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
-  final _procureKey = GlobalKey<PurchaseRequestsPageState>();
-  final _expenseKey = GlobalKey<ExpenseRequestsPageState>();
-
+class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveClientMixin {
   int _selectedIndex = 0;
   Profile? _profile;
   bool _isLoading = true;
@@ -46,6 +43,9 @@ class _DashboardPageState extends State<DashboardPage> {
   int _pendingCount = 0;
   int _approvedCount = 0;
   int _rejectedCount = 0;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -625,13 +625,11 @@ class _DashboardPageState extends State<DashboardPage> {
         return _buildOverview();
       case 1:
         return PurchaseRequestsPage(
-          key: _procureKey,
           profile: _profile!,
           initialBranch: _selectedBranch,
         );
       case 2:
         return ExpenseRequestsPage(
-          key: _expenseKey,
           profile: _profile!,
           initialBranch: _selectedBranch,
         );
