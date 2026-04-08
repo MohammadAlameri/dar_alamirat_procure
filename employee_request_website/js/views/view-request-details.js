@@ -208,7 +208,7 @@ async function showRequestDetails(requestId) {
                             <h6 class="text-muted small fw-bold">${i18nManager.get('status').toUpperCase()}</h6>
                             <span class="badge ${statusClass}">${i18nManager.get(req.status).toUpperCase()}</span>
                             <h6 class="text-muted small fw-bold mt-2">${i18nManager.get('totalPrice').toUpperCase()}</h6>
-                            <p class="h5 fw-bold text-primary">${(req.total_amount || 0).toFixed(2)} AED</p>
+                            <p class="h5 fw-bold text-primary">${(req.total_amount || 0).toFixed(2)} SAR</p>
                         </div>
                     </div>
                     
@@ -513,7 +513,7 @@ async function showRequestDetails(requestId) {
 
                 const totalDisplay = container.querySelector('.text-primary.h5.fw-bold');
                 if (totalDisplay) {
-                    totalDisplay.innerText = sum.toFixed(2) + ' AED';
+                    totalDisplay.innerText = sum.toFixed(2) + ' SAR';
                 }
             });
         });

@@ -111,12 +111,12 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 16),
                   
                    // Logo & Header
-                  const Icon(LucideIcons.shoppingCart, size: 48, color: AppTheme.primaryBlue),
+                  const Icon(LucideIcons.shoppingCart, size: 48, color: AppTheme.primaryPink),
                   const SizedBox(height: 16),
                   Text(
                     l10n.translate('title'),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.primaryPink),
                   ),
                   Text(
                     l10n.translate('procurementSystem'),
@@ -194,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
                         const TextSpan(text: ' '),
                         TextSpan(
                           text: l10n.translate('contactAdmin'),
-                          style: const TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+                          style: const TextStyle(color: AppTheme.primaryPink, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),

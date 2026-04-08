@@ -14,6 +14,13 @@ import '../../../purchase_request/data/models/purchase_request_model.dart';
 import '../../../expense_request/domain/entities/expense_request.dart';
 import '../../../expense_request/data/models/expense_request_model.dart';
 import 'package:intl/intl.dart';
+import 'package:dar_alamirat_requests/features/purchase_request/presentation/pages/purchase_requests_page.dart';
+import 'package:dar_alamirat_requests/features/expense_request/presentation/pages/expense_requests_page.dart';
+import 'package:dar_alamirat_requests/features/dashboard/presentation/pages/approvals_page.dart';
+import 'package:dar_alamirat_requests/features/management/presentation/pages/branches_page.dart';
+import 'package:dar_alamirat_requests/features/management/presentation/pages/user_management_page.dart';
+import 'package:dar_alamirat_requests/features/management/presentation/pages/product_management_page.dart';
+import 'package:dar_alamirat_requests/features/reports/presentation/pages/reports_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -23,6 +30,9 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  final _procureKey = GlobalKey<PurchaseRequestsPageState>();
+  final _expenseKey = GlobalKey<ExpenseRequestsPageState>();
+
   int _selectedIndex = 0;
   Profile? _profile;
   bool _isLoading = true;
@@ -72,24 +82,78 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _loadUserBranches(String userId) async {
     try {
-      final data = await Supabase.instance.client
-          .from('user_branches')
-          .select('*, branches(*)')
-          .eq('user_id', userId);
-      
-      final branches = (data as List).map((e) => UserBranchModel.fromJson(e)).toList();
-      
-      setState(() {
-        _userBranches = branches;
-        if (_userBranches.isNotEmpty) {
-          // Try to find first "full" access branch, otherwise first branch
-          final fullBranch = _userBranches.where((b) => b.accessLevel == 'full').firstOrNull;
-          _selectedBranch = fullBranch?.branch ?? _userBranches.first.branch;
-        }
-      });
+      final role = _profile?.role ?? UserRole.employee;
+      final isManager = role == UserRole.manager || role == UserRole.general_manager || role == UserRole.finance || role == UserRole.it_procurement || role == UserRole.admin;
+
+      if (isManager) {
+        final data = await Supabase.instance.client.from('branches').select('*').order('name');
+        final allBranches = (data as List).map((e) => BranchModel.fromJson(e)).toList();
+        setState(() {
+          _userBranches = allBranches.map((b) => UserBranchModel(id: '', userId: userId, branchId: b.id, accessLevel: 'full', branch: b)).toList();
+          if (_userBranches.isNotEmpty) {
+            _selectedBranch = _userBranches.first.branch;
+          }
+        });
+      } else {
+        final data = await Supabase.instance.client
+            .from('user_branches')
+            .select('*, branches(*)')
+            .eq('user_id', userId);
+        
+        final branches = (data as List).map((e) => UserBranchModel.fromJson(e)).toList();
+        
+        setState(() {
+          _userBranches = branches;
+          if (_userBranches.isNotEmpty) {
+            final fullBranch = _userBranches.where((b) => b.accessLevel == 'full').firstOrNull;
+            _selectedBranch = fullBranch?.branch ?? _userBranches.first.branch;
+          }
+        });
+      }
     } catch (e) {
       debugPrint('Error loading user branches: $e');
     }
+  }
+
+  void _showBranchDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(l10n.translate('branchManagement'), style: const TextStyle(fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: _userBranches.length,
+              separatorBuilder: (context, _) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final branch = _userBranches[index].branch;
+                if (branch == null) return const SizedBox.shrink();
+                final isSelected = _selectedBranch?.id == branch.id;
+                
+                return ListTile(
+                  leading: const Icon(LucideIcons.building, color: AppTheme.darkGray),
+                  title: Text(branch.name, style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                  trailing: isSelected ? const Icon(LucideIcons.check, color: AppTheme.primaryPink) : null,
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (branch.id != _selectedBranch?.id) {
+                      setState(() {
+                        _selectedBranch = branch;
+                      });
+                      _fetchDashboardData();
+                    }
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _fetchDashboardData() async {
@@ -177,6 +241,7 @@ class _DashboardPageState extends State<DashboardPage> {
     
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return Container(
@@ -187,7 +252,7 @@ class _DashboardPageState extends State<DashboardPage> {
               // User Header
               Row(
                 children: [
-                  CircleAvatar(backgroundColor: AppTheme.primaryBlue, child: Text(_profile?.fullName.substring(0, 1).toUpperCase() ?? 'U', style: const TextStyle(color: Colors.white))),
+                  CircleAvatar(backgroundColor: AppTheme.primaryPink, child: Text(_profile?.fullName.substring(0, 1).toUpperCase() ?? 'U', style: const TextStyle(color: AppTheme.darkGray))),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,9 +306,9 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color ?? AppTheme.primaryBlue, size: 24),
-          const SizedBox(height: 4),
-          Text(title, style: TextStyle(fontSize: 10, color: color ?? Colors.black87), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
+          Icon(icon, color: color ?? AppTheme.primaryPink, size: 32),
+          const SizedBox(height: 6),
+          Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: color ?? Colors.black87), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
         ],
       ),
     );
@@ -260,38 +325,40 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       extendBody: true, // Crucial for floating navbar
       appBar: AppBar(
-        title: Text(_getTitle(l10n)),
+        toolbarHeight: 70,
+        titleSpacing: 24.0, // Added little extra horizontal padding to the title
+        title: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Text(_getTitle(l10n)),
+        ),
         centerTitle: false,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
+        elevation: 1,
+        backgroundColor: AppTheme.primaryPink,
+        foregroundColor: AppTheme.darkGray,
+        iconTheme: const IconThemeData(color: AppTheme.darkGray),
         actions: [
           if (_userBranches.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: DropdownButton<Branch>(
-                value: _selectedBranch,
-                underline: const SizedBox(),
-                icon: const Icon(LucideIcons.building, size: 18),
-                items: _userBranches.map((ub) {
-                  return DropdownMenuItem<Branch>(
-                    value: ub.branch,
-                    child: Text(ub.branch?.name ?? 'Branch', style: const TextStyle(fontSize: 14)),
-                  );
-                }).toList(),
-                onChanged: (Branch? newValue) {
-                  if (newValue != null && newValue.id != _selectedBranch?.id) {
-                    setState(() {
-                      _selectedBranch = newValue;
-                    });
-                    _fetchDashboardData();
-                  }
-                },
+              padding: const EdgeInsets.only(top: 8.0, right: 24.0, left: 16.0), // Increased right padding
+              child: InkWell(
+                onTap: _showBranchDialog,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _selectedBranch?.name ?? 'Branch', 
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(LucideIcons.chevronDown, size: 16),
+                  ],
+                ),
               ),
             ),
         ],
       ),
       body: _getBody(),
+      floatingActionButton: _buildFAB(),
       bottomNavigationBar: _buildFloatingBottomNavbar(l10n, isManager),
     );
   }
@@ -301,11 +368,11 @@ class _DashboardPageState extends State<DashboardPage> {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       height: 70,
       decoration: BoxDecoration(
-        color: AppTheme.primaryBlue,
-        borderRadius: BorderRadius.circular(35),
+        color: AppTheme.primaryPink,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryBlue.withOpacity(0.3),
+            color: AppTheme.primaryPink.withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -335,14 +402,14 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           Icon(
             icon,
-            color: isSelected ? Colors.white : Colors.white54,
+            color: isSelected ? AppTheme.darkGray : Colors.black54,
             size: isSelected ? 24 : 22,
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.white54,
+              color: isSelected ? AppTheme.darkGray : Colors.black54,
               fontSize: 10,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
@@ -355,9 +422,9 @@ class _DashboardPageState extends State<DashboardPage> {
   String _getTitle(AppLocalizations l10n) {
     switch (_selectedIndex) {
       case 0: return l10n.translate('dashboard');
-      case 1: return l10n.translate('myRequests');
+      case 1: return l10n.translate('purchaseRequests');
       case 2: return l10n.translate('expenseRequests');
-      case 3: return l10n.translate('pendingApprovals');
+      case 3: return l10n.translate('approvals');
       case 5: return l10n.translate('reports');
       case 6: return l10n.translate('userManagement');
       case 7: return l10n.translate('branchManagement');
@@ -367,9 +434,18 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _getBody() {
+    if (_profile == null) return const Center(child: CircularProgressIndicator());
+    
     switch (_selectedIndex) {
       case 0: return _buildOverview();
-      default: return Center(child: Text(_getTitle(AppLocalizations.of(context)!)));
+      case 1: return PurchaseRequestsPage(key: _procureKey, profile: _profile!, initialBranch: _selectedBranch);
+      case 2: return ExpenseRequestsPage(key: _expenseKey, profile: _profile!, initialBranch: _selectedBranch);
+      case 3: return ApprovalsPage(profile: _profile!, branchId: _selectedBranch?.id);
+      case 5: return const ReportsPage();
+      case 6: return const UserManagementPage();
+      case 7: return const BranchesPage();
+      case 8: return const ProductManagementPage();
+      default: return _buildOverview();
     }
   }
 
@@ -380,15 +456,14 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.translate('dashboardOverview'), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 24),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
+            padding: EdgeInsets.zero,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1.4,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.5,
             children: [
               _buildStatCard(l10n.translate('totalRequests'), _totalCount.toString(), LucideIcons.fileText, Colors.blue),
               _buildStatCard(l10n.translate('pendingReview'), _pendingCount.toString(), LucideIcons.clock, Colors.orange),
@@ -401,12 +476,11 @@ class _DashboardPageState extends State<DashboardPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(l10n.translate('recentRequests'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              IconButton(onPressed: () {}, icon: const Icon(LucideIcons.plusCircle, color: AppTheme.primaryBlue)),
             ],
           ),
           const SizedBox(height: 16),
           _buildRecentRequestsList(),
-          const SizedBox(height: 100), // Space for floating navbar
+          const SizedBox(height: 140), // Space for floating navbar
         ],
       ),
     );
@@ -430,6 +504,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return ListView.separated(
       shrinkWrap: true,
+      padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: recent.length,
       separatorBuilder: (context, index) => const Divider(height: 1),
@@ -451,7 +526,7 @@ class _DashboardPageState extends State<DashboardPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('${item.amount.toStringAsFixed(2)} AED', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              Text('${item.amount.toStringAsFixed(2)} SAR', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 4),
               _buildStatusBadge(item.status),
             ],
@@ -466,7 +541,7 @@ class _DashboardPageState extends State<DashboardPage> {
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -502,6 +577,76 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
+  Widget? _buildFAB() {
+    if (![0, 1, 2].contains(_selectedIndex)) return null;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20), // Elevate above custom bottom navbar
+      child: FloatingActionButton(
+        onPressed: () {
+          if (_selectedIndex == 1) {
+            // TODO: Navigate to create procure request
+          } else if (_selectedIndex == 2) {
+            // TODO: Navigate to create expense request
+          } else {
+            _showDashboardCreateOptions();
+          }
+        },
+        backgroundColor: AppTheme.primaryPink,
+        child: const Icon(LucideIcons.plus, color: AppTheme.darkGray),
+      ),
+    );
+  }
+
+  void _showDashboardCreateOptions() {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildCreateOption(LucideIcons.shoppingCart, l10n.translate('purchaseRequests'), Colors.blue, () {
+                setState(() => _selectedIndex = 1);
+              }),
+              _buildCreateOption(LucideIcons.banknote, l10n.translate('expenseRequests'), Colors.orange, () {
+                setState(() => _selectedIndex = 2);
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCreateOption(IconData icon, String label, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: AppTheme.primaryPink.withOpacity(0.3),
+            child: Icon(icon, size: 24, color: AppTheme.darkGray),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
 }
 
 class _UnifiedRequest {

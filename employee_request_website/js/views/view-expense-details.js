@@ -134,7 +134,7 @@ async function showExpenseDetails(expenseId) {
                             <h6 class="text-muted small fw-bold">${i18nManager.get('status').toUpperCase()}</h6>
                             <span class="badge ${statusClass}">${i18nManager.get(exp.status).toUpperCase()}</span>
                             <h6 class="text-muted small fw-bold mt-2">${i18nManager.get('amount').toUpperCase()}</h6>
-                            <p class="h5 fw-bold text-primary">${Number(exp.amount).toFixed(2)} AED</p>
+                            <p class="h5 fw-bold text-primary">${Number(exp.amount).toFixed(2)} SAR</p>
                         </div>
                     </div>
 
