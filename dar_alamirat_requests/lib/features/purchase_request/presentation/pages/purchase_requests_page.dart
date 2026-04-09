@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
@@ -125,7 +126,11 @@ class _PurchaseRequestsViewState extends State<PurchaseRequestsView> with Automa
                         status: request.status,
                         type: 'procure',
                         onTap: () {
-                          // TODO: Navigate to details
+                          context.push('/request-details', extra: {
+                            'requestId': request.id,
+                            'type': 'procure',
+                            'currentUser': widget.profile,
+                          });
                         },
                       );
                     },

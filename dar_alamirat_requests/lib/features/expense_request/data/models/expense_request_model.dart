@@ -1,5 +1,6 @@
 import '../../domain/entities/expense_request.dart';
 import '../../../auth/data/models/profile_model.dart';
+import '../../../purchase_request/data/models/request_item_model.dart';
 
 class ExpenseRequestModel extends ExpenseRequest {
   ExpenseRequestModel({
@@ -13,6 +14,7 @@ class ExpenseRequestModel extends ExpenseRequest {
     required super.createdAt,
     super.branchId,
     super.profile,
+    super.logs,
   });
 
   factory ExpenseRequestModel.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,19 @@ class ExpenseRequestModel extends ExpenseRequest {
       createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
       branchId: json['branch_id'],
       profile: json['profiles'] != null ? ProfileModel.fromJson(json['profiles']) : null,
+      logs: json['approvals_log'] != null
+          ? (json['approvals_log'] as List).map((e) => ApprovalLogModel.fromJson(e)).toList()
+          : [],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'subject': subject,
+      'statement': statement,
+      'amount': amount,
+      'status': status,
+      'highest_approval_level': highestApprovalLevel,
+    };
   }
 }

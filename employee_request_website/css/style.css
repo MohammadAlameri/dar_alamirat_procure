@@ -1,7 +1,7 @@
 :root {
-    --primary-color: #434D88;
-    --primary-light: #6B75B0;
-    --primary-dark: #2E3660;
+    --primary-color: #d79ae0;
+    --primary-light: #F8F9FA;
+    --primary-dark: #d79ae0;
     --secondary-color: #c5a059; /* Corporate Gold/Bronze */
     --accent-color: var(--primary-light);
     --bg-light: #f4f6f9;

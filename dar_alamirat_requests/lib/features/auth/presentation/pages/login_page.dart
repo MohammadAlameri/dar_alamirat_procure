@@ -42,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
       // If we wanted manual persistence control, we would handle it here.
       
       if (mounted) {
-        context.go('/');
+        context.go('/dashboard');
       }
     } on AuthException catch (e) {
       if (mounted) {

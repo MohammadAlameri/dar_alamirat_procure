@@ -801,6 +801,13 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
               _buildStatusBadge(item.status, l10n),
             ],
           ),
+          onTap: () {
+            context.push('/request-details', extra: {
+              'requestId': item.id,
+              'type': item.type,
+              'currentUser': _profile,
+            });
+          },
         );
       },
     );

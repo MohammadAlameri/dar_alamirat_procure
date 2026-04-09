@@ -212,3 +212,57 @@ ALTER TABLE purchase_requests ADD COLUMN IF NOT EXISTS suggested_suppliers text;
 ALTER TABLE request_items ADD COLUMN IF NOT EXISTS brand_model text;
 
 
+-- 1. Create the Configurations Table
+CREATE TABLE public.configurations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  android_version text,
+  ios_version text,
+  android_store_url text,
+  ios_store_url text,
+  force_update boolean NOT NULL DEFAULT false,
+  maintenance_mode boolean NOT NULL DEFAULT false,
+  maintenance_message_ar text,
+  maintenance_message_en text,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT configurations_pkey PRIMARY KEY (id)
+);
+
+-- 2. Enable Row Level Security
+ALTER TABLE public.configurations ENABLE ROW LEVEL SECURITY;
+
+-- 3. Create RLS Policies
+
+-- Public Read Access: Required so the app can check status before the user logs in
+CREATE POLICY "Allow public read access" 
+ON public.configurations FOR SELECT 
+USING (true);
+
+-- Admin Write Access: Only users with the 'admin' role can modify settings
+CREATE POLICY "Allow admins to manage configurations" 
+ON public.configurations FOR ALL 
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles 
+    WHERE profiles.id = auth.uid() 
+    AND profiles.role = 'admin'
+  )
+);
+
+-- 4. Set up the updated_at trigger (using your existing function)
+CREATE TRIGGER set_updated_at_configurations 
+BEFORE UPDATE ON public.configurations 
+FOR EACH ROW EXECUTE PROCEDURE handle_updated_at();
+
+-- 5. Insert Initial Configuration Row
+-- This ensures the app always finds a record to read.
+INSERT INTO public.configurations (
+  android_version, 
+  ios_version, 
+  force_update, 
+  maintenance_mode
+) VALUES (
+  '1.0.0', 
+  '1.0.0', 
+  false, 
+  false
+);

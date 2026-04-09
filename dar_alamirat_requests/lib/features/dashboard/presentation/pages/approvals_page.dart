@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -94,7 +95,11 @@ class ApprovalsView extends StatelessWidget {
                           status: item.status,
                           type: 'procure',
                           onTap: () {
-                            // TODO: Navigate to approval details
+                            context.push('/request-details', extra: {
+                              'requestId': item.id,
+                              'type': 'procure',
+                              'currentUser': profile,
+                            });
                           },
                         );
                       } else {
@@ -107,7 +112,11 @@ class ApprovalsView extends StatelessWidget {
                           status: e.status,
                           type: 'expense',
                           onTap: () {
-                            // TODO: Navigate to approval details
+                            context.push('/request-details', extra: {
+                              'requestId': e.id,
+                              'type': 'expense',
+                              'currentUser': profile,
+                            });
                           },
                         );
                       }

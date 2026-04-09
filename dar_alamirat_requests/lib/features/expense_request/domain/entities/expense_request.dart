@@ -1,4 +1,5 @@
 import '../../../auth/domain/entities/profile.dart';
+import '../../../purchase_request/domain/entities/request_item.dart';
 
 class ExpenseRequest {
   final String id;
@@ -10,7 +11,8 @@ class ExpenseRequest {
   final String employeeId;
   final DateTime createdAt;
   final String? branchId;
-  final Profile? profile; // For joins
+  final Profile? profile; 
+  final List<ApprovalLog> logs;
 
   ExpenseRequest({
     required this.id,
@@ -23,7 +25,27 @@ class ExpenseRequest {
     required this.createdAt,
     this.branchId,
     this.profile,
+    this.logs = const [],
   });
 
   String get type => 'expense';
+
+  ExpenseRequest copyWith({
+    String? status,
+    List<ApprovalLog>? logs,
+  }) {
+    return ExpenseRequest(
+      id: id,
+      subject: subject,
+      statement: statement,
+      amount: amount,
+      status: status ?? this.status,
+      highestApprovalLevel: highestApprovalLevel,
+      employeeId: employeeId,
+      createdAt: createdAt,
+      branchId: branchId,
+      profile: profile,
+      logs: logs ?? this.logs,
+    );
+  }
 }
