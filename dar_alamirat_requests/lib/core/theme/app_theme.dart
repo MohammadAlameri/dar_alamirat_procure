@@ -22,7 +22,7 @@ class AppTheme {
         error: dangerRed,
       ),
       scaffoldBackgroundColor: backgroundGray,
-      textTheme: GoogleFonts.interTextTheme(),
+      textTheme: GoogleFonts.cairoTextTheme(),
       appBarTheme: const AppBarTheme(
         backgroundColor: white,
         foregroundColor: darkGray,
