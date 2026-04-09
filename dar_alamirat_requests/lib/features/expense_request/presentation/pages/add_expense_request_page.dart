@@ -7,7 +7,7 @@ import 'package:dar_alamirat_requests/features/management/domain/entities/branch
 import 'package:dar_alamirat_requests/features/expense_request/data/repositories/expense_request_repository.dart';
 import '../cubits/expense_request_cubit.dart';
 
-class AddExpenseRequestPage extends StatefulWidget {
+class AddExpenseRequestPage extends StatelessWidget {
   final Profile profile;
   final Branch? selectedBranch;
 
@@ -18,10 +18,31 @@ class AddExpenseRequestPage extends StatefulWidget {
   });
 
   @override
-  State<AddExpenseRequestPage> createState() => _AddExpenseRequestPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ExpenseRequestCubit(ExpenseRequestRepository()),
+      child: _AddExpenseRequestPageContent(
+        profile: profile,
+        selectedBranch: selectedBranch,
+      ),
+    );
+  }
 }
 
-class _AddExpenseRequestPageState extends State<AddExpenseRequestPage> {
+class _AddExpenseRequestPageContent extends StatefulWidget {
+  final Profile profile;
+  final Branch? selectedBranch;
+
+  const _AddExpenseRequestPageContent({
+    required this.profile,
+    this.selectedBranch,
+  });
+
+  @override
+  State<_AddExpenseRequestPageContent> createState() => _AddExpenseRequestPageContentState();
+}
+
+class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageContent> {
   final _formKey = GlobalKey<FormState>();
   final _subjectController = TextEditingController();
   final _statementController = TextEditingController();

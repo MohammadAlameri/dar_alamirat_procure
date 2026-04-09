@@ -8,7 +8,7 @@ import 'package:dar_alamirat_requests/features/management/domain/entities/branch
 import 'package:dar_alamirat_requests/features/purchase_request/data/repositories/purchase_request_repository.dart';
 import '../cubits/purchase_request_cubit.dart';
 
-class AddPurchaseRequestPage extends StatefulWidget {
+class AddPurchaseRequestPage extends StatelessWidget {
   final Profile profile;
   final Branch? selectedBranch;
 
@@ -19,10 +19,31 @@ class AddPurchaseRequestPage extends StatefulWidget {
   });
 
   @override
-  State<AddPurchaseRequestPage> createState() => _AddPurchaseRequestPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => PurchaseRequestCubit(PurchaseRequestRepository()),
+      child: _AddPurchaseRequestPageContent(
+        profile: profile,
+        selectedBranch: selectedBranch,
+      ),
+    );
+  }
 }
 
-class _AddPurchaseRequestPageState extends State<AddPurchaseRequestPage> {
+class _AddPurchaseRequestPageContent extends StatefulWidget {
+  final Profile profile;
+  final Branch? selectedBranch;
+
+  const _AddPurchaseRequestPageContent({
+    required this.profile,
+    this.selectedBranch,
+  });
+
+  @override
+  State<_AddPurchaseRequestPageContent> createState() => _AddPurchaseRequestPageContentState();
+}
+
+class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageContent> {
   final _formKey = GlobalKey<FormState>();
   final _subjectController = TextEditingController();
   final _justificationController = TextEditingController();

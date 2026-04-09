@@ -50,6 +50,7 @@ class UserRepository {
 
   /// Create a new user with Supabase Auth and profile
   /// This works like the website: creates auth user first, then profile
+  /// IMPORTANT: Saves and restores the current admin session to prevent logout
   Future<Profile> createUser({
     required String email,
     required String password,
@@ -59,6 +60,10 @@ class UserRepository {
     String? department,
     String? managerId,
   }) async {
+    // Save the current admin session before creating new user
+    final currentSession = _client.auth.currentSession;
+    final currentUser = _client.auth.currentUser;
+
     // Step 1: Create auth user (like website does with signUp)
     final authResponse = await _client.auth.signUp(
       email: email,
@@ -83,6 +88,15 @@ class UserRepository {
       'department': department,
       'manager_id': managerId,
     }).select().single();
+
+    // Step 3: Restore the admin session if it existed
+    // This prevents the admin from being logged out after creating a user
+    if (currentSession != null && currentUser != null) {
+      final refreshToken = currentSession.refreshToken;
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        await _client.auth.setSession(refreshToken);
+      }
+    }
 
     return ProfileModel.fromJson(response as Map<String, dynamic>);
   }

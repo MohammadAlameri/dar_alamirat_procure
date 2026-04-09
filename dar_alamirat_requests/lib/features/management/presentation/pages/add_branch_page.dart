@@ -5,14 +5,26 @@ import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/branch_repository.dart';
 import '../cubits/branch_cubit.dart';
 
-class AddBranchPage extends StatefulWidget {
+class AddBranchPage extends StatelessWidget {
   const AddBranchPage({super.key});
 
   @override
-  State<AddBranchPage> createState() => _AddBranchPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => BranchCubit(BranchRepository()),
+      child: const _AddBranchPageContent(),
+    );
+  }
 }
 
-class _AddBranchPageState extends State<AddBranchPage> {
+class _AddBranchPageContent extends StatefulWidget {
+  const _AddBranchPageContent();
+
+  @override
+  State<_AddBranchPageContent> createState() => _AddBranchPageContentState();
+}
+
+class _AddBranchPageContentState extends State<_AddBranchPageContent> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _nameArController = TextEditingController();

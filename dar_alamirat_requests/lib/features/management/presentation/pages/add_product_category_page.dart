@@ -5,14 +5,26 @@ import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/product_repository.dart';
 import '../cubits/product_cubit.dart';
 
-class AddProductPage extends StatefulWidget {
+class AddProductPage extends StatelessWidget {
   const AddProductPage({super.key});
 
   @override
-  State<AddProductPage> createState() => _AddProductPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ProductCubit(ProductRepository())..loadProducts(),
+      child: const _AddProductPageContent(),
+    );
+  }
 }
 
-class _AddProductPageState extends State<AddProductPage> {
+class _AddProductPageContent extends StatefulWidget {
+  const _AddProductPageContent();
+
+  @override
+  State<_AddProductPageContent> createState() => _AddProductPageContentState();
+}
+
+class _AddProductPageContentState extends State<_AddProductPageContent> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   String? _selectedCategoryId;
@@ -146,14 +158,26 @@ class _AddProductPageState extends State<AddProductPage> {
   }
 }
 
-class AddCategoryPage extends StatefulWidget {
+class AddCategoryPage extends StatelessWidget {
   const AddCategoryPage({super.key});
 
   @override
-  State<AddCategoryPage> createState() => _AddCategoryPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ProductCubit(ProductRepository())..loadProducts(),
+      child: const _AddCategoryPageContent(),
+    );
+  }
 }
 
-class _AddCategoryPageState extends State<AddCategoryPage> {
+class _AddCategoryPageContent extends StatefulWidget {
+  const _AddCategoryPageContent();
+
+  @override
+  State<_AddCategoryPageContent> createState() => _AddCategoryPageContentState();
+}
+
+class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   bool _isSubmitting = false;
