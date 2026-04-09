@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/branch_repository.dart';
-import '../cubits/branch_cubit.dart';
+import '../cubit/branch_cubit.dart';
 
 class AddBranchPage extends StatelessWidget {
   const AddBranchPage({super.key});

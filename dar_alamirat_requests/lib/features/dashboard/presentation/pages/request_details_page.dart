@@ -9,7 +9,7 @@ import 'package:dar_alamirat_requests/features/purchase_request/domain/entities/
 import 'package:dar_alamirat_requests/features/purchase_request/domain/entities/request_item.dart';
 import 'package:dar_alamirat_requests/features/expense_request/domain/entities/expense_request.dart';
 import 'package:dar_alamirat_requests/core/services/print_service.dart';
-import '../cubits/request_details_cubit.dart';
+import '../cubit/request_details_cubit.dart';
 
 class RequestDetailsPage extends StatelessWidget {
   final String requestId;

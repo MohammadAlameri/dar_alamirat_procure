@@ -7,7 +7,7 @@ import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/branch_repository.dart';
 import 'package:dar_alamirat_requests/features/management/presentation/pages/add_branch_page.dart';
-import '../cubits/branch_cubit.dart';
+import '../cubit/branch_cubit.dart';
 
 class BranchesPage extends StatelessWidget {
   const BranchesPage({super.key});

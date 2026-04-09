@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'core/theme/app_theme.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/constants/app_constants.dart';
+import 'core/services/language_service.dart';
 import 'core/navigation/app_router.dart';
+import 'core/di/injection_container.dart' as di;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,11 +20,17 @@ Future<void> main() async {
     anonKey: AppConstants.supabaseAnonKey,
   );
 
-  runApp(const MyApp());
+  await di.init();
+
+  // Load saved locale
+  final Locale savedLocale = await LanguageService.getLocale();
+
+  runApp(MyApp(savedLocale: savedLocale));
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final Locale savedLocale;
+  const MyApp({super.key, required this.savedLocale});
 
   static void setLocale(BuildContext context, Locale newLocale) {
     _MyAppState? state = context.findAncestorStateOfType<_MyAppState>();
@@ -34,12 +42,20 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  Locale _locale = const Locale('en');
+  late Locale _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _locale = widget.savedLocale;
+  }
 
   void setLocale(Locale locale) {
     setState(() {
       _locale = locale;
     });
+    // Save language code
+    LanguageService.saveLanguage(locale.languageCode);
   }
 
   @override

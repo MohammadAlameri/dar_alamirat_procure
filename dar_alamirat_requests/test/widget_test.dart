@@ -5,6 +5,7 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dar_alamirat_requests/main.dart';
@@ -12,7 +13,7 @@ import 'package:dar_alamirat_requests/main.dart';
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const MyApp(savedLocale: Locale('en', '')));
 
     // Verify that the app starts without errors.
     // For now, we just check that the app can build the widget tree.

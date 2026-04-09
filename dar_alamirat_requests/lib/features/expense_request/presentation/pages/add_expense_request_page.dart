@@ -4,8 +4,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
-import 'package:dar_alamirat_requests/features/expense_request/data/repositories/expense_request_repository.dart';
-import '../cubits/expense_request_cubit.dart';
+import 'package:dar_alamirat_requests/core/di/injection_container.dart';
+import '../cubit/expense_request_cubit.dart';
 
 class AddExpenseRequestPage extends StatelessWidget {
   final Profile profile;
@@ -20,7 +20,7 @@ class AddExpenseRequestPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ExpenseRequestCubit(ExpenseRequestRepository()),
+      create: (_) => sl<ExpenseRequestCubit>(),
       child: _AddExpenseRequestPageContent(
         profile: profile,
         selectedBranch: selectedBranch,

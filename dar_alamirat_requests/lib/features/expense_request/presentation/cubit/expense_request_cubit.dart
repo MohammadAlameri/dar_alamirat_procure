@@ -1,53 +1,15 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:equatable/equatable.dart';
 import '../../../auth/domain/entities/profile.dart';
 import '../../domain/entities/expense_request.dart';
-import '../../data/repositories/expense_request_repository.dart';
-
-// Events
-abstract class ExpenseRequestEvent {}
-
-class LoadExpenseRequests extends ExpenseRequestEvent {
-  final Profile profile;
-  final String? branchId;
-  final String status;
-
-  LoadExpenseRequests({
-    required this.profile,
-    this.branchId,
-    this.status = 'all',
-  });
-}
-
-class CreateExpenseRequest extends ExpenseRequestEvent {
-  final String subject;
-  final String description;
-  final String branchId;
-  final String employeeId;
-  final double amount;
-  final String highestApprovalLevel;
-
-  CreateExpenseRequest({
-    required this.subject,
-    required this.description,
-    required this.branchId,
-    required this.employeeId,
-    required this.amount,
-    required this.highestApprovalLevel,
-  });
-}
-
-class UpdateExpenseRequestStatus extends ExpenseRequestEvent {
-  final String id;
-  final String status;
-
-  UpdateExpenseRequestStatus({
-    required this.id,
-    required this.status,
-  });
-}
+import '../../domain/repositories/expense_request_repository.dart';
 
 // States
-abstract class ExpenseRequestState {}
+abstract class ExpenseRequestState extends Equatable {
+  const ExpenseRequestState();
+  @override
+  List<Object?> get props => [];
+}
 
 class ExpenseRequestInitial extends ExpenseRequestState {}
 
@@ -55,14 +17,16 @@ class ExpenseRequestLoading extends ExpenseRequestState {}
 
 class ExpenseRequestLoaded extends ExpenseRequestState {
   final List<ExpenseRequest> requests;
-
-  ExpenseRequestLoaded({required this.requests});
+  const ExpenseRequestLoaded({required this.requests});
+  @override
+  List<Object?> get props => [requests];
 }
 
 class ExpenseRequestError extends ExpenseRequestState {
   final String message;
-
-  ExpenseRequestError({required this.message});
+  const ExpenseRequestError({required this.message});
+  @override
+  List<Object?> get props => [message];
 }
 
 // Cubit
@@ -120,7 +84,6 @@ class ExpenseRequestCubit extends Cubit<ExpenseRequestState> {
         amount: amount,
         highestApprovalLevel: highestApprovalLevel,
       );
-      // Just reload - the page will handle proper parameters
     } catch (e) {
       emit(ExpenseRequestError(message: e.toString()));
     }
@@ -132,7 +95,6 @@ class ExpenseRequestCubit extends Cubit<ExpenseRequestState> {
   }) async {
     try {
       await _repository.updateStatus(id: id, status: status);
-      // Reload will be triggered from the page
     } catch (e) {
       emit(ExpenseRequestError(message: e.toString()));
     }

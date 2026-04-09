@@ -1,53 +1,15 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:equatable/equatable.dart';
 import '../../../auth/domain/entities/profile.dart';
 import '../../domain/entities/purchase_request.dart';
-import '../../data/repositories/purchase_request_repository.dart';
-
-// Events
-abstract class PurchaseRequestEvent {}
-
-class LoadPurchaseRequests extends PurchaseRequestEvent {
-  final Profile profile;
-  final String? branchId;
-  final String status;
-
-  LoadPurchaseRequests({
-    required this.profile,
-    this.branchId,
-    this.status = 'all',
-  });
-}
-
-class CreatePurchaseRequest extends PurchaseRequestEvent {
-  final String subject;
-  final String description;
-  final String branchId;
-  final String createdBy;
-  final double totalAmount;
-  final List<Map<String, dynamic>> items;
-
-  CreatePurchaseRequest({
-    required this.subject,
-    required this.description,
-    required this.branchId,
-    required this.createdBy,
-    required this.totalAmount,
-    required this.items,
-  });
-}
-
-class UpdatePurchaseRequestStatus extends PurchaseRequestEvent {
-  final String id;
-  final String status;
-
-  UpdatePurchaseRequestStatus({
-    required this.id,
-    required this.status,
-  });
-}
+import '../../domain/repositories/purchase_request_repository.dart';
 
 // States
-abstract class PurchaseRequestState {}
+abstract class PurchaseRequestState extends Equatable {
+  const PurchaseRequestState();
+  @override
+  List<Object?> get props => [];
+}
 
 class PurchaseRequestInitial extends PurchaseRequestState {}
 
@@ -55,14 +17,16 @@ class PurchaseRequestLoading extends PurchaseRequestState {}
 
 class PurchaseRequestLoaded extends PurchaseRequestState {
   final List<PurchaseRequest> requests;
-
-  PurchaseRequestLoaded({required this.requests});
+  const PurchaseRequestLoaded({required this.requests});
+  @override
+  List<Object?> get props => [requests];
 }
 
 class PurchaseRequestError extends PurchaseRequestState {
   final String message;
-
-  PurchaseRequestError({required this.message});
+  const PurchaseRequestError({required this.message});
+  @override
+  List<Object?> get props => [message];
 }
 
 // Cubit
@@ -120,7 +84,6 @@ class PurchaseRequestCubit extends Cubit<PurchaseRequestState> {
         totalAmount: totalAmount,
         items: items,
       );
-      // Just reload - the page will handle proper parameters
     } catch (e) {
       emit(PurchaseRequestError(message: e.toString()));
     }
@@ -132,7 +95,6 @@ class PurchaseRequestCubit extends Cubit<PurchaseRequestState> {
   }) async {
     try {
       await _repository.updateStatus(id: id, status: status);
-      // Reload will be triggered from the page
     } catch (e) {
       emit(PurchaseRequestError(message: e.toString()));
     }

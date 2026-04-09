@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
-import 'package:dar_alamirat_requests/features/purchase_request/data/repositories/purchase_request_repository.dart';
-import '../cubits/purchase_request_cubit.dart';
+import 'package:dar_alamirat_requests/core/di/injection_container.dart';
+import '../cubit/purchase_request_cubit.dart';
 
 class AddPurchaseRequestPage extends StatelessWidget {
   final Profile profile;
@@ -21,7 +20,7 @@ class AddPurchaseRequestPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => PurchaseRequestCubit(PurchaseRequestRepository()),
+      create: (_) => sl<PurchaseRequestCubit>(),
       child: _AddPurchaseRequestPageContent(
         profile: profile,
         selectedBranch: selectedBranch,
@@ -133,8 +132,6 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('New Purchase Request'),

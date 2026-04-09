@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
-import 'package:dar_alamirat_requests/features/management/presentation/cubits/user_cubit.dart';
+import 'package:dar_alamirat_requests/features/management/presentation/cubit/user_cubit.dart';
 
 class AddUserPage extends StatefulWidget {
   const AddUserPage({super.key});

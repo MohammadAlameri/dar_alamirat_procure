@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
-import 'package:dar_alamirat_requests/features/expense_request/data/repositories/expense_request_repository.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_widgets.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
-import '../cubits/expense_request_cubit.dart';
+import 'package:dar_alamirat_requests/core/di/injection_container.dart';
+import '../cubit/expense_request_cubit.dart';
 
 class ExpenseRequestsPage extends StatelessWidget {
   final Profile profile;
@@ -22,7 +22,7 @@ class ExpenseRequestsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ExpenseRequestCubit(ExpenseRequestRepository())
+      create: (_) => sl<ExpenseRequestCubit>()
         ..loadRequests(
           profile: profile,
           branchId: initialBranch?.id,
@@ -83,6 +83,7 @@ class _ExpenseRequestsViewState extends State<ExpenseRequestsView> with Automati
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final l10n = AppLocalizations.of(context)!;
 
     return Column(

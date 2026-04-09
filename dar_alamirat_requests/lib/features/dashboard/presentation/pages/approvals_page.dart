@@ -8,7 +8,7 @@ import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart
 import 'package:dar_alamirat_requests/features/purchase_request/domain/entities/purchase_request.dart';
 import 'package:dar_alamirat_requests/features/expense_request/domain/entities/expense_request.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_widgets.dart';
-import '../cubits/approval_cubit.dart';
+import '../cubit/approval_cubit.dart';
 
 class ApprovalsPage extends StatelessWidget {
   final Profile profile;

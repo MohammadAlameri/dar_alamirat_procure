@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/product_repository.dart';
-import '../cubits/product_cubit.dart';
+import '../cubit/product_cubit.dart';
 
 class AddProductPage extends StatelessWidget {
   const AddProductPage({super.key});

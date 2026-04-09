@@ -6,7 +6,7 @@ import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/product_repository.dart';
 import 'package:dar_alamirat_requests/features/management/presentation/pages/add_product_category_page.dart';
-import '../cubits/product_cubit.dart';
+import '../cubit/product_cubit.dart';
 
 class ProductManagementPage extends StatelessWidget {
   const ProductManagementPage({super.key});

@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
-import 'package:dar_alamirat_requests/features/purchase_request/data/repositories/purchase_request_repository.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_widgets.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
-import '../cubits/purchase_request_cubit.dart';
+import 'package:dar_alamirat_requests/core/di/injection_container.dart';
+import '../cubit/purchase_request_cubit.dart';
 
 class PurchaseRequestsPage extends StatelessWidget {
   final Profile profile;
@@ -22,7 +22,7 @@ class PurchaseRequestsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => PurchaseRequestCubit(PurchaseRequestRepository())
+      create: (_) => sl<PurchaseRequestCubit>()
         ..loadRequests(
           profile: profile,
           branchId: initialBranch?.id,
@@ -83,6 +83,7 @@ class _PurchaseRequestsViewState extends State<PurchaseRequestsView> with Automa
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final l10n = AppLocalizations.of(context)!;
 
     return Column(

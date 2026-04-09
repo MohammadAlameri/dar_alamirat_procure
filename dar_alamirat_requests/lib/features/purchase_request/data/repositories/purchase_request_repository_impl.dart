@@ -1,10 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/purchase_request.dart';
+import '../../domain/repositories/purchase_request_repository.dart';
 import '../models/purchase_request_model.dart';
 
-class PurchaseRequestRepository {
-  final _client = Supabase.instance.client;
+class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
+  final SupabaseClient _client;
 
+  PurchaseRequestRepositoryImpl(this._client);
+
+  @override
   Future<List<PurchaseRequest>> fetchRequests({
     String? branchId,
     String? userId,
@@ -30,6 +34,7 @@ class PurchaseRequestRepository {
     return (data as List).map((e) => PurchaseRequestModel.fromJson(e)).toList();
   }
 
+  @override
   Future<PurchaseRequest> createRequest({
     required String subject,
     required String description,
@@ -63,6 +68,7 @@ class PurchaseRequestRepository {
     return request;
   }
 
+  @override
   Future<PurchaseRequest> updateStatus({
     required String id,
     required String status,

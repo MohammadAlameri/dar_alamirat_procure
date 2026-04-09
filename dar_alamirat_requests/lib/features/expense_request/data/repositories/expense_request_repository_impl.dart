@@ -1,10 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/expense_request.dart';
+import '../../domain/repositories/expense_request_repository.dart';
 import '../models/expense_request_model.dart';
 
-class ExpenseRequestRepository {
-  final _client = Supabase.instance.client;
+class ExpenseRequestRepositoryImpl implements ExpenseRequestRepository {
+  final SupabaseClient _client;
 
+  ExpenseRequestRepositoryImpl(this._client);
+
+  @override
   Future<List<ExpenseRequest>> fetchRequests({
     String? branchId,
     String? userId,
@@ -30,6 +34,7 @@ class ExpenseRequestRepository {
     return (data as List).map((e) => ExpenseRequestModel.fromJson(e)).toList();
   }
 
+  @override
   Future<ExpenseRequest> createRequest({
     required String subject,
     required String description,
@@ -51,6 +56,7 @@ class ExpenseRequestRepository {
     return ExpenseRequestModel.fromJson(data);
   }
 
+  @override
   Future<ExpenseRequest> updateStatus({
     required String id,
     required String status,

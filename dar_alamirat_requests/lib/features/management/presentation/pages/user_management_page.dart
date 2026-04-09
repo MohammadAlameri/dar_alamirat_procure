@@ -7,7 +7,7 @@ import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/user_repository.dart';
 import 'package:dar_alamirat_requests/features/management/presentation/pages/add_user_page.dart';
-import '../cubits/user_cubit.dart';
+import '../cubit/user_cubit.dart';
 
 class UserManagementPage extends StatelessWidget {
   const UserManagementPage({super.key});
