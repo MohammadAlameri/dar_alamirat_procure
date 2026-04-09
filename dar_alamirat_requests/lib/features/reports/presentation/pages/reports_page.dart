@@ -18,7 +18,7 @@ class ReportsPage extends StatelessWidget {
               _buildReportItem(
                 context,
                 l10n.translate('procurementSummary'),
-                'Overview of all purchase requests and costs.',
+                l10n.translate('procurementSummaryDesc'),
                 LucideIcons.fileText,
                 Colors.blue,
               ),
@@ -26,7 +26,7 @@ class ReportsPage extends StatelessWidget {
               _buildReportItem(
                 context,
                 l10n.translate('expenseSummary'),
-                'Overview of all expense requests and reimbursements.',
+                l10n.translate('expenseSummaryDesc'),
                 LucideIcons.banknote,
                 Colors.orange,
               ),
@@ -34,7 +34,7 @@ class ReportsPage extends StatelessWidget {
               _buildReportItem(
                 context,
                 l10n.translate('branchPerformance'),
-                'Compare activity across different branches.',
+                l10n.translate('branchPerformanceDesc'),
                 LucideIcons.building,
                 Colors.green,
               ),

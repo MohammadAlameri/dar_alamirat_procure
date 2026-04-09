@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
+import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/product_repository.dart';
 import '../cubit/product_cubit.dart';
 
@@ -55,6 +56,7 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       final cubit = context.read<ProductCubit>();
@@ -65,14 +67,14 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product created successfully')),
+          SnackBar(content: Text(l10n.translate('productCreatedSuccessfully'))),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${l10n.translate('error')}: $e')),
         );
       }
     } finally {
@@ -84,9 +86,10 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Product'),
+        title: Text(l10n.translate('addProduct')),
         backgroundColor: AppTheme.primaryPink,
         foregroundColor: AppTheme.darkGray,
       ),
@@ -98,14 +101,14 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
             // Product Name
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Product Name *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.package),
+              decoration: InputDecoration(
+                labelText: l10n.translate('productNameRequired'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.package),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter product name';
+                  return l10n.translate('productNameRequired');
                 }
                 return null;
               },
@@ -115,12 +118,12 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
             // Category Dropdown
             DropdownButtonFormField<String>(
               value: _selectedCategoryId,
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.folder),
+              decoration: InputDecoration(
+                labelText: l10n.translate('category'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.folder),
               ),
-              hint: const Text('Select a category (optional)'),
+              hint: Text(l10n.translate('selectCategoryOptional')),
               items: _categories.map((category) {
                 return DropdownMenuItem<String>(
                   value: category['id'],
@@ -144,9 +147,9 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
                 ),
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: AppTheme.darkGray)
-                    : const Text(
-                        'Create Product',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    : Text(
+                        l10n.translate('createProduct'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
             ),
@@ -192,6 +195,7 @@ class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       final cubit = context.read<ProductCubit>();
@@ -201,14 +205,14 @@ class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Category created successfully')),
+          SnackBar(content: Text(l10n.translate('categoryCreatedSuccessfully'))),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${l10n.translate('error')}: $e')),
         );
       }
     } finally {
@@ -220,9 +224,10 @@ class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Category'),
+        title: Text(l10n.translate('addCategory')),
         backgroundColor: AppTheme.primaryPink,
         foregroundColor: AppTheme.darkGray,
       ),
@@ -234,14 +239,14 @@ class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
             // Category Name
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Category Name *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.folder),
+              decoration: InputDecoration(
+                labelText: l10n.translate('categoryName'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.folder),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter category name';
+                  return l10n.translate('categoryNameRequired');
                 }
                 return null;
               },
@@ -259,9 +264,9 @@ class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
                 ),
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: AppTheme.darkGray)
-                    : const Text(
-                        'Create Category',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    : Text(
+                        l10n.translate('createCategory'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
             ),

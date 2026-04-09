@@ -24,14 +24,14 @@ class UserManagementPage extends StatelessWidget {
 class UserManagementView extends StatelessWidget {
   const UserManagementView({super.key});
 
-  void _showUserOptionsDialog(BuildContext context) {
+  void _showUserOptionsDialog(BuildContext context, [Profile? profile]) {
     final userCubit = context.read<UserCubit>();
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => BlocProvider.value(
           value: userCubit,
-          child: const AddUserPage(),
+          child: AddUserPage(userToEdit: profile),
         ),
       ),
     );
@@ -83,7 +83,7 @@ class UserManagementView extends StatelessWidget {
                               // TODO: Show user details
                             },
                             onEdit: () {
-                              // TODO: Edit user profile
+                              _showUserOptionsDialog(context, profile);
                             },
                           );
                         },

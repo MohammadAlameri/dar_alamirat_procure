@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
+import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/branch_repository.dart';
 import '../cubit/branch_cubit.dart';
 
@@ -47,6 +48,7 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       final cubit = context.read<BranchCubit>();
@@ -60,14 +62,14 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Branch created successfully')),
+          SnackBar(content: Text(l10n.translate('branchCreatedSuccessfully'))),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${l10n.translate('error')}: $e')),
         );
       }
     } finally {
@@ -79,9 +81,11 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Branch'),
+        title: Text(l10n.translate('addBranch')),
         backgroundColor: AppTheme.primaryPink,
         foregroundColor: AppTheme.darkGray,
       ),
@@ -93,14 +97,14 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
             // Branch Name (English)
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Branch Name (English) *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.building),
+              decoration: InputDecoration(
+                labelText: l10n.translate('branchNameEn'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.building),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter branch name';
+                  return l10n.translate('branchNameRequired');
                 }
                 return null;
               },
@@ -110,10 +114,10 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
             // Branch Name (Arabic)
             TextFormField(
               controller: _nameArController,
-              decoration: const InputDecoration(
-                labelText: 'Branch Name (Arabic)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.languages),
+              decoration: InputDecoration(
+                labelText: l10n.translate('branchNameAr'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.languages),
               ),
             ),
             const SizedBox(height: 16),
@@ -121,10 +125,10 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
             // Branch Code
             TextFormField(
               controller: _codeController,
-              decoration: const InputDecoration(
-                labelText: 'Branch Code',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.hash),
+              decoration: InputDecoration(
+                labelText: l10n.translate('branchCode'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.hash),
               ),
             ),
             const SizedBox(height: 16),
@@ -132,10 +136,10 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
             // Address
             TextFormField(
               controller: _addressController,
-              decoration: const InputDecoration(
-                labelText: 'Address',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.mapPin),
+              decoration: InputDecoration(
+                labelText: l10n.translate('address'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.mapPin),
               ),
               maxLines: 2,
             ),
@@ -144,10 +148,10 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
             // Phone
             TextFormField(
               controller: _phoneController,
-              decoration: const InputDecoration(
-                labelText: 'Phone',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.phone),
+              decoration: InputDecoration(
+                labelText: l10n.translate('phone'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.phone),
               ),
               keyboardType: TextInputType.phone,
             ),
@@ -164,9 +168,9 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
                 ),
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: AppTheme.darkGray)
-                    : const Text(
-                        'Create Branch',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    : Text(
+                        l10n.translate('createBranch'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
             ),

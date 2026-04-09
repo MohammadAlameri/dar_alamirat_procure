@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
@@ -90,10 +91,11 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
   }
 
   Future<void> _submitForm() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one item')),
+        SnackBar(content: Text(l10n.translate('addAtLeastOneItem'))),
       );
       return;
     }
@@ -113,14 +115,14 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Purchase request created successfully')),
+          SnackBar(content: Text(l10n.translate('purchaseRequestCreatedSuccessfully'))),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${l10n.translate('error')}: $e')),
         );
       }
     } finally {
@@ -132,9 +134,11 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Purchase Request'),
+        title: Text(l10n.translate('newPurchaseRequest')),
         backgroundColor: AppTheme.primaryPink,
         foregroundColor: AppTheme.darkGray,
       ),
@@ -146,14 +150,14 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
             // Subject
             TextFormField(
               controller: _subjectController,
-              decoration: const InputDecoration(
-                labelText: 'Subject *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.fileText),
+              decoration: InputDecoration(
+                labelText: l10n.translate('subjectRequired'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.fileText),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a subject';
+                  return l10n.translate('enterSubject');
                 }
                 return null;
               },
@@ -163,10 +167,10 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
             // Justification
             TextFormField(
               controller: _justificationController,
-              decoration: const InputDecoration(
-                labelText: 'Justification',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.alignLeft),
+              decoration: InputDecoration(
+                labelText: l10n.translate('justification'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.alignLeft),
               ),
               maxLines: 3,
             ),
@@ -176,14 +180,14 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Items',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.translate('items'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 ElevatedButton.icon(
                   onPressed: _addItem,
                   icon: const Icon(LucideIcons.plus, size: 18),
-                  label: const Text('Add Item'),
+                  label: Text(l10n.translate('addItem')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryPink,
                     foregroundColor: AppTheme.darkGray,
@@ -201,10 +205,10 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                   border: Border.all(color: Colors.grey.shade300),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
-                    'No items added yet. Click "Add Item" to start.',
-                    style: TextStyle(color: Colors.grey),
+                    l10n.translate('noItemsAdded'),
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ),
               ),
@@ -222,7 +226,7 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                       Row(
                         children: [
                           Text(
-                            'Item ${index + 1}',
+                            '${l10n.translate('itemLabel')} ${index + 1}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -240,14 +244,14 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                       // Product Name
                       TextFormField(
                         initialValue: item['product_name'],
-                        decoration: const InputDecoration(
-                          labelText: 'Product Name *',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: l10n.translate('productNameRequired2'),
+                          border: const OutlineInputBorder(),
                         ),
                         onChanged: (value) => _updateItem(index, 'product_name', value),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Required';
+                            return l10n.translate('requiredField');
                           }
                           return null;
                         },
@@ -257,9 +261,9 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                       // Specifications
                       TextFormField(
                         initialValue: item['specifications'],
-                        decoration: const InputDecoration(
-                          labelText: 'Specifications',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: l10n.translate('specifications'),
+                          border: const OutlineInputBorder(),
                         ),
                         onChanged: (value) => _updateItem(index, 'specifications', value),
                       ),
@@ -268,14 +272,14 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                       // Unit
                       DropdownButtonFormField<String>(
                         value: item['unit'],
-                        decoration: const InputDecoration(
-                          labelText: 'Unit',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: l10n.translate('unit'),
+                          border: const OutlineInputBorder(),
                         ),
                         items: ['pcs', 'box', 'kg', 'liter', 'meter', 'set']
                             .map((unit) => DropdownMenuItem(
                                   value: unit,
-                                  child: Text(unit),
+                                  child: Text(l10n.translate(unit)),
                                 ))
                             .toList(),
                         onChanged: (value) => _updateItem(index, 'unit', value),
@@ -288,16 +292,16 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                           Expanded(
                             child: TextFormField(
                               initialValue: item['quantity'].toString(),
-                              decoration: const InputDecoration(
-                                labelText: 'Quantity *',
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: l10n.translate('quantityRequired'),
+                                border: const OutlineInputBorder(),
                               ),
                               keyboardType: TextInputType.number,
                               onChanged: (value) {
                                 _updateItem(index, 'quantity', double.tryParse(value) ?? 0);
                               },
                               validator: (value) {
-                                if (value == null || value.isEmpty) return 'Required';
+                                if (value == null || value.isEmpty) return l10n.translate('requiredField');
                                 return null;
                               },
                             ),
@@ -306,16 +310,16 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                           Expanded(
                             child: TextFormField(
                               initialValue: item['unit_price'].toString(),
-                              decoration: const InputDecoration(
-                                labelText: 'Unit Price (SAR) *',
-                                border: OutlineInputBorder(),
+                              decoration: InputDecoration(
+                                labelText: l10n.translate('unitPriceRequired'),
+                                border: const OutlineInputBorder(),
                               ),
                               keyboardType: TextInputType.number,
                               onChanged: (value) {
                                 _updateItem(index, 'unit_price', double.tryParse(value) ?? 0);
                               },
                               validator: (value) {
-                                if (value == null || value.isEmpty) return 'Required';
+                                if (value == null || value.isEmpty) return l10n.translate('requiredField');
                                 return null;
                               },
                             ),
@@ -326,7 +330,7 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
 
                       // Item Total
                       Text(
-                        'Total: ${((item['quantity'] as num).toDouble() * (item['unit_price'] as num).toDouble()).toStringAsFixed(2)} SAR',
+                        '${l10n.translate('total')}: ${((item['quantity'] as num).toDouble() * (item['unit_price'] as num).toDouble()).toStringAsFixed(2)} ${l10n.translate('sar')}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: AppTheme.primaryPink,
@@ -347,15 +351,15 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Grand Total:',
-                        style: TextStyle(
+                      Text(
+                        l10n.translate('grandTotal'),
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        '${_calculateTotal().toStringAsFixed(2)} SAR',
+                        '${_calculateTotal().toStringAsFixed(2)} ${l10n.translate('sar')}',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -381,9 +385,9 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                 ),
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: AppTheme.darkGray)
-                    : const Text(
-                        'Submit Request',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    : Text(
+                        l10n.translate('submitRequest'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
             ),

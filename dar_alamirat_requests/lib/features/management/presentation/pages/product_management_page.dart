@@ -129,7 +129,8 @@ class ProductsTab extends StatelessWidget {
 
         if (state is ProductLoaded) {
           if (state.products.isEmpty) {
-            return const Center(child: Text('No products found'));
+            final l10n = AppLocalizations.of(context)!;
+            return Center(child: Text(l10n.translate('noProductsFound')));
           }
 
           return ListView.builder(
@@ -137,6 +138,7 @@ class ProductsTab extends StatelessWidget {
             itemCount: state.products.length,
             itemBuilder: (context, index) {
               final product = state.products[index];
+              final l10n = AppLocalizations.of(context)!;
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
@@ -144,7 +146,7 @@ class ProductsTab extends StatelessWidget {
                     product['name'] ?? '',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(product['categories']?['name'] ?? 'No Category'),
+                  subtitle: Text(product['categories']?['name'] ?? l10n.translate('noCategory')),
                   trailing: IconButton(
                     icon: const Icon(LucideIcons.edit, size: 18),
                     onPressed: () {
@@ -201,7 +203,8 @@ class CategoriesTab extends StatelessWidget {
 
         if (state is ProductLoaded) {
           if (state.categories.isEmpty) {
-            return const Center(child: Text('No categories found'));
+            final l10n = AppLocalizations.of(context)!;
+            return Center(child: Text(l10n.translate('noCategoriesFound')));
           }
 
           return ListView.builder(

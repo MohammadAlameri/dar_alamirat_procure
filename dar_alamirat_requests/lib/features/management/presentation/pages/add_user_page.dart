@@ -4,8 +4,13 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/presentation/cubit/user_cubit.dart';
 
+import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
+import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
+
 class AddUserPage extends StatefulWidget {
-  const AddUserPage({super.key});
+  final Profile? userToEdit;
+  
+  const AddUserPage({super.key, this.userToEdit});
 
   @override
   State<AddUserPage> createState() => _AddUserPageState();
@@ -34,6 +39,19 @@ class _AddUserPageState extends State<AddUserPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.userToEdit != null) {
+      final user = widget.userToEdit!;
+      _fullNameController.text = user.fullName;
+      _emailController.text = user.email;
+      _selectedRole = user.role.name;
+      _jobTitleController.text = user.jobTitle ?? '';
+      _departmentController.text = user.department ?? '';
+    }
+  }
+
+  @override
   void dispose() {
     _fullNameController.dispose();
     _emailController.dispose();
@@ -47,22 +65,35 @@ class _AddUserPageState extends State<AddUserPage> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       final cubit = context.read<UserCubit>();
-      await cubit.createUser(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        fullName: _fullNameController.text.trim(),
-        role: _selectedRole,
-        jobTitle: _jobTitleController.text.trim().isEmpty ? null : _jobTitleController.text.trim(),
-        department: _departmentController.text.trim().isEmpty ? null : _departmentController.text.trim(),
-      );
+      
+      if (widget.userToEdit != null) {
+        await cubit.updateUser(
+          id: widget.userToEdit!.id,
+          fullName: _fullNameController.text.trim(),
+          email: _emailController.text.trim(),
+          role: UserRole.values.firstWhere((e) => e.name == _selectedRole),
+          jobTitle: _jobTitleController.text.trim().isEmpty ? null : _jobTitleController.text.trim(),
+          department: _departmentController.text.trim().isEmpty ? null : _departmentController.text.trim(),
+        );
+      } else {
+        await cubit.createUser(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          fullName: _fullNameController.text.trim(),
+          role: _selectedRole,
+          jobTitle: _jobTitleController.text.trim().isEmpty ? null : _jobTitleController.text.trim(),
+          department: _departmentController.text.trim().isEmpty ? null : _departmentController.text.trim(),
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User created successfully!'),
+          SnackBar(
+            content: Text(widget.userToEdit != null ? l10n.translate('userUpdatedSuccessfully') : l10n.translate('userCreatedSuccessfully')),
             backgroundColor: Colors.green,
           ),
         );
@@ -72,7 +103,7 @@ class _AddUserPageState extends State<AddUserPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${l10n.translate('error')}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -86,9 +117,12 @@ class _AddUserPageState extends State<AddUserPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.userToEdit != null;
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New User'),
+        title: Text(isEditing ? l10n.translate('updateUser') : l10n.translate('addUser')),
         backgroundColor: Colors.white,
         foregroundColor: AppTheme.darkGray,
         elevation: 0,
@@ -102,8 +136,8 @@ class _AddUserPageState extends State<AddUserPage> {
             TextFormField(
               controller: _fullNameController,
               decoration: InputDecoration(
-                labelText: 'Full Name',
-                hintText: 'Enter full name',
+                labelText: l10n.translate('name'),
+                hintText: l10n.translate('enterFullName'),
                 prefixIcon: const Icon(LucideIcons.user, size: 20),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -111,7 +145,7 @@ class _AddUserPageState extends State<AddUserPage> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Full name is required';
+                  return l10n.translate('fullNameRequired');
                 }
                 return null;
               },
@@ -122,8 +156,9 @@ class _AddUserPageState extends State<AddUserPage> {
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              enabled: !isEditing, // Email shouldn't be edited easily
               decoration: InputDecoration(
-                labelText: 'Email',
+                labelText: l10n.translate('email'),
                 hintText: 'user@example.com',
                 prefixIcon: const Icon(LucideIcons.mail, size: 20),
                 border: OutlineInputBorder(
@@ -132,10 +167,10 @@ class _AddUserPageState extends State<AddUserPage> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Email is required';
+                  return l10n.translate('emailRequired');
                 }
                 if (!value.contains('@')) {
-                  return 'Enter a valid email';
+                  return l10n.translate('invalidEmail');
                 }
                 return null;
               },
@@ -143,43 +178,45 @@ class _AddUserPageState extends State<AddUserPage> {
             const SizedBox(height: 16),
 
             // Password
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                hintText: 'Enter password',
-                prefixIcon: const Icon(LucideIcons.lock, size: 20),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? LucideIcons.eye : LucideIcons.eyeOff,
-                    size: 20,
+            if (!isEditing) ...[
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: l10n.translate('password'),
+                  hintText: l10n.translate('enterPassword'),
+                  prefixIcon: const Icon(LucideIcons.lock, size: 20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  onPressed: () {
-                    setState(() => _obscurePassword = !_obscurePassword);
-                  },
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? LucideIcons.eye : LucideIcons.eyeOff,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() => _obscurePassword = !_obscurePassword);
+                    },
+                  ),
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return l10n.translate('passwordRequired');
+                  }
+                  if (value.length < 6) {
+                    return l10n.translate('passwordMinLength');
+                  }
+                  return null;
+                },
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Password is required';
-                }
-                if (value.length < 6) {
-                  return 'Password must be at least 6 characters';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
+            ],
 
             // Role Dropdown
             DropdownButtonFormField<String>(
               value: _selectedRole,
               decoration: InputDecoration(
-                labelText: 'Role',
+                labelText: l10n.translate('roles'),
                 prefixIcon: const Icon(LucideIcons.shield, size: 20),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -188,7 +225,7 @@ class _AddUserPageState extends State<AddUserPage> {
               items: _roles.map((role) {
                 return DropdownMenuItem(
                   value: role,
-                  child: Text(role.replaceAll('_', ' ').toUpperCase()),
+                  child: Text(l10n.translate(role).toUpperCase()),
                 );
               }).toList(),
               onChanged: (value) {
@@ -203,8 +240,8 @@ class _AddUserPageState extends State<AddUserPage> {
             TextFormField(
               controller: _jobTitleController,
               decoration: InputDecoration(
-                labelText: 'Job Title (Optional)',
-                hintText: 'e.g., Software Engineer',
+                labelText: l10n.translate('jobTitleOptional'),
+                hintText: l10n.translate('egSoftwareEngineer'),
                 prefixIcon: const Icon(LucideIcons.briefcase, size: 20),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -217,8 +254,8 @@ class _AddUserPageState extends State<AddUserPage> {
             TextFormField(
               controller: _departmentController,
               decoration: InputDecoration(
-                labelText: 'Department (Optional)',
-                hintText: 'e.g., IT, Finance',
+                labelText: l10n.translate('departmentOptional'),
+                hintText: l10n.translate('egItFinance'),
                 prefixIcon: const Icon(LucideIcons.building, size: 20),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -228,28 +265,29 @@ class _AddUserPageState extends State<AddUserPage> {
             const SizedBox(height: 24),
 
             // Info Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(LucideIcons.info, color: Colors.blue, size: 20),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'This will create both the authentication account and user profile automatically.',
-                      style: TextStyle(fontSize: 14, color: Colors.blue),
+            if (!isEditing)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(LucideIcons.info, color: Colors.blue, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.translate('createUserAccountInfo'),
+                        style: const TextStyle(fontSize: 14, color: Colors.blue),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
+            if (!isEditing) const SizedBox(height: 24),
 
             // Submit Button
             SizedBox(
@@ -273,9 +311,9 @@ class _AddUserPageState extends State<AddUserPage> {
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : const Text(
-                        'Create User',
-                        style: TextStyle(
+                    : Text(
+                        isEditing ? l10n.translate('updateUserButton') : l10n.translate('createUserButton'),
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),

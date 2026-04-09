@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
+import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
 import 'package:dar_alamirat_requests/core/di/injection_container.dart';
@@ -62,6 +63,7 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isSubmitting = true);
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       final cubit = context.read<ExpenseRequestCubit>();
@@ -76,14 +78,14 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Expense request created successfully')),
+          SnackBar(content: Text(l10n.translate('expenseRequestCreatedSuccessfully'))),
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('${l10n.translate('error')}: $e')),
         );
       }
     } finally {
@@ -95,9 +97,11 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Expense Request'),
+        title: Text(l10n.translate('newExpenseRequest')),
         backgroundColor: AppTheme.primaryPink,
         foregroundColor: AppTheme.darkGray,
       ),
@@ -109,14 +113,14 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
             // Subject
             TextFormField(
               controller: _subjectController,
-              decoration: const InputDecoration(
-                labelText: 'Subject *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.fileText),
+              decoration: InputDecoration(
+                labelText: l10n.translate('subjectRequired'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.fileText),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a subject';
+                  return l10n.translate('enterSubject');
                 }
                 return null;
               },
@@ -126,15 +130,15 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
             // Statement/Description
             TextFormField(
               controller: _statementController,
-              decoration: const InputDecoration(
-                labelText: 'Statement/Description *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.alignLeft),
+              decoration: InputDecoration(
+                labelText: l10n.translate('statementRequired'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.alignLeft),
               ),
               maxLines: 4,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a description';
+                  return l10n.translate('enterDescription');
                 }
                 return null;
               },
@@ -144,18 +148,18 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
             // Amount
             TextFormField(
               controller: _amountController,
-              decoration: const InputDecoration(
-                labelText: 'Amount (SAR) *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.banknote),
+              decoration: InputDecoration(
+                labelText: l10n.translate('amountRequired'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.banknote),
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter an amount';
+                  return l10n.translate('enterAmount');
                 }
                 if (double.tryParse(value) == null) {
-                  return 'Please enter a valid number';
+                  return l10n.translate('validNumber');
                 }
                 return null;
               },
@@ -165,15 +169,15 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
             // Approval Level
             DropdownButtonFormField<String>(
               value: _approvalLevel,
-              decoration: const InputDecoration(
-                labelText: 'Highest Approval Level *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.userCheck),
+              decoration: InputDecoration(
+                labelText: l10n.translate('highestApprovalLevel'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.userCheck),
               ),
-              items: const [
-                DropdownMenuItem(value: 'manager', child: Text('Manager')),
-                DropdownMenuItem(value: 'finance', child: Text('Finance')),
-                DropdownMenuItem(value: 'general_manager', child: Text('General Manager')),
+              items: [
+                DropdownMenuItem(value: 'manager', child: Text(l10n.translate('manager'))),
+                DropdownMenuItem(value: 'finance', child: Text(l10n.translate('finance'))),
+                DropdownMenuItem(value: 'general_manager', child: Text(l10n.translate('general_manager'))),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -186,16 +190,16 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
             // Info Card
             Card(
               color: Colors.blue.withOpacity(0.1),
-              child: const Padding(
-                padding: EdgeInsets.all(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Icon(LucideIcons.info, color: Colors.blue),
-                    SizedBox(width: 12),
+                    const Icon(LucideIcons.info, color: Colors.blue),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'The request will go through the approval workflow based on the selected approval level.',
-                        style: TextStyle(color: Colors.blue),
+                        l10n.translate('approvalWorkflowInfo'),
+                        style: const TextStyle(color: Colors.blue),
                       ),
                     ),
                   ],
@@ -215,9 +219,9 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
                 ),
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: AppTheme.darkGray)
-                    : const Text(
-                        'Submit Expense Request',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    : Text(
+                        l10n.translate('submitExpenseRequest'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
             ),
