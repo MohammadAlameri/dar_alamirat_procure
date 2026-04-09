@@ -119,7 +119,7 @@ class _PurchaseRequestsViewState extends State<PurchaseRequestsView> with Automa
                       final request = state.requests[index];
                       return RequestCard(
                         subject: request.subject,
-                        requester: request.profile?.fullName ?? 'Unknown',
+                        requester: request.profile?.fullName ?? l10n.translate('unknown'),
                         date: request.createdAt,
                         amount: request.totalAmount,
                         status: request.status,
@@ -138,11 +138,11 @@ class _PurchaseRequestsViewState extends State<PurchaseRequestsView> with Automa
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Error loading requests'),
+                      Text(l10n.translate('errorLoadingRequests')),
                       const SizedBox(height: 8),
                       ElevatedButton(
                         onPressed: _fetchRequests,
-                        child: const Text('Retry'),
+                        child: Text(l10n.translate('retry')),
                       ),
                     ],
                   ),
@@ -201,11 +201,11 @@ class _PurchaseRequestsViewState extends State<PurchaseRequestsView> with Automa
 
   String _getStatusLabel(String status, AppLocalizations l10n) {
     switch (status) {
-      case 'all': return 'All';
-      case 'pending': return 'Pending';
-      case 'manager_approved': return 'Manager Approved';
-      case 'completed': return 'Completed';
-      case 'rejected': return 'Rejected';
+      case 'all': return l10n.translate('all');
+      case 'pending': return l10n.translate('pending');
+      case 'manager_approved': return l10n.translate('manager_approved');
+      case 'completed': return l10n.translate('completed');
+      case 'rejected': return l10n.translate('rejected');
       default: return status.replaceAll('_', ' ').replaceFirst(status[0], status[0].toUpperCase());
     }
   }

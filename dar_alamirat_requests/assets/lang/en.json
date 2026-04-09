@@ -4,6 +4,7 @@
   "myRequests": "Procure",
   "pendingApprovals": "Pending Approvals",
   "procureRequests": "Procure Requests",
+  "purchaseRequests": "Procure Requests",
   "allRequests": "All Requests",
   "reports": "Reports",
   "userManagement": "User Management",
@@ -42,5 +43,19 @@
   "jobTitle": "Job Title",
   "admin": "Administration",
   "menu": "Menu",
-  "approvals": "Approvals"
+  "approvals": "Approvals",
+  "all": "All",
+  "pending": "Pending",
+  "completed": "Completed",
+  "paid": "Paid",
+  "manager_approved": "Manager Approved",
+  "noRequestsFound": "No requests found",
+  "noPendingApprovals": "No pending approvals",
+  "errorLoadingRequests": "Error loading requests",
+  "retry": "Retry",
+  "unknown": "Unknown",
+  "branch": "Branch",
+  "sar": "SAR",
+  "procure": "Procure",
+  "expense": "Expense"
 }

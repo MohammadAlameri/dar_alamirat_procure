@@ -88,7 +88,7 @@ class ApprovalsView extends StatelessWidget {
                       if (item is PurchaseRequest) {
                         return RequestCard(
                           subject: item.subject,
-                          requester: item.profile?.fullName ?? 'Unknown',
+                          requester: item.profile?.fullName ?? l10n.translate('unknown'),
                           date: item.createdAt,
                           amount: item.totalAmount,
                           status: item.status,
@@ -101,7 +101,7 @@ class ApprovalsView extends StatelessWidget {
                         final e = item as ExpenseRequest;
                         return RequestCard(
                           subject: e.subject,
-                          requester: e.profile?.fullName ?? 'Unknown',
+                          requester: e.profile?.fullName ?? l10n.translate('unknown'),
                           date: e.createdAt,
                           amount: e.amount,
                           status: e.status,
@@ -135,7 +135,7 @@ class ApprovalsView extends StatelessWidget {
                           branchId: branchId,
                         );
                   },
-                  child: const Text('Retry'),
+                  child: Text(l10n.translate('retry')),
                 ),
               ],
             ),

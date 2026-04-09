@@ -4,6 +4,7 @@
   "myRequests": "المشتريات",
   "pendingApprovals": "طلبات بانتظار الموافقة",
   "procureRequests": "طلبات المشتريات",
+  "purchaseRequests": "طلبات المشتريات",
   "allRequests": "كل الطلبات",
   "reports": "التقارير",
   "userManagement": "إدارة المستخدمين",
@@ -42,5 +43,19 @@
   "jobTitle": "المسمى الوظيفي",
   "admin": "الإدارة",
   "menu": "القائمة",
-  "approvals": "الموافقات"
+  "approvals": "الموافقات",
+  "all": "الكل",
+  "pending": "قيد الانتظار",
+  "completed": "مكتمل",
+  "paid": "مدفوع",
+  "manager_approved": "موافقة المدير",
+  "noRequestsFound": "لم يتم العثور على طلبات",
+  "noPendingApprovals": "لا توجد طلبات بانتظار الموافقة",
+  "errorLoadingRequests": "حدث خطأ أثناء تحميل الطلبات",
+  "retry": "إعادة المحاولة",
+  "unknown": "غير معروف",
+  "branch": "الفرع",
+  "sar": "ر.س",
+  "procure": "مشتريات",
+  "expense": "مصروفات"
 }

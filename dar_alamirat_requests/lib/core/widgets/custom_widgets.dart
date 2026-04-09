@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 
 class StatusBadge extends StatelessWidget {
   final String status;
@@ -15,14 +16,23 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     Color color = Colors.grey;
-    final s = status.toLowerCase();
+    String statusKey = status.toLowerCase();
     
-    if (s.contains('approved')) color = Colors.green;
-    else if (s.contains('rejected')) color = Colors.red;
-    else if (s == 'pending') color = Colors.orange;
-    else if (s == 'completed' || s == 'paid' || s == 'received') color = Colors.blue;
-    else if (s == 'purchased') color = Colors.deepPurple;
+    if (statusKey.contains('approved')) {
+      color = Colors.green;
+      statusKey = 'approved';
+    } else if (statusKey.contains('rejected')) {
+      color = Colors.red;
+      statusKey = 'rejected';
+    } else if (statusKey == 'pending') {
+      color = Colors.orange;
+    } else if (statusKey == 'completed' || statusKey == 'paid' || statusKey == 'received') {
+      color = Colors.blue;
+    } else if (statusKey == 'purchased') {
+      color = Colors.deepPurple;
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -32,7 +42,7 @@ class StatusBadge extends StatelessWidget {
         border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(
-        status.replaceAll('_', ' ').toUpperCase(),
+        l10n != null ? l10n.translate(statusKey).toUpperCase() : statusKey.toUpperCase(),
         style: TextStyle(color: color, fontSize: fontSize, fontWeight: FontWeight.bold),
       ),
     );
@@ -99,7 +109,7 @@ class RequestCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '${amount.toStringAsFixed(2)} SAR',
+              '${amount.toStringAsFixed(2)} ${AppLocalizations.of(context)?.translate('sar') ?? 'SAR'}',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             const SizedBox(height: 4),

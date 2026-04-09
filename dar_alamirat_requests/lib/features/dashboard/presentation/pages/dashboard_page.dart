@@ -496,7 +496,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _selectedBranch?.name ?? 'Branch',
+                      _selectedBranch?.name ?? l10n.translate('branch'),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -706,14 +706,14 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
             ],
           ),
           const SizedBox(height: 16),
-          _buildRecentRequestsList(),
+          _buildRecentRequestsList(l10n),
           const SizedBox(height: 140), // Space for floating navbar
         ],
       ),
     );
   }
 
-  Widget _buildRecentRequestsList() {
+  Widget _buildRecentRequestsList(AppLocalizations l10n) {
     final combined = [
       ..._purchaseRequests.map(
         (r) => _UnifiedRequest(
@@ -723,7 +723,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
           r.createdAt,
           r.totalAmount,
           'procure',
-          r.profile?.fullName ?? 'Unknown',
+          r.profile?.fullName ?? l10n.translate('unknown'),
         ),
       ),
       ..._expenseRequests.map(
@@ -734,7 +734,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
           e.createdAt,
           e.amount,
           'expense',
-          e.profile?.fullName ?? 'Unknown',
+          e.profile?.fullName ?? l10n.translate('unknown'),
         ),
       ),
     ];
@@ -743,13 +743,13 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
     final recent = combined.take(10).toList();
 
     if (recent.isEmpty) {
-      return const Card(
+      return Card(
         child: Padding(
-          padding: EdgeInsets.all(40.0),
+          padding: const EdgeInsets.all(40.0),
           child: Center(
             child: Text(
-              'No requests found',
-              style: TextStyle(color: Colors.grey),
+              l10n.translate('noRequestsFound'),
+              style: const TextStyle(color: Colors.grey),
             ),
           ),
         ),
@@ -791,14 +791,14 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${item.amount.toStringAsFixed(2)} SAR',
+                '${item.amount.toStringAsFixed(2)} ${l10n.translate('sar')}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                 ),
               ),
               const SizedBox(height: 4),
-              _buildStatusBadge(item.status),
+              _buildStatusBadge(item.status, l10n),
             ],
           ),
         );
@@ -845,18 +845,25 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(String status, AppLocalizations l10n) {
     Color color = Colors.grey;
-    if (status.contains('approved'))
+    String statusKey = status.toLowerCase();
+    
+    if (statusKey.contains('approved')) {
       color = Colors.green;
-    else if (status.contains('rejected'))
+      statusKey = 'approved';
+    } else if (statusKey.contains('rejected')) {
       color = Colors.red;
-    else if (status == 'pending')
+      statusKey = 'rejected';
+    } else if (statusKey == 'pending') {
       color = Colors.orange;
-    else if (status == 'completed')
+    } else if (statusKey == 'completed') {
       color = Colors.blue;
-    else if (status == 'purchased')
+    } else if (statusKey == 'purchased') {
       color = Colors.deepPurple;
+    } else if (statusKey == 'paid') {
+      color = Colors.green;
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -866,7 +873,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
         border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(
-        status.replaceAll('_', ' ').toUpperCase(),
+        l10n.translate(statusKey).toUpperCase(),
         style: TextStyle(
           color: color,
           fontSize: 8,

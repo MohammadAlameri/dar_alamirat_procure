@@ -119,7 +119,7 @@ class _ExpenseRequestsViewState extends State<ExpenseRequestsView> with Automati
                       final request = state.requests[index];
                       return RequestCard(
                         subject: request.subject,
-                        requester: request.profile?.fullName ?? 'Unknown',
+                        requester: request.profile?.fullName ?? l10n.translate('unknown'),
                         date: request.createdAt,
                         amount: request.amount,
                         status: request.status,
@@ -138,11 +138,11 @@ class _ExpenseRequestsViewState extends State<ExpenseRequestsView> with Automati
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Error loading requests'),
+                      Text(l10n.translate('errorLoadingRequests')),
                       const SizedBox(height: 8),
                       ElevatedButton(
                         onPressed: _fetchRequests,
-                        child: const Text('Retry'),
+                        child: Text(l10n.translate('retry')),
                       ),
                     ],
                   ),
@@ -201,11 +201,11 @@ class _ExpenseRequestsViewState extends State<ExpenseRequestsView> with Automati
 
   String _getStatusLabel(String status, AppLocalizations l10n) {
     switch (status) {
-      case 'all': return 'All';
-      case 'pending': return 'Pending';
-      case 'completed': return 'Completed';
-      case 'paid': return 'Paid';
-      case 'rejected': return 'Rejected';
+      case 'all': return l10n.translate('all');
+      case 'pending': return l10n.translate('pending');
+      case 'completed': return l10n.translate('completed');
+      case 'paid': return l10n.translate('paid');
+      case 'rejected': return l10n.translate('rejected');
       default: return status.replaceAll('_', ' ').replaceFirst(status[0], status[0].toUpperCase());
     }
   }
