@@ -37,7 +37,7 @@ class PrintService {
     final paidApproval = exp.logs.where((l) => l.action == 'paid').firstOrNull;
 
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         pageFormat: PdfPageFormat.a4.copyWith(
           marginTop: 1 * PdfPageFormat.cm,
           marginBottom: 1 * PdfPageFormat.cm,
@@ -46,128 +46,141 @@ class PrintService {
         ),
         theme: pw.ThemeData.withFont(base: font, bold: boldFont),
         build: (pw.Context context) {
-          return pw.Directionality(
-            textDirection: pw.TextDirection.rtl,
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                pw.Container(
-                  decoration: pw.BoxDecoration(border: pw.Border.all(width: 1.5)),
-                  padding: const pw.EdgeInsets.all(5),
-                  margin: const pw.EdgeInsets.only(bottom: 8),
-                  child: pw.Column(
-                    children: [
-                      pw.Container(
-                        alignment: pw.Alignment.center,
-                        decoration: const pw.BoxDecoration(
-                          border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
-                        ),
-                        padding: const pw.EdgeInsets.only(bottom: 5),
-                        margin: const pw.EdgeInsets.only(bottom: 5),
-                        child: pw.Column(
+          final rtlWrap = (pw.Widget child) => pw.Directionality(textDirection: pw.TextDirection.rtl, child: child);
+          
+          return [
+            rtlWrap(pw.Container(
+              decoration: pw.BoxDecoration(border: pw.Border.all(width: 1.5)),
+              padding: const pw.EdgeInsets.all(5),
+              margin: const pw.EdgeInsets.only(bottom: 8),
+              child: pw.Column(
+                children: [
+                  pw.Container(
+                    alignment: pw.Alignment.center,
+                    decoration: const pw.BoxDecoration(
+                      border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
+                    ),
+                    padding: const pw.EdgeInsets.only(bottom: 5),
+                    margin: const pw.EdgeInsets.only(bottom: 5),
+                    child: pw.Column(
+                      children: [
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.center,
                           children: [
-                            pw.Text('DAR ALAMIRAT', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-                            pw.Text('دار الاميرات', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                            pw.Text('دار الاميرات', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.blue700)),
+                            pw.SizedBox(width: 10),
+                            pw.Container(
+                              padding: const pw.EdgeInsets.all(4),
+                              decoration: pw.BoxDecoration(color: PdfColors.blue700),
+                              child: pw.Text('DA', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                            ),
                           ],
                         ),
-                      ),
-                      pw.Text('نموذج طلب صرف مصاريف', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                      pw.SizedBox(height: 3),
+                        pw.Text('DAR ALAMIRAT', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, letterSpacing: 2, color: PdfColors.blue700)),
+                      ],
+                    ),
+                  ),
+                  pw.Text('نموذج طلب صرف مصاريف', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 3),
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
                       pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        mainAxisSize: pw.MainAxisSize.min,
                         children: [
-                          pw.Text('التاريخ: $hijriDate', style: const pw.TextStyle(fontSize: 9)),
-                          pw.Text('Date: $gregorianDate', style: const pw.TextStyle(fontSize: 9), textDirection: pw.TextDirection.ltr),
+                          pw.Text('التاريخ: ', style: const pw.TextStyle(fontSize: 9)),
+                          pw.Text(hijriDate.replaceAll('هـ', '').trim(), style: const pw.TextStyle(fontSize: 9), textDirection: pw.TextDirection.ltr),
+                          pw.SizedBox(width: 2),
+                          pw.Text('هـ', style: const pw.TextStyle(fontSize: 9)),
+                        ],
+                      ),
+                      pw.Row(
+                        mainAxisSize: pw.MainAxisSize.min,
+                        children: [
+                          pw.Text('Date: ', style: const pw.TextStyle(fontSize: 9)),
+                          pw.Text(gregorianDate, style: const pw.TextStyle(fontSize: 9), textDirection: pw.TextDirection.ltr),
                         ],
                       ),
                     ],
                   ),
-                ),
-
-                // Employee Info
-                _buildSectionTitle('بيانات الموظف مقدم الطلب'),
-                _buildTable([
-                  _buildRow([
-                    _tableCell('اسم الموظف', isLabel: true, flex: 1),
-                    _tableCell(exp.profile?.fullName ?? '', flex: 2),
-                    _tableCell('المسمى الوظيفي', isLabel: true, flex: 1),
-                    _tableCell(exp.profile?.jobTitle ?? '', flex: 2),
-                  ]),
-                  _buildRow([
-                    _tableCell('الإدارة / القسم', isLabel: true, flex: 1),
-                    _tableCell(exp.profile?.department ?? '', flex: 2),
-                    _tableCell('رقم الطلب', isLabel: true, flex: 1),
-                    _tableCell('#${exp.id.substring(0, 8).toUpperCase()}', flex: 2),
-                  ]),
-                ]),
-                pw.SizedBox(height: 8),
-
-                // Expense Details
-                _buildSectionTitle('تفاصيل المصروف'),
-                _buildTable([
-                  _buildRow([
-                    _tableCell('الموضوع', isLabel: true, flex: 1),
-                    _tableCell(exp.subject, flex: 5),
-                  ]),
-                  _buildRow([
-                    _tableCell('البيان', isLabel: true, flex: 1),
-                    _tableCell(exp.statement, flex: 5, minHeight: 30),
-                  ]),
-                  _buildRow([
-                    _tableCell('المبلغ المطلوب', isLabel: true, flex: 1),
-                    _tableCell('${exp.amount.toStringAsFixed(2)} ريال', isBold: true, flex: 2),
-                    _tableCell('أعلى مستوى اعتماد', isLabel: true, flex: 1),
-                    _tableCell(_getLevelLabel(exp.highestApprovalLevel), flex: 2),
-                  ]),
-                ]),
-                pw.SizedBox(height: 8),
-
-                // Signatures
-                _buildSignatureSection('الموظف مقدم الطلب :', [
-                  'الاسم: ${exp.profile?.fullName ?? ''}',
-                  'الوظيفة: ${exp.profile?.jobTitle ?? ''}',
-                  'التوقيع: .....................',
-                  'التاريخ: $hijriDate',
-                ]),
-
-                _buildSignatureSection('اعتماد المدير المباشر :', [
-                  'الاسم: ${managerApproval?.profile?.fullName ?? ''}',
-                  'التوقيع: .....................',
-                  'التاريخ: ${managerApproval != null ? _toHijri(managerApproval.createdAt) : ''}',
-                ], comments: managerApproval?.comments),
-
-                if (exp.highestApprovalLevel == 'finance' || exp.highestApprovalLevel == 'general_manager')
-                  _buildSignatureSection('الإدارة المالية :', [
-                    'الاسم: ${financeApproval?.profile?.fullName ?? ''}',
-                    'التوقيع: .....................',
-                    'التاريخ: ${financeApproval != null ? _toHijri(financeApproval.createdAt) : ''}',
-                  ], comments: financeApproval?.comments),
-
-                if (exp.highestApprovalLevel == 'general_manager')
-                  _buildSignatureSection('اعتماد المدير العام :', [
-                    'الاسم: ${gmApproval?.profile?.fullName ?? ''}',
-                    'التوقيع: .....................',
-                    'التاريخ: ${gmApproval != null ? _toHijri(gmApproval.createdAt) : ''}',
-                  ], comments: gmApproval?.comments),
-
-                _buildSignatureSection('محاسب العهدة (الصرف) :', [
-                  'الاسم: ${paidApproval?.profile?.fullName ?? ''}',
-                  'المبلغ المصروف: ${exp.amount.toStringAsFixed(2)} ريال',
-                  'التوقيع: .....................',
-                  'التاريخ: ${paidApproval != null ? _toHijri(paidApproval.createdAt) : ''}',
-                ], comments: paidApproval?.comments),
-
-                // Instructions
-                pw.SizedBox(height: 8),
+                ],
+              ),
+            )),
+            rtlWrap(_buildSectionTitle('بيانات الموظف مقدم الطلب')),
+            rtlWrap(_buildTable([
+              _buildRow([
+                _tableCell('اسم الموظف', isLabel: true, flex: 1),
+                _tableCell(exp.profile?.fullName ?? '', flex: 2),
+                _tableCell('المسمى الوظيفي', isLabel: true, flex: 1),
+                _tableCell(exp.profile?.jobTitle ?? '', flex: 2),
+              ]),
+              _buildRow([
+                _tableCell('الإدارة / القسم', isLabel: true, flex: 1),
+                _tableCell(exp.profile?.department ?? '', flex: 2),
+                _tableCell('رقم الطلب', isLabel: true, flex: 1),
+                _tableCell('#${exp.id.substring(0, 8).toUpperCase()}', flex: 2),
+              ]),
+            ])),
+            pw.SizedBox(height: 8),
+            rtlWrap(_buildSectionTitle('تفاصيل المصروف')),
+            rtlWrap(_buildTable([
+              _buildRow([
+                _tableCell('الموضوع', isLabel: true, flex: 1),
+                _tableCell(exp.subject, flex: 5),
+              ]),
+              _buildRow([
+                _tableCell('البيان', isLabel: true, flex: 1),
+                _tableCell(exp.statement, flex: 5, minHeight: 30),
+              ]),
+              _buildRow([
+                _tableCell('المبلغ المطلوب', isLabel: true, flex: 1),
+                _tableCell('${exp.amount.toStringAsFixed(2)} ريال', isBold: true, flex: 2),
+                _tableCell('أعلى مستوى اعتماد', isLabel: true, flex: 1),
+                _tableCell(_getLevelLabel(exp.highestApprovalLevel), flex: 2),
+              ]),
+            ])),
+            pw.SizedBox(height: 8),
+            rtlWrap(_buildSignatureSection('الموظف مقدم الطلب :', [
+              'الاسم: ${exp.profile?.fullName ?? ''}',
+              'الوظيفة: ${exp.profile?.jobTitle ?? ''}',
+              'التوقيع: .....................',
+              'التاريخ: $hijriDate',
+            ])),
+            rtlWrap(_buildSignatureSection('اعتماد المدير المباشر :', [
+              'الاسم: ${managerApproval?.profile?.fullName ?? ''}',
+              'التوقيع: .....................',
+              'التاريخ: ${managerApproval != null ? _toHijri(managerApproval.createdAt) : ''}',
+            ], comments: managerApproval?.comments)),
+            if (exp.highestApprovalLevel == 'finance' || exp.highestApprovalLevel == 'general_manager')
+              rtlWrap(_buildSignatureSection('الإدارة المالية :', [
+                'الاسم: ${financeApproval?.profile?.fullName ?? ''}',
+                'التوقيع: .....................',
+                'التاريخ: ${financeApproval != null ? _toHijri(financeApproval.createdAt) : ''}',
+              ], comments: financeApproval?.comments)),
+            if (exp.highestApprovalLevel == 'general_manager')
+              rtlWrap(_buildSignatureSection('اعتماد المدير العام :', [
+                'الاسم: ${gmApproval?.profile?.fullName ?? ''}',
+                'التوقيع: .....................',
+                'التاريخ: ${gmApproval != null ? _toHijri(gmApproval.createdAt) : ''}',
+              ], comments: gmApproval?.comments)),
+            rtlWrap(_buildSignatureSection('محاسب العهدة (الصرف) :', [
+              'الاسم: ${paidApproval?.profile?.fullName ?? ''}',
+              'المبلغ المصروف: ${exp.amount.toStringAsFixed(2)} ريال',
+              'التوقيع: .....................',
+              'التاريخ: ${paidApproval != null ? _toHijri(paidApproval.createdAt) : ''}',
+            ], comments: paidApproval?.comments)),
+            pw.SizedBox(height: 8),
+            rtlWrap(pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
                 pw.Text('تعليمات يجب مراعاتها :', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
                 pw.Text('1. لن يُقبل أي طلب صرف مصاريف غير مستوفي للبيانات المذكورة أعلاه.', style: const pw.TextStyle(fontSize: 8)),
                 pw.Text('2. يجب تقديم المستندات المؤيدة للمبلغ المطلوب (فواتير، ايصالات، ..الخ).', style: const pw.TextStyle(fontSize: 8)),
                 pw.Text('3. الصرف على حسب مستوى الاعتماد المحدد في الطلب.', style: const pw.TextStyle(fontSize: 8)),
                 pw.Text('4. يتم صرف المبلغ من العهدة بعد اكتمال جميع الاعتمادات المطلوبة.', style: const pw.TextStyle(fontSize: 8)),
               ],
-            ),
-          );
+            )),
+          ];
         },
       ),
     );
@@ -265,13 +278,13 @@ class PrintService {
           if (isColumn)
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: lines.map((l) => (l is pw.Widget) ? l : pw.Text(l.toString(), style: const pw.TextStyle(fontSize: 9))).toList(),
+              children: lines.map((l) => _buildLine(l)).toList(),
             )
           else
             pw.Wrap(
               spacing: 15,
               runSpacing: 2,
-              children: lines.map((l) => (l is pw.Widget) ? l : pw.Text(l.toString(), style: const pw.TextStyle(fontSize: 9))).toList(),
+              children: lines.map((l) => _buildLine(l)).toList(),
             ),
           if (comments != null && comments.isNotEmpty)
             pw.Padding(
@@ -281,6 +294,28 @@ class PrintService {
         ],
       ),
     );
+  }
+
+  static pw.Widget _buildLine(dynamic l) {
+    if (l is pw.Widget) return l;
+    final s = l.toString();
+    if (s.contains('التاريخ:')) {
+      final parts = s.split('التاريخ:');
+      String dateText = parts[1].trim();
+      bool isHijri = dateText.contains('هـ');
+      String cleanDate = dateText.replaceAll('هـ', '').trim();
+
+      return pw.Row(
+        mainAxisSize: pw.MainAxisSize.min,
+        children: [
+          pw.Text('${parts[0]}التاريخ: ', style: const pw.TextStyle(fontSize: 9)),
+          pw.Text(cleanDate, style: const pw.TextStyle(fontSize: 9), textDirection: pw.TextDirection.ltr),
+          if (isHijri) pw.SizedBox(width: 2),
+          if (isHijri) pw.Text('هـ', style: const pw.TextStyle(fontSize: 9)),
+        ],
+      );
+    }
+    return pw.Text(s, style: const pw.TextStyle(fontSize: 9));
   }
 
   static Future<void> printPurchaseRequest(PurchaseRequest req) async {
@@ -307,57 +342,50 @@ class PrintService {
           final rtlWrap = (pw.Widget child) => pw.Directionality(textDirection: pw.TextDirection.rtl, child: child);
           
           return [
-            rtlWrap(pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                pw.Container(
-                  decoration: pw.BoxDecoration(border: pw.Border.all(width: 1.5)),
-                  padding: const pw.EdgeInsets.all(5),
-                  margin: const pw.EdgeInsets.only(bottom: 5),
-                  child: pw.Column(
+            rtlWrap(pw.Container(
+              decoration: pw.BoxDecoration(border: pw.Border.all(width: 1.5)),
+              padding: const pw.EdgeInsets.all(5),
+              margin: const pw.EdgeInsets.only(bottom: 5),
+              child: pw.Column(
+                children: [
+                  pw.Container(
+                    alignment: pw.Alignment.center,
+                    decoration: const pw.BoxDecoration(
+                      border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
+                    ),
+                    padding: const pw.EdgeInsets.only(bottom: 3),
+                    margin: const pw.EdgeInsets.only(bottom: 3),
+                    child: pw.Column(
+                      children: [
+                        pw.Text('DAR ALAMIRAT', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                        pw.Text('دار الاميرات', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                  pw.Text('نموذج طلب شــــــراء', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 2),
+                  pw.Row(
                     children: [
-                      pw.Container(
-                        alignment: pw.Alignment.center,
-                        decoration: const pw.BoxDecoration(
-                          border: pw.Border(bottom: pw.BorderSide(width: 1.5)),
-                        ),
-                        padding: const pw.EdgeInsets.only(bottom: 3),
-                        margin: const pw.EdgeInsets.only(bottom: 3),
-                        child: pw.Column(
-                          children: [
-                            pw.Text('DAR ALAMIRAT', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-                            pw.Text('دار الاميرات', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                      pw.Text('نموذج طلب شــــــراء', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                      pw.SizedBox(height: 2),
-                      pw.Row(
-                        children: [
-                          pw.Text('الموضوع :', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                          pw.SizedBox(width: 5),
-                          pw.Expanded(child: pw.Text(req.subject, style: const pw.TextStyle(fontSize: 10))),
-                        ],
-                      ),
-                      pw.Row(
-                        children: [
-                          pw.Text('مبررات الاحتياج :', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                          pw.SizedBox(width: 5),
-                          pw.Expanded(child: pw.Text(req.justification ?? '', style: const pw.TextStyle(fontSize: 10))),
-                        ],
-                      ),
+                      pw.Text('الموضوع :', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                      pw.SizedBox(width: 5),
+                      pw.Expanded(child: pw.Text(req.subject, style: const pw.TextStyle(fontSize: 10))),
                     ],
                   ),
-                ),
-              ],
+                  pw.Row(
+                    children: [
+                      pw.Text('مبررات الاحتياج :', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                      pw.SizedBox(width: 5),
+                      pw.Expanded(child: pw.Text(req.justification ?? '', style: const pw.TextStyle(fontSize: 10))),
+                    ],
+                  ),
+                ],
+              ),
             )),
 
-            // Items Table
-            rtlWrap(pw.Table(
+            // Items Table - Direct child for splitting
+            pw.Table(
               border: pw.TableBorder.all(),
               columnWidths: {
-                // Table is LTR naturally, so we define widths left-to-right to match our reversed children
                 0: const pw.FlexColumnWidth(3), // Guarantee
                 1: const pw.FlexColumnWidth(3), // Country
                 2: const pw.FlexColumnWidth(3), // Total price
@@ -371,14 +399,14 @@ class PrintService {
                 pw.TableRow(
                   decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                   children: [
-                    _tableCellForTable('* مدة الضمان', isLabel: true),
-                    _tableCellForTable('* بلد الصناعة', isLabel: true),
-                    _tableCellForTable('* السعر الإجمالي', isLabel: true),
-                    _tableCellForTable('* سعر الوحدة', isLabel: true),
-                    _tableCellForTable('الكمية', isLabel: true),
-                    _tableCellForTable('الوحدة', isLabel: true),
-                    _tableCellForTable('المواصفات المطلوبة', isLabel: true),
-                    _tableCellForTable('م', isLabel: true),
+                    rtlWrap(_tableCellForTable('* مدة الضمان', isLabel: true)),
+                    rtlWrap(_tableCellForTable('* بلد الصناعة', isLabel: true)),
+                    rtlWrap(_tableCellForTable('* السعر الإجمالي', isLabel: true)),
+                    rtlWrap(_tableCellForTable('* سعر الوحدة', isLabel: true)),
+                    rtlWrap(_tableCellForTable('الكمية', isLabel: true)),
+                    rtlWrap(_tableCellForTable('الوحدة', isLabel: true)),
+                    rtlWrap(_tableCellForTable('المواصفات المطلوبة', isLabel: true)),
+                    rtlWrap(_tableCellForTable('م', isLabel: true)),
                   ],
                 ),
                 ...req.items.asMap().entries.map((entry) {
@@ -386,19 +414,19 @@ class PrintService {
                   final item = entry.value;
                   return pw.TableRow(
                     children: [
-                      _tableCellForTable(item.warrantyPeriod ?? ''),
-                      _tableCellForTable(item.countryOfOrigin ?? ''),
-                      _tableCellForTable((item.quantity * item.unitPrice).toStringAsFixed(2)),
-                      _tableCellForTable(item.unitPrice.toStringAsFixed(2)),
-                      _tableCellForTable('${item.quantity}'),
-                      _tableCellForTable(item.unit ?? ''),
-                      _tableCellForTable('${item.productName}${item.specifications != null ? ' - ${item.specifications}' : ''}'),
-                      _tableCellForTable('${i + 1}'),
+                      rtlWrap(_tableCellForTable(item.warrantyPeriod ?? '')),
+                      rtlWrap(_tableCellForTable(item.countryOfOrigin ?? '')),
+                      rtlWrap(_tableCellForTable((item.quantity * item.unitPrice).toStringAsFixed(2))),
+                      rtlWrap(_tableCellForTable(item.unitPrice.toStringAsFixed(2))),
+                      rtlWrap(_tableCellForTable('${item.quantity}')),
+                      rtlWrap(_tableCellForTable(item.unit ?? '')),
+                      rtlWrap(_tableCellForTable('${item.productName}${item.specifications != null ? ' - ${item.specifications}' : ''}')),
+                      rtlWrap(_tableCellForTable('${i + 1}')),
                     ],
                   );
                 }),
               ],
-            )),
+            ),
 
             rtlWrap(pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.stretch,
@@ -409,14 +437,12 @@ class PrintService {
                   'التوقيع: .....................',
                   'التاريخ: $hijriDate',
                 ]),
-
                 _buildSignatureSection('اعتماد مسؤول الجهة الطالبة :', [
                    'الاسم: ${managerApproval?.profile?.fullName ?? ''}',
                    'الوظيفة: ${managerApproval?.profile?.jobTitle ?? ''}',
                    'التوقيع: .....................',
                    'التاريخ: ${managerApproval != null ? _toHijri(managerApproval.createdAt) : ''}',
                 ]),
-
                 pw.Container(
                   margin: const pw.EdgeInsets.only(top: 5),
                   padding: const pw.EdgeInsets.all(5),
@@ -471,7 +497,6 @@ class PrintService {
                     ],
                   ),
                 ),
-
                 _buildSignatureSection('إدارة التخطيط والميزانية – الارتباطات :', [
                   pw.Row(children: [
                     pw.Text('البند يسمح ( ', style: const pw.TextStyle(fontSize: 9)),
@@ -481,13 +506,11 @@ class PrintService {
                   'المبلغ: ( ${req.totalAmount.toStringAsFixed(2)} - ${req.amountInWords ?? ''} ) ريال',
                   'رقم البند: ${req.budgetLineItem ?? ''}   رقم الارتباط: ${req.commitmentNumber ?? ''}   الموظف: ............   التوقيع: ............',
                 ], isColumn: true),
-
                 _buildSignatureSection('الإدارة المالية :', [
                   'الاسم: ${financeApproval?.profile?.fullName ?? ''}',
                   'التوقيع: .....................',
                   'التاريخ: ${financeApproval != null ? _toHijri(financeApproval.createdAt) : ''}',
                 ]),
-
                 pw.SizedBox(height: 5),
                 pw.Text('تعليمات يجب مراعاتها :', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
                 pw.Text('1. سوف يعاد إلى الجهة الطالبة أي طلب شراء غير مستوفي للبيانات المذكورة أعلاه.', style: const pw.TextStyle(fontSize: 8)),
@@ -513,11 +536,38 @@ class PrintService {
     final daysAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
     final dayOfWeek = daysAr[dateObj.weekday % 7];
     final hijriDate = _toHijri(dateObj);
-    final gregorianDate = DateFormat('dd/MM/yyyy').format(dateObj);
+    final gregorianDate = DateFormat('yyyy/MM/dd').format(dateObj);
     final timeStr = DateFormat('HH:mm').format(dateObj);
 
     final isAccepted = req.staffAcceptanceStatus == 'accepted';
     final isRejected = req.staffAcceptanceStatus == 'rejected';
+
+    // Build items table rows
+    final itemRows = <pw.TableRow>[
+      pw.TableRow(
+        decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+        children: [
+          pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('م', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.center)),
+          pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('الوصف', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.center)),
+          pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('النوع', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.center)),
+          pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('الكمية', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.center)),
+          pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('ملاحظة', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.center)),
+        ],
+      ),
+      ...req.items.asMap().entries.map((entry) {
+        final i = entry.key;
+        final item = entry.value;
+        return pw.TableRow(
+          children: [
+            pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('${i + 1}', style: const pw.TextStyle(fontSize: 8), textAlign: pw.TextAlign.center)),
+            pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('${item.productName} ${item.brandModel != null ? '(${item.brandModel})' : ''}', style: const pw.TextStyle(fontSize: 8), textAlign: pw.TextAlign.right)),
+            pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('-', style: const pw.TextStyle(fontSize: 8), textAlign: pw.TextAlign.center)),
+            pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('${item.quantity}', style: const pw.TextStyle(fontSize: 8), textAlign: pw.TextAlign.center)),
+            pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text(item.specifications ?? '', style: const pw.TextStyle(fontSize: 8), textAlign: pw.TextAlign.right)),
+          ],
+        );
+      }),
+    ];
 
     pdf.addPage(
       pw.Page(
@@ -538,19 +588,41 @@ class PrintService {
                 pw.Center(
                   child: pw.Column(
                     children: [
-                      pw.Text('دار الاميرات', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.blue700)),
-                      pw.Text('DAR ALAMIRAT', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.blue700)),
-                      pw.SizedBox(height: 5),
-                      pw.Text('استلام عهدة اصل', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, decoration: pw.TextDecoration.underline)),
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.center,
+                        children: [
+                          pw.Text('دار الاميرات', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.blue700)),
+                          pw.SizedBox(width: 10),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.all(4),
+                            decoration: pw.BoxDecoration(color: PdfColors.blue700),
+                            child: pw.Text('DA', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                          ),
+                        ],
+                      ),
+                      pw.Text('DAR ALAMIRAT', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, letterSpacing: 2, color: PdfColors.blue700)),
+                      pw.SizedBox(height: 10),
+                      pw.Text('استلام عهدة أصل', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, decoration: pw.TextDecoration.underline)),
                     ],
                   ),
                 ),
-                pw.SizedBox(height: 10),
+                pw.SizedBox(height: 15),
+
+                // Dates
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('التاريخ: .... / .... / .... 14هـ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
-                    pw.Text('التاريخ: ${DateFormat('yyyy/MM/dd').format(req.createdAt)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                    pw.Text('التاريخ: .... / .... / .... 14هـ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                    pw.Row(
+                      mainAxisSize: pw.MainAxisSize.min,
+                      children: [
+                        pw.Text('التاريخ: ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                        pw.Directionality(
+                          textDirection: pw.TextDirection.ltr,
+                          child: pw.Text(DateFormat('yyyy/MM/dd').format(req.createdAt), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 pw.SizedBox(height: 10),
@@ -559,38 +631,29 @@ class PrintService {
                 _buildSectionTitle('بيانات المستلم'),
                 _buildTable([
                   _buildRow([
-                    _tableCell('اسم الموظف', isLabel: true, flex: 1),
-                    _tableCell(req.profile?.fullName ?? '', flex: 2),
+                    _tableCell('اسم الموظف', isLabel: true, flex: 2),
+                    _tableCell(req.profile?.fullName ?? '', flex: 4),
                     _tableCell('الإدارة', isLabel: true, flex: 1),
-                    _tableCell(req.profile?.department ?? '', flex: 1),
-                    _tableCell('المسمى الوظيفي', isLabel: true, flex: 1),
-                    _tableCell(req.profile?.jobTitle ?? '', flex: 1),
+                    _tableCell(req.profile?.department ?? '', flex: 2),
+                    _tableCell('المسمى الوظيفي', isLabel: true, flex: 2),
+                    _tableCell(req.profile?.jobTitle ?? '', flex: 2),
                   ]),
                 ]),
                 pw.SizedBox(height: 10),
 
-                // Items
+                // Items Table
                 _buildSectionTitle('بيانات العهدة'),
-                _buildTable([
-                  _buildRow([
-                    _tableCell('ملاحظة', isLabel: true, flex: 5, color: PdfColors.grey200),
-                    _tableCell('الكمية', isLabel: true, flex: 2, color: PdfColors.grey200),
-                    _tableCell('النوع', isLabel: true, flex: 3, color: PdfColors.grey200),
-                    _tableCell('الوصف', isLabel: true, flex: 10, color: PdfColors.grey200),
-                    _tableCell('م', isLabel: true, flex: 1, color: PdfColors.grey200),
-                  ]),
-                  ...req.items.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final item = entry.value;
-                    return _buildRow([
-                      _tableCell(item.specifications ?? '', flex: 5),
-                      _tableCell('${item.quantity}', flex: 2),
-                      _tableCell('-', flex: 3),
-                      _tableCell('${item.productName} ${item.brandModel != null ? '(${item.brandModel})' : ''}', flex: 10),
-                      _tableCell('${i + 1}', flex: 1),
-                    ]);
-                  }),
-                ]),
+                pw.Table(
+                  border: pw.TableBorder.all(),
+                  columnWidths: {
+                    0: const pw.FlexColumnWidth(1),   // م
+                    1: const pw.FlexColumnWidth(10),  // الوصف
+                    2: const pw.FlexColumnWidth(3),   // النوع
+                    3: const pw.FlexColumnWidth(2),   // الكمية
+                    4: const pw.FlexColumnWidth(5),   // ملاحظة
+                  },
+                  children: itemRows,
+                ),
                 pw.SizedBox(height: 10),
 
                 // Declaration
@@ -603,14 +666,14 @@ class PrintService {
                     children: [
                       pw.Text(
                         'أقر أنا الموقع أدناه بأنني استلمت العُهد الموضحة أعلاه في يوم/ $dayOfWeek الموافق $gregorianDate / $hijriDate في تمام الساعة $timeStr بحالة صالحة للاستخدام وأتعهد بالمحافظة عليها وان لا أتنازل عنها لأي شخص آخر وسأقوم بإعادتها عند طلبها أو عند ترك العمل أو دفع قيمة ما تسببت في تلفه وسأكون عرضة للمسائلة في حين مخالفتي للإقرار.',
-                        style: const pw.TextStyle(fontSize: 10),
+                        style: const pw.TextStyle(fontSize: 9),
                       ),
-                      pw.SizedBox(height: 15),
+                      pw.SizedBox(height: 20),
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text('المستلم/ ${req.profile?.fullName ?? ''}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                          pw.Text('التوقيع/ ...........................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                          pw.Text('المستلم/ ${req.profile?.fullName ?? ''}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                          pw.Text('التوقيع/ ...........................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
                         ],
                       ),
                     ],
@@ -618,7 +681,7 @@ class PrintService {
                 ),
                 pw.SizedBox(height: 10),
 
-                // Delivery Officer
+                // Handover Section
                 _buildSectionTitle('خاص بمسؤول التسليم والاستلام'),
                 pw.Container(
                   decoration: pw.BoxDecoration(border: pw.Border.all()),
@@ -626,58 +689,47 @@ class PrintService {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Row(
-                        children: [
-                          pw.RichText(
-                            text: pw.TextSpan(
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
-                              children: [
-                                pw.TextSpan(text: 'أ- تم استلام العُهد بحالة التسليم. ( '),
-                                pw.TextSpan(text: isAccepted ? 'X' : '  ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                                pw.TextSpan(text: ' ) نعم'),
-                              ],
-                            ),
-                          ),
-                          pw.SizedBox(width: 40),
-                          pw.RichText(
-                            text: pw.TextSpan(
-                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
-                              children: [
-                                pw.TextSpan(text: '( '),
-                                pw.TextSpan(text: isRejected ? 'X' : '  ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                                pw.TextSpan(text: ' ) لا، للأسباب التالية :'),
-                              ],
-                            ),
-                          ),
-                        ],
+                      pw.Text(
+                        'أ- تم استلام العُهد بحالة التسليم. ( ${isAccepted ? "X" : "   "} ) نعم          ( ${isRejected ? "X" : "   "} ) لا، للأسباب التالية :',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
                       ),
+                      pw.SizedBox(height: 8),
                       if (isRejected && req.staffRejectionReason != null)
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.only(top: 3),
-                          child: pw.Text(req.staffRejectionReason!, style: const pw.TextStyle(fontSize: 9)),
-                        ),
-                      pw.SizedBox(height: 10),
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        children: [
-                          pw.Text('تم استلام العُهد في يوم/ $dayOfWeek', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                          pw.Text('الموافق $gregorianDate / $hijriDate', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                          pw.Text('في تمام الساعة $timeStr', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                        ],
-                      ),
+                        pw.Text(req.staffRejectionReason!, style: const pw.TextStyle(fontSize: 8))
+                      else
+                        pw.Text('...................................................................................................................................................', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey400)),
                       pw.SizedBox(height: 15),
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text('مسؤول التسليم: ...................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                          pw.Text('التوقيع: ...................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                          pw.Text('تم استلام العُهد في يوم/ $dayOfWeek', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                          pw.Row(
+                            mainAxisSize: pw.MainAxisSize.min,
+                            children: [
+                              pw.Text('الموافق ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                              pw.Directionality(textDirection: pw.TextDirection.ltr, child: pw.Text(gregorianDate, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9))),
+                              pw.Text(' / ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                              pw.Directionality(textDirection: pw.TextDirection.ltr, child: pw.Text(hijriDate.replaceAll('هـ', '').trim(), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9))),
+                              pw.SizedBox(width: 2),
+                              pw.Text('هـ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                            ],
+                          ),
+                          pw.Text('في تمام الساعة $timeStr', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                        ],
+                      ),
+                      pw.SizedBox(height: 20),
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text('مسؤول التسليم: ...................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                          pw.Text('التوقيع: ...................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
                         ],
                       ),
                     ],
                   ),
                 ),
-                
-                pw.SizedBox(height: 5),
+
+                pw.SizedBox(height: 8),
                 pw.Center(
                   child: pw.Text('الأصل: ملف الموظف | نسخة: المستلم | نسخة: إدارة تقنية المعلومات', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
                 ),
@@ -700,7 +752,7 @@ class PrintService {
     final daysAr = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
     final dayOfWeek = daysAr[dateObj.weekday % 7];
     final hijriDate = _toHijri(dateObj);
-    final gregorianDate = DateFormat('dd/MM/yyyy').format(dateObj);
+    final gregorianDate = DateFormat('yyyy/MM/dd').format(dateObj);
     final timeStr = DateFormat('HH:mm').format(dateObj);
 
     final paidApproval = exp.logs.where((l) => l.action == 'paid').firstOrNull;
@@ -726,33 +778,55 @@ class PrintService {
                 pw.Center(
                   child: pw.Column(
                     children: [
-                      pw.Text('دار الاميرات', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.blue700)),
-                      pw.Text('DAR ALAMIRAT', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.blue700)),
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.center,
+                        children: [
+                          pw.Text('دار الاميرات', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.blue700)),
+                          pw.SizedBox(width: 10),
+                          pw.Container(
+                            padding: const pw.EdgeInsets.all(4),
+                            decoration: pw.BoxDecoration(color: PdfColors.blue700),
+                            child: pw.Text('DA', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                          ),
+                        ],
+                      ),
+                      pw.Text('DAR ALAMIRAT', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, letterSpacing: 2, color: PdfColors.blue700)),
                       pw.SizedBox(height: 10),
-                      pw.Text('سند استلام مبلغ مصاريف', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, decoration: pw.TextDecoration.underline)),
+                      pw.Text('سند استلام مبلغ مصاريف', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, decoration: pw.TextDecoration.underline)),
                     ],
                   ),
                 ),
                 pw.SizedBox(height: 15),
+
+                // Dates
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('التاريخ: .... / .... / .... 14هـ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
-                    pw.Text('التاريخ: ${DateFormat('yyyy/MM/dd').format(exp.createdAt)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                    pw.Text('التاريخ: .... / .... / .... 14هـ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                    pw.Row(
+                      mainAxisSize: pw.MainAxisSize.min,
+                      children: [
+                        pw.Text('التاريخ: ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                        pw.Directionality(
+                          textDirection: pw.TextDirection.ltr,
+                          child: pw.Text(DateFormat('yyyy/MM/dd').format(exp.createdAt), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 pw.SizedBox(height: 10),
 
-                // Employee Info
+                // Receiver Info
                 _buildSectionTitle('بيانات المستلم'),
                 _buildTable([
                   _buildRow([
-                    _tableCell('اسم الموظف', isLabel: true, flex: 1),
-                    _tableCell(exp.profile?.fullName ?? '', flex: 2),
+                    _tableCell('اسم الموظف', isLabel: true, flex: 2),
+                    _tableCell(exp.profile?.fullName ?? '', flex: 4),
                     _tableCell('الإدارة', isLabel: true, flex: 1),
-                    _tableCell(exp.profile?.department ?? '', flex: 1),
-                    _tableCell('المسمى الوظيفي', isLabel: true, flex: 1),
-                    _tableCell(exp.profile?.jobTitle ?? '', flex: 1),
+                    _tableCell(exp.profile?.department ?? '', flex: 2),
+                    _tableCell('المسمى الوظيفي', isLabel: true, flex: 2),
+                    _tableCell(exp.profile?.jobTitle ?? '', flex: 2),
                   ]),
                 ]),
                 pw.SizedBox(height: 10),
@@ -781,22 +855,22 @@ class PrintService {
                 _buildSectionTitle('إقرار باستلام المبلغ'),
                 pw.Container(
                   decoration: pw.BoxDecoration(border: pw.Border.all()),
-                  padding: const pw.EdgeInsets.all(12),
+                  padding: const pw.EdgeInsets.all(10),
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
                         'أقر أنا الموقع أدناه / ${exp.profile?.fullName ?? ''} بأنني استلمت مبلغ وقدره ${exp.amount.toStringAsFixed(2)} ريال وذلك بموجب طلب صرف مصاريف رقم #${exp.id.substring(0, 8).toUpperCase()} عن ${exp.subject} وذلك في يوم / $dayOfWeek الموافق $gregorianDate / $hijriDate في تمام الساعة $timeStr.',
-                        style: const pw.TextStyle(fontSize: 10),
+                        style: const pw.TextStyle(fontSize: 9),
                       ),
-                      pw.SizedBox(height: 8),
-                      pw.Text('وأتعهد بصرف المبلغ في الغرض المخصص له وتقديم المستندات المؤيدة خلال المدة المحددة.', style: const pw.TextStyle(fontSize: 10)),
-                      pw.SizedBox(height: 15),
+                      pw.SizedBox(height: 6),
+                      pw.Text('وأتعهد بصرف المبلغ في الغرض المخصص له وتقديم المستندات المؤيدة خلال المدة المحددة.', style: const pw.TextStyle(fontSize: 9)),
+                      pw.SizedBox(height: 20),
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text('المستلم/ ${exp.profile?.fullName ?? ''}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                          pw.Text('التوقيع/ ...........................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                          pw.Text('المستلم/ ${exp.profile?.fullName ?? ''}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                          pw.Text('التوقيع/ ...........................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
                         ],
                       ),
                     ],
@@ -808,41 +882,45 @@ class PrintService {
                 _buildSectionTitle('خاص بمسؤول الصرف (محاسب العهدة)'),
                 pw.Container(
                   decoration: pw.BoxDecoration(border: pw.Border.all()),
-                  padding: const pw.EdgeInsets.all(12),
+                  padding: const pw.EdgeInsets.all(10),
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.RichText(
-                        text: pw.TextSpan(
-                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
-                          children: [
-                            pw.TextSpan(text: 'تم صرف المبلغ بحالة ( '),
-                            pw.TextSpan(text: isPaid ? 'X' : '  ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                            pw.TextSpan(text: ' ) نعم'),
-                          ],
-                        ),
-                      ),
-                      pw.SizedBox(height: 10),
-                      pw.Row(
-                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                        children: [
-                          pw.Text('تم الصرف في يوم/ ${paidApproval != null ? daysAr[paidApproval.createdAt.weekday % 7] : '............'}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                          pw.Text('الموافق ${paidApproval != null ? DateFormat('yyyy/MM/dd').format(paidApproval.createdAt) : '.... / .... / ....'} / ${paidApproval != null ? _toHijri(paidApproval.createdAt) : '.... / .... / .... هـ'}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                        ],
+                      pw.Text(
+                        'تم صرف المبلغ بحالة ( ${isPaid ? "X" : "   "} ) نعم',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
                       ),
                       pw.SizedBox(height: 15),
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text('مسؤول الصرف: $accountantName', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-                          pw.Text('التوقيع: ...........................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                          pw.Text('تم الصرف في يوم/ ${paidApproval != null ? daysAr[paidApproval.createdAt.weekday % 7] : '............'}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                          pw.Row(
+                            mainAxisSize: pw.MainAxisSize.min,
+                            children: [
+                              pw.Text('الموافق ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                              pw.Directionality(textDirection: pw.TextDirection.ltr, child: pw.Text(paidApproval != null ? DateFormat('yyyy/MM/dd').format(paidApproval.createdAt) : '.... / .... / ....', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9))),
+                              pw.Text(' / ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                              pw.Directionality(textDirection: pw.TextDirection.ltr, child: pw.Text(paidApproval != null ? _toHijri(paidApproval.createdAt).replaceAll('هـ', '').trim() : '.... / .... / ....', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9))),
+                              pw.SizedBox(width: 2),
+                              pw.Text('هـ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      pw.SizedBox(height: 20),
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text('مسؤول الصرف: $accountantName', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                          pw.Text('التوقيع: ...........................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
                         ],
                       ),
                     ],
                   ),
                 ),
-                
-                pw.SizedBox(height: 5),
+
+                pw.SizedBox(height: 8),
                 pw.Center(
                   child: pw.Text('الأصل: ملف الموظف | نسخة: المستلم | نسخة: الإدارة المالية', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700)),
                 ),
