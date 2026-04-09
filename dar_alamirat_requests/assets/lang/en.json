@@ -96,5 +96,7 @@
   "commitmentNo": "Commitment No",
   "suggestedSuppliers": "Suggested Suppliers",
   "amount": "Amount",
-  "approve": "Approve"
+  "approve": "Approve",
+  "printRequest": "Print Request",
+  "printReceipt": "Print Receipt"
 }

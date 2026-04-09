@@ -45,6 +45,9 @@ dependencies:
   shimmer: ^3.0.0
   url_launcher: ^6.3.0
   package_info_plus: ^8.0.0
+  pdf: ^3.10.8
+  printing: ^5.11.1
+  hijri: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -73,9 +76,17 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/lang/
-    - assets/google_fonts/
+    - assets/google_fonts/Cairo-Regular.ttf
+    - assets/google_fonts/Cairo-Bold.ttf
     - shorebird.yaml
     - assets/images/
+
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/google_fonts/Cairo-Regular.ttf
+        - asset: assets/google_fonts/Cairo-Bold.ttf
+          weight: 700
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

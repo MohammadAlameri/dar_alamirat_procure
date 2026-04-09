@@ -8,6 +8,7 @@ import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart
 import 'package:dar_alamirat_requests/features/purchase_request/domain/entities/purchase_request.dart';
 import 'package:dar_alamirat_requests/features/purchase_request/domain/entities/request_item.dart';
 import 'package:dar_alamirat_requests/features/expense_request/domain/entities/expense_request.dart';
+import 'package:dar_alamirat_requests/core/services/print_service.dart';
 import '../cubits/request_details_cubit.dart';
 
 class RequestDetailsPage extends StatelessWidget {
@@ -44,12 +45,68 @@ class RequestDetailsView extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.translate('requestDetails')),
         actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.printer),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Printing functionality coming soon...')),
-              );
+          BlocBuilder<RequestDetailsCubit, RequestDetailsState>(
+            builder: (context, state) {
+              if (state is RequestDetailsLoaded) {
+                return PopupMenuButton<String>(
+                  icon: const Icon(LucideIcons.printer),
+                  onSelected: (value) async {
+                    if (value == 'request') {
+                      if (state.request is PurchaseRequest) {
+                        await PrintService.printPurchaseRequest(state.request as PurchaseRequest);
+                      } else if (state.request is ExpenseRequest) {
+                        await PrintService.printExpenseRequest(state.request as ExpenseRequest);
+                      }
+                    } else if (value == 'receipt') {
+                      if (state.request is PurchaseRequest) {
+                        await PrintService.printReceipt(state.request as PurchaseRequest);
+                      } else if (state.request is ExpenseRequest) {
+                        await PrintService.printExpenseReceipt(state.request as ExpenseRequest);
+                      }
+                    }
+                  },
+                  itemBuilder: (context) {
+                    final List<PopupMenuEntry<String>> items = [
+                      PopupMenuItem(
+                        value: 'request',
+                        child: Row(
+                          children: [
+                            const Icon(LucideIcons.fileText, size: 18),
+                            const SizedBox(width: 8),
+                            Text(l10n.translate('printRequest')),
+                          ],
+                        ),
+                      ),
+                    ];
+
+                    bool showReceipt = false;
+                    if (state.request is PurchaseRequest) {
+                      final req = state.request as PurchaseRequest;
+                      showReceipt = req.status == 'purchased' || req.status == 'received_by_staff' || req.status == 'completed';
+                    } else if (state.request is ExpenseRequest) {
+                      final req = state.request as ExpenseRequest;
+                      showReceipt = req.status == 'paid' || req.status == 'completed';
+                    }
+
+                    if (showReceipt) {
+                      items.add(
+                        PopupMenuItem(
+                          value: 'receipt',
+                          child: Row(
+                            children: [
+                              const Icon(LucideIcons.receipt, size: 18),
+                              const SizedBox(width: 8),
+                              Text(l10n.translate('printReceipt')),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return items;
+                  },
+                );
+              }
+              return const SizedBox.shrink();
             },
           ),
         ],

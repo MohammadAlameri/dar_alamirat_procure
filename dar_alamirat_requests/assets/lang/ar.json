@@ -96,5 +96,7 @@
   "commitmentNo": "رقم الارتباط",
   "suggestedSuppliers": "الموردين المقترحين",
   "amount": "المبلغ",
-  "approve": "موافقة"
+  "approve": "موافقة",
+  "printRequest": "طباعة الطلب",
+  "printReceipt": "طباعة السند"
 }
