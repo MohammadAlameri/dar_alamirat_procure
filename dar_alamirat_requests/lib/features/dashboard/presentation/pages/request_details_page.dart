@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_widgets.dart';
@@ -587,9 +587,15 @@ class _RequestItemCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${item.quantity} ${item.unit ?? l10n.translate('pcs')} x ${item.unitPrice.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 12),
+                Row(
+                  textDirection: TextDirection.rtl,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('${item.quantity} ', style: const TextStyle(fontSize: 12)),
+                    Text('${item.unit ?? l10n.translate('pcs')} ', style: const TextStyle(fontSize: 12)),
+                    Text(' x ', style: const TextStyle(fontSize: 12)),
+                    Text('${item.unitPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12)),
+                  ],
                 ),
                 Text(
                   '${(item.quantity * item.unitPrice).toStringAsFixed(2)} ${l10n.translate('sar')}',
