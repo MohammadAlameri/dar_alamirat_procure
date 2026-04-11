@@ -45,7 +45,7 @@ class ExpenseRequestRepositoryImpl implements ExpenseRequestRepository {
   }) async {
     final data = await _client.from('expense_requests').insert({
       'subject': subject,
-      'description': description,
+      'statement': description,
       'branch_id': branchId,
       'employee_id': employeeId,
       'amount': amount,

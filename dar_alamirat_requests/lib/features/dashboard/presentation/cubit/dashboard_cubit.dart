@@ -13,7 +13,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   DashboardCubit(this.repository) : super(DashboardInitial());
 
-  Future<void> loadDashboard() async {
+  Future<void> loadDashboard({String? branchId}) async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       emit(const DashboardError('User not logged in'));
@@ -32,16 +32,22 @@ class DashboardCubit extends Cubit<DashboardState> {
         await branchesResult.fold(
           (failure) async => emit(DashboardError(failure.message)),
           (branches) async {
-            Branch? initialBranch;
+            Branch? selectedBranch;
             if (branches.isNotEmpty) {
-              final fullBranch = branches.where((b) => b.accessLevel == 'full').firstOrNull;
-              initialBranch = fullBranch?.branch ?? branches.first.branch;
+              if (branchId != null) {
+                selectedBranch = branches.map((e) => e.branch).where((b) => b?.id == branchId).firstOrNull;
+              }
+              
+              if (selectedBranch == null) {
+                final fullBranch = branches.where((b) => b.accessLevel == 'full').firstOrNull;
+                selectedBranch = fullBranch?.branch ?? branches.first.branch;
+              }
             }
 
             await fetchDashboardData(
               profile: profile,
               userBranches: branches,
-              selectedBranch: initialBranch,
+              selectedBranch: selectedBranch,
             );
           },
         );

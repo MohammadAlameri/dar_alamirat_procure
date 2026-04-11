@@ -21,7 +21,7 @@ class ExpenseRequestModel extends ExpenseRequest {
     return ExpenseRequestModel(
       id: json['id'] ?? '',
       subject: json['subject'] ?? '',
-      statement: json['description'] ?? '',
+      statement: json['statement'] ?? '',
       amount: (json['amount'] ?? 0).toDouble(),
       status: json['status'] ?? 'pending',
       highestApprovalLevel: json['highest_approval_level'] ?? 'manager',

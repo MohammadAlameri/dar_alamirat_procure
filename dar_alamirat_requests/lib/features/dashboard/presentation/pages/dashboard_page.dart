@@ -21,6 +21,7 @@ import '../../../management/presentation/pages/branches_page.dart';
 import '../../../management/presentation/pages/user_management_page.dart';
 import '../../../management/presentation/pages/product_management_page.dart';
 import '../../../reports/presentation/pages/reports_page.dart';
+import '../../../auth/presentation/pages/profile_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -43,6 +44,7 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveClientMixin {
   int _selectedIndex = 0;
+  int _refreshCounter = 0;
 
   @override
   bool get wantKeepAlive => true;
@@ -67,7 +69,10 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
                   Text(state.message, style: const TextStyle(color: Colors.red)),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => context.read<DashboardCubit>().loadDashboard(),
+                    onPressed: () {
+                      setState(() => _refreshCounter++);
+                      context.read<DashboardCubit>().loadDashboard();
+                    },
                     child: const Text('Retry'),
                   ),
                 ],
@@ -278,6 +283,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
                 children: [
+                  _buildMenuItem(10, LucideIcons.user, l10n.translate('profile')),
                   if (isAdmin) ...[
                     _buildMenuItem(5, LucideIcons.barChart2, l10n.translate('reports')),
                     _buildMenuItem(6, LucideIcons.users, l10n.translate('userManagement')),
@@ -301,8 +307,9 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
                     color: Colors.red,
                     onTap: () async {
                       await Supabase.instance.client.auth.signOut();
-                      if (!mounted) return;
-                      context.go('/login');
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
                     },
                   ),
                 ],
@@ -351,6 +358,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
       case 6: return l10n.translate('userManagement');
       case 7: return l10n.translate('branchManagement');
       case 8: return l10n.translate('productManagement');
+      case 10: return l10n.translate('profile');
       default: return l10n.translate('dashboard');
     }
   }
@@ -358,13 +366,14 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
   Widget _getBody(DashboardLoaded state) {
     switch (_selectedIndex) {
       case 0: return _buildOverview(state);
-      case 1: return PurchaseRequestsPage(key: ValueKey('pr_${state.selectedBranch?.id}'), profile: state.profile, initialBranch: state.selectedBranch);
-      case 2: return ExpenseRequestsPage(key: ValueKey('ex_${state.selectedBranch?.id}'), profile: state.profile, initialBranch: state.selectedBranch);
-      case 3: return ApprovalsPage(key: ValueKey('app_${state.selectedBranch?.id}'), profile: state.profile, branchId: state.selectedBranch?.id);
+      case 1: return PurchaseRequestsPage(key: ValueKey('pr_${state.selectedBranch?.id}_$_refreshCounter'), profile: state.profile, initialBranch: state.selectedBranch);
+      case 2: return ExpenseRequestsPage(key: ValueKey('ex_${state.selectedBranch?.id}_$_refreshCounter'), profile: state.profile, initialBranch: state.selectedBranch);
+      case 3: return ApprovalsPage(key: ValueKey('app_${state.selectedBranch?.id}_$_refreshCounter'), profile: state.profile, branchId: state.selectedBranch?.id);
       case 5: return const ReportsPage();
       case 6: return const UserManagementPage();
       case 7: return const BranchesPage();
       case 8: return const ProductManagementPage();
+      case 10: return ProfilePage(profile: state.profile);
       default: return _buildOverview(state);
     }
   }
@@ -372,7 +381,10 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
   Widget _buildOverview(DashboardLoaded state) {
     final l10n = AppLocalizations.of(context)!;
     return RefreshIndicator(
-      onRefresh: () async => context.read<DashboardCubit>().loadDashboard(),
+      onRefresh: () async {
+        setState(() => _refreshCounter++);
+        await context.read<DashboardCubit>().loadDashboard(branchId: state.selectedBranch?.id);
+      },
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(24.0),
@@ -453,8 +465,10 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
           ),
           onTap: () async {
             await context.push('/request-details', extra: {'requestId': item.id, 'type': item.type, 'currentUser': state.profile});
-            if (!mounted) return;
-            context.read<DashboardCubit>().loadDashboard();
+            if (context.mounted) {
+              setState(() => _refreshCounter++);
+              context.read<DashboardCubit>().loadDashboard(branchId: state.selectedBranch?.id);
+            }
           },
         );
       },
@@ -523,13 +537,19 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
   Future<void> _navigateToAddPurchaseRequest(DashboardLoaded state) async {
     if (state.selectedBranch == null) return;
     await Navigator.push(context, MaterialPageRoute(builder: (context) => AddPurchaseRequestPage(profile: state.profile, selectedBranch: state.selectedBranch)));
-    if (mounted) context.read<DashboardCubit>().loadDashboard();
+    if (mounted) {
+      setState(() => _refreshCounter++);
+      context.read<DashboardCubit>().loadDashboard(branchId: state.selectedBranch?.id);
+    }
   }
 
   Future<void> _navigateToAddExpenseRequest(DashboardLoaded state) async {
     if (state.selectedBranch == null) return;
     await Navigator.push(context, MaterialPageRoute(builder: (context) => AddExpenseRequestPage(profile: state.profile, selectedBranch: state.selectedBranch)));
-    if (mounted) context.read<DashboardCubit>().loadDashboard();
+    if (mounted) {
+      setState(() => _refreshCounter++);
+      context.read<DashboardCubit>().loadDashboard(branchId: state.selectedBranch?.id);
+    }
   }
 
   void _showDashboardCreateOptions(DashboardLoaded state) {

@@ -103,12 +103,15 @@ class _PurchaseRequestsViewState extends State<PurchaseRequestsView> with Automa
 
               if (state is PurchaseRequestLoaded) {
                 if (state.requests.isEmpty) {
-                  return ListView(
-                    padding: const EdgeInsets.only(bottom: 120),
-                    children: [
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-                      Center(child: Text(l10n.translate('noRequestsFound'))),
-                    ],
+                  return RefreshIndicator(
+                    onRefresh: () async => _fetchRequests(),
+                    child: ListView(
+                      padding: const EdgeInsets.only(bottom: 120),
+                      children: [
+                        SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                        Center(child: Text(l10n.translate('noRequestsFound'))),
+                      ],
+                    ),
                   );
                 }
 

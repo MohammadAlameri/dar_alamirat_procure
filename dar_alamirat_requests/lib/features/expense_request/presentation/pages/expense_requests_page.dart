@@ -103,12 +103,15 @@ class _ExpenseRequestsViewState extends State<ExpenseRequestsView> with Automati
 
               if (state is ExpenseRequestLoaded) {
                 if (state.requests.isEmpty) {
-                  return ListView(
-                    padding: const EdgeInsets.only(bottom: 120),
-                    children: [
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.3),
-                      Center(child: Text(l10n.translate('noRequestsFound'))),
-                    ],
+                  return RefreshIndicator(
+                    onRefresh: () async => _fetchRequests(),
+                    child: ListView(
+                      padding: const EdgeInsets.only(bottom: 120),
+                      children: [
+                        SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                        Center(child: Text(l10n.translate('noRequestsFound'))),
+                      ],
+                    ),
                   );
                 }
 
