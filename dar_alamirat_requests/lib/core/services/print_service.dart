@@ -9,11 +9,11 @@ import '../../features/purchase_request/domain/entities/purchase_request.dart';
 
 class PrintService {
   static Future<pw.Font> _loadFont() async {
-    return pw.Font.ttf(await rootBundle.load("assets/google_fonts/Cairo-Regular.ttf"));
+    return pw.Font.ttf(await rootBundle.load("assets/google_fonts/NotoKufiArabic-Regular.ttf"));
   }
 
   static Future<pw.Font> _loadBoldFont() async {
-    return pw.Font.ttf(await rootBundle.load("assets/google_fonts/Cairo-Bold.ttf"));
+    return pw.Font.ttf(await rootBundle.load("assets/google_fonts/NotoKufiArabic-Bold.ttf"));
   }
 
   static String _toHijri(DateTime date) {

@@ -94,6 +94,11 @@ flutter:
         - asset: assets/google_fonts/Cairo-Regular.ttf
         - asset: assets/google_fonts/Cairo-Bold.ttf
           weight: 700
+    - family: NotoKufiArabic
+      fonts:
+        - asset: assets/google_fonts/NotoKufiArabic-Regular.ttf
+        - asset: assets/google_fonts/NotoKufiArabic-Bold.ttf
+          weight: 700
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
