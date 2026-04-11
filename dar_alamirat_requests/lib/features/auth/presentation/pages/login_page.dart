@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+/* ... rest of imports ... */
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/custom_snackbar.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../dashboard/domain/repositories/dashboard_repository.dart';
+import '../../../../main.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,7 +26,23 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   bool _rememberMe = false;
 
+  Future<void> _chatWithAdmin() async {
+    final Uri url = Uri.parse("https://wa.me/966551771975");
+    try {
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        if (mounted) {
+          AppSnackBar.show(context, 'Could not launch WhatsApp', type: SnackBarType.error);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.show(context, 'Error: $e', type: SnackBarType.error);
+      }
+    }
+  }
+
   Future<void> _signIn() async {
+/* ... existing _signIn code ... */
     final l10n = AppLocalizations.of(context)!;
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       AppSnackBar.show(
@@ -134,7 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
                   
-                   // Logo & Header
+                  // Logo & Header
                   const Icon(LucideIcons.shoppingCart, size: 48, color: AppTheme.primaryPink),
                   const SizedBox(height: 16),
                   Text(
@@ -214,11 +234,13 @@ class _LoginPageState extends State<LoginPage> {
                   Text.rich(
                     TextSpan(
                       text: l10n.translate('noAccount'),
+                      style: const TextStyle(color: Colors.black),
                       children: [
                         const TextSpan(text: ' '),
                         TextSpan(
-                          text: l10n.translate('contactAdmin'),
+                          text: l10n.translate('chatWithAdmin'),
                           style: const TextStyle(color: AppTheme.primaryPink, fontWeight: FontWeight.bold),
+                          recognizer: TapGestureRecognizer()..onTap = _chatWithAdmin,
                         ),
                       ],
                     ),
@@ -234,3 +256,4 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+

@@ -1,5 +1,7 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AppConstants {
-  static const String supabaseUrl = 'https://gonldcbklguwjhekjhff.supabase.co';
-  static const String supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvbmxkY2JrbGd1d2poZWtqaGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NTg3MjIsImV4cCI6MjA4ODAzNDcyMn0.UEKkRK4o-XDfA-8YwYf_syaGyiaepTjFNfruBvB1uFk';
+  static String get supabaseUrl => dotenv.get('SUPABASE_URL', fallback: '');
+  static String get supabaseAnonKey => dotenv.get('SUPABASE_ANON_KEY', fallback: '');
   static const String configurationsTable = 'configurations';
 }
