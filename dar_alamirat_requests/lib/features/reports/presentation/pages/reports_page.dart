@@ -62,7 +62,7 @@ class _ReportsPageState extends State<ReportsPage> {
   Future<void> _loadFilters() async {
     setState(() => _isLoading = true);
     try {
-      final branches = await _branchRepository.fetchBranches();
+      final branches = await _branchRepository.fetchBranches(onlyActive: true);
       final users = await _userRepository.fetchAllProfiles();
       setState(() {
         _branches = branches.map((b) => BranchState(b.id, b.name, b.nameAr)).toList();
@@ -110,13 +110,14 @@ class _ReportsPageState extends State<ReportsPage> {
     AppSnackBar.show(context, message, type: SnackBarType.error);
   }
 
-  Future<void> _exportToExcel() async {
+  Future<void> _exportToExcel([Rect? sharePositionOrigin]) async {
     setState(() => _isLoading = true);
     try {
       await ExcelExportHelper.exportRequests(
         data: _reportData,
         reportType: _reportType,
         languageCode: 'ar', // Force Arabic as requested
+        sharePositionOrigin: sharePositionOrigin,
       );
     } catch (e) {
       _showError(e.toString());
@@ -326,16 +327,24 @@ class _ReportsPageState extends State<ReportsPage> {
                       SizedBox(
                         height: 48,
                         width: 48,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : () => _exportToExcel(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade600,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.zero,
-                            shape: const CircleBorder(),
-                          ),
-                          child: const Icon(LucideIcons.fileSpreadsheet, size: 20),
-                        ),
+                        child: Builder(builder: (btnContext) {
+                          return ElevatedButton(
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    final box = btnContext.findRenderObject() as RenderBox?;
+                                    final rect = box != null ? (box.localToGlobal(Offset.zero) & box.size) : null;
+                                    _exportToExcel(rect);
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade600,
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.zero,
+                              shape: const CircleBorder(),
+                            ),
+                            child: const Icon(LucideIcons.fileSpreadsheet, size: 20),
+                          );
+                        }),
                       ),
                     ],
                   ],

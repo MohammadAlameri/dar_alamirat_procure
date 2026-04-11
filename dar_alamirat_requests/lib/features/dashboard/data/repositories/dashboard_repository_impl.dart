@@ -41,7 +41,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
           role == UserRole.admin;
 
       if (isManager) {
-        final data = await supabase.from('branches').select('*').order('name');
+        final data = await supabase.from('branches').select('*').eq('is_active', true).order('name');
         final allBranches = (data as List).map((e) => BranchModel.fromJson(e)).toList();
         return Right(allBranches
             .map((b) => UserBranchModel(
@@ -55,8 +55,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
       } else {
         final data = await supabase
             .from('user_branches')
-            .select('*, branches(*)')
-            .eq('user_id', userId);
+            .select('*, branches!inner(*)')
+            .eq('user_id', userId)
+            .eq('branches.is_active', true);
         final branches = (data as List).map((e) => UserBranchModel.fromJson(e)).toList();
         return Right(branches);
       }

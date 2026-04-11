@@ -5,7 +5,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/custom_snackbar.dart';
-import '../../../../main.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../dashboard/domain/repositories/dashboard_repository.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,10 +23,11 @@ class _LoginPageState extends State<LoginPage> {
   bool _rememberMe = false;
 
   Future<void> _signIn() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       AppSnackBar.show(
         context,
-        AppLocalizations.of(context)!.translate('pleaseFillAllFields'),
+        l10n.translate('pleaseFillAllFields'),
         type: SnackBarType.error,
       );
       return;
@@ -33,14 +35,36 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => _isLoading = true);
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      final response = await Supabase.instance.client.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
       
-      // Supabase persistent session is handled by the client automatically.
-      // If we wanted manual persistence control, we would handle it here.
-      
+      final user = response.user;
+      if (user != null) {
+        final repo = sl<DashboardRepository>();
+        final profileResult = await repo.getProfile(user.id);
+        
+        bool hasAccess = await profileResult.fold(
+          (failure) async => false,
+          (profile) async {
+            final branchesResult = await repo.getUserBranches(user.id, profile.role);
+            return branchesResult.fold(
+              (failure) => false,
+              (branches) => branches.isNotEmpty,
+            );
+          },
+        );
+
+        if (!hasAccess) {
+          await Supabase.instance.client.auth.signOut();
+          if (mounted) {
+            AppSnackBar.show(context, l10n.translate('accountInactive'), type: SnackBarType.error);
+          }
+          return;
+        }
+      }
+
       if (mounted) {
         context.go('/dashboard');
       }

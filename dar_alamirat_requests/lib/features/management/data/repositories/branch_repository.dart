@@ -6,8 +6,12 @@ import 'package:dar_alamirat_requests/features/management/data/models/user_branc
 class BranchRepository {
   final _client = Supabase.instance.client;
 
-  Future<List<Branch>> fetchBranches() async {
-    final data = await _client.from('branches').select('*').order('name');
+  Future<List<Branch>> fetchBranches({bool onlyActive = false}) async {
+    var query = _client.from('branches').select('*');
+    if (onlyActive) {
+      query = query.eq('is_active', true);
+    }
+    final data = await query.order('name');
     return (data as List).map((e) => BranchModel.fromJson(e)).toList();
   }
 

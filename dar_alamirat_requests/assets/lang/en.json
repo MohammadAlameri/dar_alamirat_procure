@@ -224,5 +224,6 @@
   "dateTo": "To Date",
   "generateReport": "Generate Report",
   "ok": "OK",
-  "requestProcessedSuccessfully": "Request processed successfully"
+  "requestProcessedSuccessfully": "Request processed successfully",
+  "accountInactive": "Account inactive (No active branches assigned)"
 }

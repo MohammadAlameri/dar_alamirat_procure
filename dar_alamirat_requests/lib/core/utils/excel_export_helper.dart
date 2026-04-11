@@ -11,6 +11,7 @@ class ExcelExportHelper {
     required List<dynamic> data,
     required String reportType,
     required String languageCode, // Use 'ar' for Arabic as requested
+    Rect? sharePositionOrigin,
   }) async {
     // Load translations for the target language
     String jsonString = await rootBundle.loadString('assets/lang/$languageCode.json');
@@ -89,7 +90,11 @@ class ExcelExportHelper {
       final file = File("${directory.path}/$fileName");
       await file.writeAsBytes(bytes);
 
-      await Share.shareXFiles([XFile(file.path)], text: translate('reports'));
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: translate('reports'),
+        sharePositionOrigin: sharePositionOrigin,
+      );
     }
   }
 

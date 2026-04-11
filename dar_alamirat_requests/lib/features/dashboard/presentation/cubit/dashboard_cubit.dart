@@ -32,21 +32,29 @@ class DashboardCubit extends Cubit<DashboardState> {
         await branchesResult.fold(
           (failure) async => emit(DashboardError(failure.message)),
           (branches) async {
+            // Filter only active branches
+            final activeBranches = branches.where((ub) => ub.branch?.isActive ?? false).toList();
+            
+            if (activeBranches.isEmpty) {
+              emit(const DashboardError('Account access restricted: No active branches assigned.'));
+              return;
+            }
+
             Branch? selectedBranch;
-            if (branches.isNotEmpty) {
+            if (activeBranches.isNotEmpty) {
               if (branchId != null) {
-                selectedBranch = branches.map((e) => e.branch).where((b) => b?.id == branchId).firstOrNull;
+                selectedBranch = activeBranches.map((e) => e.branch).where((b) => b?.id == branchId).firstOrNull;
               }
               
               if (selectedBranch == null) {
-                final fullBranch = branches.where((b) => b.accessLevel == 'full').firstOrNull;
-                selectedBranch = fullBranch?.branch ?? branches.first.branch;
+                final fullBranch = activeBranches.where((b) => b.accessLevel == 'full').firstOrNull;
+                selectedBranch = fullBranch?.branch ?? activeBranches.first.branch;
               }
             }
 
             await fetchDashboardData(
               profile: profile,
-              userBranches: branches,
+              userBranches: activeBranches,
               selectedBranch: selectedBranch,
             );
           },

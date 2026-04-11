@@ -224,5 +224,6 @@
   "dateTo": "إلى تاريخ",
   "generateReport": "إنشاء التقرير",
   "ok": "حسنا",
-  "requestProcessedSuccessfully": "تمت معالجة الطلب بنجاح"
+  "requestProcessedSuccessfully": "تمت معالجة الطلب بنجاح",
+  "accountInactive": "الحساب غير نشط (لا توجد فروع نشطة مرتبطة)"
 }
