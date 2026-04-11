@@ -95,7 +95,7 @@ class _PurchaseRequestsViewState extends State<PurchaseRequestsView> with Automa
             builder: (context, state) {
               if (state is PurchaseRequestLoading) {
                 return ListView.builder(
-                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                  padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 120),
                   itemCount: 6,
                   itemBuilder: (context, index) => const RequestCardShimmer(),
                 );
@@ -115,7 +115,7 @@ class _PurchaseRequestsViewState extends State<PurchaseRequestsView> with Automa
                 return RefreshIndicator(
                   onRefresh: () async => _fetchRequests(),
                   child: ListView.builder(
-                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                    padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 120),
                     itemCount: state.requests.length,
                     itemBuilder: (context, index) {
                       final request = state.requests[index];

@@ -150,7 +150,16 @@ class ProductsTab extends StatelessWidget {
                   trailing: IconButton(
                     icon: const Icon(LucideIcons.edit, size: 18),
                     onPressed: () {
-                      // TODO: Edit product
+                      final productCubit = context.read<ProductCubit>();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BlocProvider.value(
+                            value: productCubit,
+                            child: AddProductPage(productToEdit: product),
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -222,7 +231,16 @@ class CategoriesTab extends StatelessWidget {
                   trailing: IconButton(
                     icon: const Icon(LucideIcons.edit, size: 18),
                     onPressed: () {
-                      // TODO: Edit category
+                      final productCubit = context.read<ProductCubit>();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BlocProvider.value(
+                            value: productCubit,
+                            child: AddCategoryPage(categoryToEdit: category),
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),

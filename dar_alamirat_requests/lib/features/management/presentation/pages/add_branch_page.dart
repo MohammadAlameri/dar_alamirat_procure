@@ -4,22 +4,27 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/branch_repository.dart';
+import '../../domain/entities/branch.dart';
 import '../cubit/branch_cubit.dart';
 
 class AddBranchPage extends StatelessWidget {
-  const AddBranchPage({super.key});
+  final Branch? branchToEdit;
+  
+  const AddBranchPage({super.key, this.branchToEdit});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => BranchCubit(BranchRepository()),
-      child: const _AddBranchPageContent(),
+      child: _AddBranchPageContent(branchToEdit: branchToEdit),
     );
   }
 }
 
 class _AddBranchPageContent extends StatefulWidget {
-  const _AddBranchPageContent();
+  final Branch? branchToEdit;
+
+  const _AddBranchPageContent({this.branchToEdit});
 
   @override
   State<_AddBranchPageContent> createState() => _AddBranchPageContentState();
@@ -33,6 +38,18 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.branchToEdit != null) {
+      _nameController.text = widget.branchToEdit!.name;
+      _nameArController.text = widget.branchToEdit!.nameAr ?? '';
+      _codeController.text = widget.branchToEdit!.code ?? '';
+      _addressController.text = widget.branchToEdit!.address ?? '';
+      _phoneController.text = widget.branchToEdit!.phone ?? '';
+    }
+  }
 
   @override
   void dispose() {
@@ -52,17 +69,29 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
 
     try {
       final cubit = context.read<BranchCubit>();
-      await cubit.createBranch(
-        name: _nameController.text.trim(),
-        nameAr: _nameArController.text.trim().isEmpty ? null : _nameArController.text.trim(),
-        code: _codeController.text.trim().isEmpty ? null : _codeController.text.trim(),
-        address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
-        phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-      );
+      if (widget.branchToEdit != null) {
+        await cubit.updateBranch(
+          id: widget.branchToEdit!.id,
+          name: _nameController.text.trim(),
+          nameAr: _nameArController.text.trim().isEmpty ? null : _nameArController.text.trim(),
+          code: _codeController.text.trim().isEmpty ? null : _codeController.text.trim(),
+          address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
+          phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+          isActive: widget.branchToEdit!.isActive,
+        );
+      } else {
+        await cubit.createBranch(
+          name: _nameController.text.trim(),
+          nameAr: _nameArController.text.trim().isEmpty ? null : _nameArController.text.trim(),
+          code: _codeController.text.trim().isEmpty ? null : _codeController.text.trim(),
+          address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
+          phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.translate('branchCreatedSuccessfully'))),
+          SnackBar(content: Text(widget.branchToEdit != null ? l10n.translate('branchUpdatedSuccessfully') ?? 'Branch Updated' : l10n.translate('branchCreatedSuccessfully'))),
         );
         Navigator.pop(context);
       }
@@ -85,7 +114,7 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.translate('addBranch')),
+        title: Text(widget.branchToEdit != null ? l10n.translate('editBranch') ?? 'Edit Branch' : l10n.translate('addBranch')),
         backgroundColor: AppTheme.primaryPink,
         foregroundColor: AppTheme.darkGray,
       ),
@@ -169,7 +198,7 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: AppTheme.darkGray)
                     : Text(
-                        l10n.translate('createBranch'),
+                        widget.branchToEdit != null ? l10n.translate('updateBranch') ?? 'Update Branch' : l10n.translate('createBranch'),
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),

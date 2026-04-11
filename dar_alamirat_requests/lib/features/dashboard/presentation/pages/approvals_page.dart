@@ -2,7 +2,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/purchase_request/domain/entities/purchase_request.dart';
@@ -57,7 +56,7 @@ class ApprovalsView extends StatelessWidget {
             children: [
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                  padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 120),
                   itemCount: 6,
                   itemBuilder: (context, index) => const RequestCardShimmer(),
                 ),
@@ -82,7 +81,7 @@ class ApprovalsView extends StatelessWidget {
                         );
                   },
                   child: ListView.builder(
-                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                    padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 120),
                     itemCount: state.pendingRequests.length,
                     itemBuilder: (context, index) {
                       final item = state.pendingRequests[index];

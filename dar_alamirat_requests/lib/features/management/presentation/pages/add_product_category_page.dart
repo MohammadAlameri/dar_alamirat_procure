@@ -7,19 +7,23 @@ import 'package:dar_alamirat_requests/features/management/data/repositories/prod
 import '../cubit/product_cubit.dart';
 
 class AddProductPage extends StatelessWidget {
-  const AddProductPage({super.key});
+  final Map<String, dynamic>? productToEdit;
+  
+  const AddProductPage({super.key, this.productToEdit});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => ProductCubit(ProductRepository())..loadProducts(),
-      child: const _AddProductPageContent(),
+      child: _AddProductPageContent(productToEdit: productToEdit),
     );
   }
 }
 
 class _AddProductPageContent extends StatefulWidget {
-  const _AddProductPageContent();
+  final Map<String, dynamic>? productToEdit;
+  
+  const _AddProductPageContent({this.productToEdit});
 
   @override
   State<_AddProductPageContent> createState() => _AddProductPageContentState();
@@ -28,14 +32,27 @@ class _AddProductPageContent extends StatefulWidget {
 class _AddProductPageContentState extends State<_AddProductPageContent> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _detailsController = TextEditingController();
   String? _selectedCategoryId;
   bool _isSubmitting = false;
   List<Map<String, dynamic>> _categories = [];
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _detailsController.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _loadCategories();
+    if (widget.productToEdit != null) {
+      _nameController.text = widget.productToEdit!['name'] ?? '';
+      _selectedCategoryId = widget.productToEdit!['category_id']?.toString();
+      _detailsController.text = widget.productToEdit!['product_details'] ?? '';
+    }
   }
 
   Future<void> _loadCategories() async {
@@ -60,14 +77,25 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
 
     try {
       final cubit = context.read<ProductCubit>();
-      await cubit.createProduct(
-        name: _nameController.text.trim(),
-        categoryId: _selectedCategoryId,
-      );
+      
+      if (widget.productToEdit != null) {
+        await cubit.updateProduct(
+          widget.productToEdit!['id'],
+          name: _nameController.text.trim(),
+          categoryId: _selectedCategoryId,
+          productDetails: _detailsController.text.trim(),
+        );
+      } else {
+        await cubit.createProduct(
+          name: _nameController.text.trim(),
+          categoryId: _selectedCategoryId,
+          productDetails: _detailsController.text.trim(),
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.translate('productCreatedSuccessfully'))),
+          SnackBar(content: Text(widget.productToEdit != null ? l10n.translate('productUpdatedSuccessfully') : l10n.translate('productCreatedSuccessfully'))),
         );
         Navigator.pop(context);
       }
@@ -89,7 +117,7 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.translate('addProduct')),
+        title: Text(widget.productToEdit != null ? l10n.translate('editProduct') : l10n.translate('addProduct')),
         backgroundColor: AppTheme.primaryPink,
         foregroundColor: AppTheme.darkGray,
       ),
@@ -134,6 +162,18 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
                 setState(() => _selectedCategoryId = value);
               },
             ),
+            const SizedBox(height: 16),
+
+            // Product Details
+            TextFormField(
+              controller: _detailsController,
+              decoration: InputDecoration(
+                labelText: l10n.translate('productDetails'),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(LucideIcons.fileText),
+              ),
+              maxLines: 3,
+            ),
             const SizedBox(height: 24),
 
             // Submit Button
@@ -148,7 +188,7 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: AppTheme.darkGray)
                     : Text(
-                        l10n.translate('createProduct'),
+                        widget.productToEdit != null ? l10n.translate('updateProduct') : l10n.translate('createProduct'),
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
@@ -162,19 +202,23 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
 }
 
 class AddCategoryPage extends StatelessWidget {
-  const AddCategoryPage({super.key});
+  final Map<String, dynamic>? categoryToEdit;
+  
+  const AddCategoryPage({super.key, this.categoryToEdit});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => ProductCubit(ProductRepository())..loadProducts(),
-      child: const _AddCategoryPageContent(),
+      child: _AddCategoryPageContent(categoryToEdit: categoryToEdit),
     );
   }
 }
 
 class _AddCategoryPageContent extends StatefulWidget {
-  const _AddCategoryPageContent();
+  final Map<String, dynamic>? categoryToEdit;
+
+  const _AddCategoryPageContent({this.categoryToEdit});
 
   @override
   State<_AddCategoryPageContent> createState() => _AddCategoryPageContentState();
@@ -184,6 +228,14 @@ class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.categoryToEdit != null) {
+      _nameController.text = widget.categoryToEdit!['name'] ?? '';
+    }
+  }
 
   @override
   void dispose() {
@@ -199,13 +251,21 @@ class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
 
     try {
       final cubit = context.read<ProductCubit>();
-      await cubit.createCategory(
-        name: _nameController.text.trim(),
-      );
+      
+      if (widget.categoryToEdit != null) {
+        await cubit.updateCategory(
+          widget.categoryToEdit!['id'],
+          name: _nameController.text.trim(),
+        );
+      } else {
+        await cubit.createCategory(
+          name: _nameController.text.trim(),
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.translate('categoryCreatedSuccessfully'))),
+          SnackBar(content: Text(widget.categoryToEdit != null ? l10n.translate('categoryUpdatedSuccessfully') : l10n.translate('categoryCreatedSuccessfully'))),
         );
         Navigator.pop(context);
       }
@@ -227,7 +287,7 @@ class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.translate('addCategory')),
+        title: Text(widget.categoryToEdit != null ? l10n.translate('editCategory') : l10n.translate('addCategory')),
         backgroundColor: AppTheme.primaryPink,
         foregroundColor: AppTheme.darkGray,
       ),
@@ -265,7 +325,7 @@ class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: AppTheme.darkGray)
                     : Text(
-                        l10n.translate('createCategory'),
+                        widget.categoryToEdit != null ? l10n.translate('updateCategory') : l10n.translate('createCategory'),
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),

@@ -37,6 +37,7 @@ class Profile {
   final String email;
   final String? jobTitle;
   final String? department;
+  final String? managerId;
   final UserRole role;
 
   Profile({
@@ -45,6 +46,7 @@ class Profile {
     required this.email,
     this.jobTitle,
     this.department,
+    this.managerId,
     required this.role,
   });
 }

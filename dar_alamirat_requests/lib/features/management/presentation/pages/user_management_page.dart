@@ -50,7 +50,7 @@ class UserManagementView extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ListView(
-                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                      padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 120),
                       children: const [
                         UserCardShimmer(),
                         UserCardShimmer(),
@@ -73,7 +73,7 @@ class UserManagementView extends StatelessWidget {
                     child: RefreshIndicator(
                       onRefresh: () => context.read<UserCubit>().loadUsers(),
                       child: ListView.builder(
-                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                        padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 120),
                         itemCount: state.users.length,
                         itemBuilder: (context, index) {
                           final profile = state.users[index];

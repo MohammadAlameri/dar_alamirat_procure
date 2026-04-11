@@ -1,10 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../auth/domain/entities/profile.dart';
-import '../../../purchase_request/domain/entities/purchase_request.dart';
 import '../../../purchase_request/data/models/purchase_request_model.dart';
 import '../../../purchase_request/data/models/request_item_model.dart';
-import '../../../expense_request/domain/entities/expense_request.dart';
 import '../../../expense_request/data/models/expense_request_model.dart';
 
 abstract class RequestDetailsState {}

@@ -1,3 +1,4 @@
+import 'package:dar_alamirat_requests/features/management/presentation/pages/branch_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -37,7 +38,7 @@ class BranchesView extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ListView(
-                      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                      padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 120),
                       children: const [
                         BranchCardShimmer(),
                         BranchCardShimmer(),
@@ -60,7 +61,7 @@ class BranchesView extends StatelessWidget {
                     child: RefreshIndicator(
                       onRefresh: () => context.read<BranchCubit>().loadBranches(),
                       child: ListView.builder(
-                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
+                        padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 120),
                         itemCount: state.branches.length,
                         itemBuilder: (context, index) {
                           final branch = state.branches[index];
@@ -73,7 +74,16 @@ class BranchesView extends StatelessWidget {
                                   );
                             },
                             onTap: () {
-                              // TODO: Edit branch
+                              final branchCubit = context.read<BranchCubit>();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BlocProvider.value(
+                                    value: branchCubit,
+                                    child: BranchDetailsPage(branch: branch),
+                                  ),
+                                ),
+                              );
                             },
                           );
                         },
@@ -154,10 +164,7 @@ class BranchCard extends StatelessWidget {
         ),
         title: Text(branch.name, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(branch.code ?? 'No Code'),
-        trailing: Switch(
-          value: branch.isActive,
-          onChanged: onToggleActive,
-        ),
+        trailing: const Icon(LucideIcons.chevronRight, color: Colors.grey),
         onTap: onTap,
       ),
     );

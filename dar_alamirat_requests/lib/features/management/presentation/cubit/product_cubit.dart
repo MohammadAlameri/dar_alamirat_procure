@@ -11,12 +11,12 @@ class LoadCategories extends ProductEvent {}
 class CreateProduct extends ProductEvent {
   final String name;
   final String? categoryId;
-  final String? description;
+  final String? productDetails;
 
   CreateProduct({
     required this.name,
     this.categoryId,
-    this.description,
+    this.productDetails,
   });
 }
 
@@ -74,13 +74,13 @@ class ProductCubit extends Cubit<ProductState> {
   Future<void> createProduct({
     required String name,
     String? categoryId,
-    String? description,
+    String? productDetails,
   }) async {
     try {
       await _repository.createProduct(
         name: name,
         categoryId: categoryId,
-        description: description,
+        productDetails: productDetails,
       );
       loadProducts();
     } catch (e) {
@@ -93,6 +93,37 @@ class ProductCubit extends Cubit<ProductState> {
   }) async {
     try {
       await _repository.createCategory(name: name);
+      loadProducts();
+    } catch (e) {
+      emit(ProductError(message: e.toString()));
+    }
+  }
+
+  Future<void> updateProduct(
+    String id, {
+    String? name,
+    String? categoryId,
+    String? productDetails,
+  }) async {
+    try {
+      await _repository.updateProduct(
+        id,
+        name: name,
+        categoryId: categoryId,
+        productDetails: productDetails,
+      );
+      loadProducts();
+    } catch (e) {
+      emit(ProductError(message: e.toString()));
+    }
+  }
+
+  Future<void> updateCategory(
+    String id, {
+    required String name,
+  }) async {
+    try {
+      await _repository.updateCategory(id, name: name);
       loadProducts();
     } catch (e) {
       emit(ProductError(message: e.toString()));

@@ -74,6 +74,8 @@ class PurchaseRequestCubit extends Cubit<PurchaseRequestState> {
     required String createdBy,
     required double totalAmount,
     required List<Map<String, dynamic>> items,
+    String? employeeName,
+    String? jobTitle,
   }) async {
     try {
       await _repository.createRequest(
@@ -83,6 +85,8 @@ class PurchaseRequestCubit extends Cubit<PurchaseRequestState> {
         createdBy: createdBy,
         totalAmount: totalAmount,
         items: items,
+        employeeName: employeeName,
+        jobTitle: jobTitle,
       );
     } catch (e) {
       emit(PurchaseRequestError(message: e.toString()));

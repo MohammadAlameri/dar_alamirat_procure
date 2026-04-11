@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/branch.dart';
 import '../models/branch_model.dart';
+import '../models/user_branch_model.dart' hide UserBranchModel;
 
 class BranchRepository {
   final _client = Supabase.instance.client;
@@ -52,5 +53,39 @@ class BranchRepository {
 
   Future<void> deleteBranch(String id) async {
     await _client.from('branches').delete().eq('id', id);
+  }
+
+  Future<List<UserBranchModel>> fetchAssignedUsers(String branchId) async {
+    final data = await _client
+        .from('user_branches')
+        .select('*, profiles(id, full_name, email, role)')
+        .eq('branch_id', branchId);
+    return (data as List).map((e) => UserBranchModel.fromJson(e)).toList();
+  }
+
+  Future<void> assignUserToBranch(String userId, String branchId, String accessLevel) async {
+    final existing = await _client
+        .from('user_branches')
+        .select()
+        .eq('user_id', userId)
+        .eq('branch_id', branchId)
+        .maybeSingle();
+
+    if (existing != null) {
+      await _client
+          .from('user_branches')
+          .update({'access_level': accessLevel})
+          .eq('id', existing['id']);
+    } else {
+      await _client.from('user_branches').insert({
+        'user_id': userId,
+        'branch_id': branchId,
+        'access_level': accessLevel,
+      });
+    }
+  }
+
+  Future<void> removeUserFromBranch(String id) async {
+    await _client.from('user_branches').delete().eq('id', id);
   }
 }

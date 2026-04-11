@@ -168,7 +168,7 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
 
             // Approval Level
             DropdownButtonFormField<String>(
-              value: _approvalLevel,
+              initialValue: _approvalLevel,
               decoration: InputDecoration(
                 labelText: l10n.translate('highestApprovalLevel'),
                 border: const OutlineInputBorder(),
@@ -189,17 +189,17 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
 
             // Info Card
             Card(
-              color: Colors.blue.withOpacity(0.1),
+              color: AppTheme.backgroundGray,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Icon(LucideIcons.info, color: Colors.blue),
+                    const Icon(LucideIcons.info, color: Color.fromARGB(255, 220, 203, 52)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         l10n.translate('approvalWorkflowInfo'),
-                        style: const TextStyle(color: Colors.blue),
+                        style: const TextStyle(color: Color.fromARGB(255, 220, 203, 52)),
                       ),
                     ),
                   ],

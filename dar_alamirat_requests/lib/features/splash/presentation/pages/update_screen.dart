@@ -28,7 +28,7 @@ class UpdateScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(

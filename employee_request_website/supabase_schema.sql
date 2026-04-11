@@ -1,64 +1,173 @@
--- 1. Create Profiles Table (Extensions for auth.users)
-CREATE TABLE profiles (
-  id uuid REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+-- TABLES --
+CREATE TABLE public.approvals_log (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  request_id uuid,
+  user_id uuid,
+  action text,
+  comments text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT approvals_log_pkey PRIMARY KEY (id),
+  CONSTRAINT approvals_log_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.purchase_requests(id),
+  CONSTRAINT approvals_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.audit_log (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  table_name text NOT NULL,
+  record_id uuid NOT NULL,
+  action text NOT NULL CHECK (action = ANY (ARRAY['INSERT'::text, 'UPDATE'::text, 'DELETE'::text])),
+  old_data jsonb,
+  new_data jsonb,
+  changed_by uuid,
+  branch_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT audit_log_pkey PRIMARY KEY (id),
+  CONSTRAINT audit_log_changed_by_fkey FOREIGN KEY (changed_by) REFERENCES public.profiles(id),
+  CONSTRAINT audit_log_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id)
+);
+CREATE TABLE public.branches (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  name_ar text,
+  code text UNIQUE,
+  address text,
+  phone text,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT branches_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.categories (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT categories_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.configurations (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  android_version text,
+  ios_version text,
+  android_store_url text,
+  ios_store_url text,
+  force_update boolean NOT NULL DEFAULT false,
+  maintenance_mode boolean NOT NULL DEFAULT false,
+  maintenance_message_ar text,
+  maintenance_message_en text,
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT configurations_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.expense_approvals_log (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  request_id uuid,
+  user_id uuid,
+  action text,
+  comments text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT expense_approvals_log_pkey PRIMARY KEY (id),
+  CONSTRAINT expense_approvals_log_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.expense_requests(id),
+  CONSTRAINT expense_approvals_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.expense_requests (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  subject text NOT NULL,
+  amount numeric NOT NULL,
+  highest_approval_level text NOT NULL CHECK (highest_approval_level = ANY (ARRAY['manager'::text, 'finance'::text, 'general_manager'::text])),
+  statement text,
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'manager_approved'::text, 'finance_approved'::text, 'gm_approved'::text, 'paid'::text, 'completed'::text, 'rejected_by_manager'::text, 'rejected_by_finance'::text, 'rejected_by_gm'::text])),
+  employee_id uuid,
+  employee_name text,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  branch_id uuid,
+  CONSTRAINT expense_requests_pkey PRIMARY KEY (id),
+  CONSTRAINT expense_requests_employee_id_fkey FOREIGN KEY (employee_id) REFERENCES public.profiles(id),
+  CONSTRAINT expense_requests_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id)
+);
+CREATE TABLE public.products (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  category_id uuid,
+  name text NOT NULL,
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  product_details text,
+  CONSTRAINT products_pkey PRIMARY KEY (id),
+  CONSTRAINT products_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
   full_name text,
-  email text,
   job_title text,
   department text,
-  role text DEFAULT 'employee' CHECK (role IN ('employee', 'manager', 'it_procurement', 'finance', 'admin')),
+  role text DEFAULT 'employee'::text CHECK (role = ANY (ARRAY['employee'::text, 'manager'::text, 'it_procurement'::text, 'finance'::text, 'accountant'::text, 'general_manager'::text, 'admin'::text])),
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
-  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  email text,
+  manager_id uuid,
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id),
+  CONSTRAINT profiles_manager_id_fkey FOREIGN KEY (manager_id) REFERENCES public.profiles(id)
 );
-
--- 2. Create Purchase Requests Table
-CREATE TABLE purchase_requests (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+CREATE TABLE public.purchase_requests (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
   subject text NOT NULL,
   justification text,
-  status text DEFAULT 'pending' CHECK (status IN ('pending', 'manager_approved', 'it_approved', 'finance_approved', 'purchased', 'received_by_staff', 'rejected_by_staff', 'completed', 'rejected_by_manager', 'rejected_by_it', 'rejected_by_finance', 'rejected_by_it_purchase', 'rejected')),
-  
-  -- Financial Fields (managed by Finance/Accountant)
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'manager_approved'::text, 'it_approved'::text, 'finance_approved'::text, 'purchased'::text, 'received_by_staff'::text, 'rejected_by_staff'::text, 'completed'::text, 'rejected_by_manager'::text, 'rejected_by_it'::text, 'rejected_by_finance'::text, 'rejected_by_it_purchase'::text, 'rejected'::text])),
   budget_status boolean,
   budget_line_item text,
   commitment_number text,
-  total_amount decimal(12, 2) DEFAULT 0,
+  total_amount numeric DEFAULT 0,
   amount_in_words text,
-  
-  -- Audit Fields
-  created_by uuid REFERENCES profiles(id),
-  updated_by uuid REFERENCES profiles(id),
+  created_by uuid,
+  updated_by uuid,
   created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
-  is_deleted boolean DEFAULT false
+  is_deleted boolean DEFAULT false,
+  requested_by_name text,
+  requested_by_title text,
+  suggested_suppliers text,
+  staff_acceptance_status text,
+  staff_rejection_reason text,
+  staff_receiving_date timestamp with time zone,
+  branch_id uuid,
+  CONSTRAINT purchase_requests_pkey PRIMARY KEY (id),
+  CONSTRAINT purchase_requests_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.profiles(id),
+  CONSTRAINT purchase_requests_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES public.profiles(id),
+  CONSTRAINT purchase_requests_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id)
 );
-
--- 3. Create Request Items Table
-CREATE TABLE request_items (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  request_id uuid REFERENCES purchase_requests(id) ON DELETE CASCADE,
+CREATE TABLE public.request_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  request_id uuid,
   product_name text NOT NULL,
   specifications text,
   unit text,
   quantity integer NOT NULL,
-  unit_price decimal(12, 2),
-  total_price decimal(12, 2) GENERATED ALWAYS AS (quantity * unit_price) STORED,
+  unit_price numeric,
+  total_price numeric DEFAULT ((quantity)::numeric * unit_price),
   country_of_origin text,
   warranty_period text,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
+  brand_model text,
+  category_id uuid,
+  product_id uuid,
+  CONSTRAINT request_items_pkey PRIMARY KEY (id),
+  CONSTRAINT request_items_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.purchase_requests(id),
+  CONSTRAINT request_items_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id),
+  CONSTRAINT request_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
+);
+CREATE TABLE public.user_branches (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  branch_id uuid NOT NULL,
+  access_level text DEFAULT 'view'::text CHECK (access_level = ANY (ARRAY['full'::text, 'view'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_branches_pkey PRIMARY KEY (id),
+  CONSTRAINT user_branches_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT user_branches_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id)
 );
 
--- 4. Create Approvals Log Table
-CREATE TABLE approvals_log (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  request_id uuid REFERENCES purchase_requests(id),
-  user_id uuid REFERENCES profiles(id),
-  action text,
-  comments text,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
-);
-
--- 5. Automate updated_at update
-CREATE OR REPLACE FUNCTION handle_updated_at()
+-- FUNCTIONS AND TRIGGERS --
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = now();
@@ -66,10 +175,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER set_updated_at_profiles BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE PROCEDURE handle_updated_at();
-CREATE TRIGGER set_updated_at_requests BEFORE UPDATE ON purchase_requests FOR EACH ROW EXECUTE PROCEDURE handle_updated_at();
+CREATE TRIGGER set_updated_at_profiles BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE PROCEDURE handle_updated_at();
+CREATE TRIGGER set_updated_at_requests BEFORE UPDATE ON public.purchase_requests FOR EACH ROW EXECUTE PROCEDURE handle_updated_at();
+CREATE TRIGGER set_updated_at_configurations BEFORE UPDATE ON public.configurations FOR EACH ROW EXECUTE PROCEDURE handle_updated_at();
 
--- 6. SPECIAL SECURITY TRIGGER: Prevent Accountant from changing Staff's description
 CREATE OR REPLACE FUNCTION protect_staff_description()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -89,60 +198,63 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER enforce_description_protection
-BEFORE UPDATE ON purchase_requests
+BEFORE UPDATE ON public.purchase_requests
 FOR EACH ROW
 EXECUTE FUNCTION protect_staff_description();
 
--- 7. Enable Row Level Security
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE purchase_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE request_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE approvals_log ENABLE ROW LEVEL SECURITY;
+-- ENABLE RLS --
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.purchase_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.request_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.approvals_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.configurations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.expense_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.expense_approvals_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_branches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 
--- 8. RLS Policies for Purchase Requests
+-- RLS POLICIES --
 
--- View Policy: Staff sees own, others see all relevant to their role
+-- Purchase Requests Policies
 CREATE POLICY "Users can view relevant requests" 
-ON purchase_requests FOR SELECT 
+ON public.purchase_requests FOR SELECT 
 USING (
   auth.uid() = created_by OR 
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('manager', 'it_procurement', 'finance', 'admin'))
 );
 
--- Insert Policy: Staff can create
 CREATE POLICY "Staff can create requests" 
-ON purchase_requests FOR INSERT 
+ON public.purchase_requests FOR INSERT 
 WITH CHECK (auth.uid() = created_by);
 
--- 1. Staff can update if not completed (to edit)
--- 2. Other roles can update based on their review stage
 CREATE POLICY "Authorized roles can update requests" 
-ON purchase_requests FOR UPDATE 
+ON public.purchase_requests FOR UPDATE 
 USING (
   (auth.uid() = created_by AND status != 'completed') OR
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('manager', 'it_procurement', 'finance', 'admin'))
 );
 
--- 9. RLS Policies for Items
+-- Items Policies
 CREATE POLICY "Users can view items of accessible requests" 
-ON request_items FOR SELECT 
+ON public.request_items FOR SELECT 
 USING (
   EXISTS (SELECT 1 FROM purchase_requests pr WHERE pr.id = request_id)
 );
 
 CREATE POLICY "Staff can manage items for own requests" 
-ON request_items FOR ALL 
+ON public.request_items FOR ALL 
 USING (
   EXISTS (SELECT 1 FROM purchase_requests pr WHERE pr.id = request_id AND pr.created_by = auth.uid() AND pr.status != 'completed')
 );
 
--- 10. Profile Policies
--- Users can view their own profile always
-CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+-- Profile Policies
+CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
 
--- Admins can view and manage all profiles
 CREATE POLICY "Admins can manage all profiles" 
-ON profiles FOR ALL 
+ON public.profiles FOR ALL 
 USING (
   EXISTS (
     SELECT 1 FROM profiles 
@@ -151,93 +263,35 @@ USING (
   )
 );
 
--- Allow other roles to view staff names for the request details
-CREATE POLICY "Everyone can view profiles" ON profiles FOR SELECT USING (true);
+CREATE POLICY "Everyone can view profiles" ON public.profiles FOR SELECT USING (true);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
-
--- Allow new signups to insert their own profile
--- 11. Approvals Log Policies
-CREATE POLICY "Users can view all logs" ON approvals_log FOR SELECT USING (true);
-CREATE POLICY "Users can insert logs for reachable requests" ON approvals_log FOR INSERT WITH CHECK (
+-- Approvals Log Policies
+CREATE POLICY "Users can view all logs" ON public.approvals_log FOR SELECT USING (true);
+CREATE POLICY "Users can insert logs for reachable requests" ON public.approvals_log FOR INSERT WITH CHECK (
   auth.uid() IS NOT NULL
 );
-
 CREATE POLICY "Staff can delete logs for own requests" 
-ON approvals_log FOR DELETE 
+ON public.approvals_log FOR DELETE 
 USING (
   EXISTS (SELECT 1 FROM purchase_requests pr WHERE pr.id = request_id AND pr.created_by = auth.uid())
 );
 
--- 1. Create Categories Table
-CREATE TABLE categories (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  name text NOT NULL,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
-  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
-);
-
--- 2. Create Products Table
-CREATE TABLE products (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  category_id uuid REFERENCES categories(id) ON DELETE CASCADE,
-  name text NOT NULL,
-  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()),
-  updated_at timestamp with time zone DEFAULT timezone('utc'::text, now())
-);
-
--- 3. Modify Request Items Table to support linked products and categories
-ALTER TABLE request_items ADD COLUMN category_id uuid REFERENCES categories(id) ON DELETE SET NULL;
-ALTER TABLE request_items ADD COLUMN product_id uuid REFERENCES products(id) ON DELETE SET NULL;
-
--- 4. Enable RLS
-ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-
--- 5. RLS Policies for Categories
-CREATE POLICY "Everyone can view categories" ON categories FOR SELECT USING (true);
-CREATE POLICY "Only admins can manage categories" ON categories FOR ALL 
+-- Category Policies
+CREATE POLICY "Everyone can view categories" ON public.categories FOR SELECT USING (true);
+CREATE POLICY "Only admins can manage categories" ON public.categories FOR ALL 
 USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
--- 6. RLS Policies for Products
-CREATE POLICY "Everyone can view products" ON products FOR SELECT USING (true);
-CREATE POLICY "Only admins can manage products" ON products FOR ALL 
+-- Product Policies
+CREATE POLICY "Everyone can view products" ON public.products FOR SELECT USING (true);
+CREATE POLICY "Only admins can manage products" ON public.products FOR ALL 
 USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
 
-
--- 12. New columns for print template support
-ALTER TABLE purchase_requests ADD COLUMN IF NOT EXISTS requested_by_name text;
-ALTER TABLE purchase_requests ADD COLUMN IF NOT EXISTS requested_by_title text;
-ALTER TABLE purchase_requests ADD COLUMN IF NOT EXISTS suggested_suppliers text;
-ALTER TABLE request_items ADD COLUMN IF NOT EXISTS brand_model text;
-
-
--- 1. Create the Configurations Table
-CREATE TABLE public.configurations (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  android_version text,
-  ios_version text,
-  android_store_url text,
-  ios_store_url text,
-  force_update boolean NOT NULL DEFAULT false,
-  maintenance_mode boolean NOT NULL DEFAULT false,
-  maintenance_message_ar text,
-  maintenance_message_en text,
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT configurations_pkey PRIMARY KEY (id)
-);
-
--- 2. Enable Row Level Security
-ALTER TABLE public.configurations ENABLE ROW LEVEL SECURITY;
-
--- 3. Create RLS Policies
-
--- Public Read Access: Required so the app can check status before the user logs in
+-- Configuration Policies
 CREATE POLICY "Allow public read access" 
 ON public.configurations FOR SELECT 
 USING (true);
 
--- Admin Write Access: Only users with the 'admin' role can modify settings
 CREATE POLICY "Allow admins to manage configurations" 
 ON public.configurations FOR ALL 
 USING (
@@ -248,13 +302,7 @@ USING (
   )
 );
 
--- 4. Set up the updated_at trigger (using your existing function)
-CREATE TRIGGER set_updated_at_configurations 
-BEFORE UPDATE ON public.configurations 
-FOR EACH ROW EXECUTE PROCEDURE handle_updated_at();
-
--- 5. Insert Initial Configuration Row
--- This ensures the app always finds a record to read.
+-- DATA INSERTION --
 INSERT INTO public.configurations (
   android_version, 
   ios_version, 

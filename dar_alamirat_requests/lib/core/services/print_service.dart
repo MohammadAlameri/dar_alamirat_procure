@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -7,7 +6,6 @@ import 'package:printing/printing.dart';
 import 'package:hijri/hijri_calendar.dart';
 import '../../features/expense_request/domain/entities/expense_request.dart';
 import '../../features/purchase_request/domain/entities/purchase_request.dart';
-import '../../features/purchase_request/domain/entities/request_item.dart';
 
 class PrintService {
   static Future<pw.Font> _loadFont() async {
@@ -46,7 +44,7 @@ class PrintService {
         ),
         theme: pw.ThemeData.withFont(base: font, bold: boldFont),
         build: (pw.Context context) {
-          final rtlWrap = (pw.Widget child) => pw.Directionality(textDirection: pw.TextDirection.rtl, child: child);
+          pw.Widget rtlWrap(pw.Widget child) => pw.Directionality(textDirection: pw.TextDirection.rtl, child: child);
           
           return [
             rtlWrap(pw.Container(
@@ -339,7 +337,7 @@ class PrintService {
         ),
         theme: pw.ThemeData.withFont(base: font, bold: boldFont),
         build: (pw.Context context) {
-          final rtlWrap = (pw.Widget child) => pw.Directionality(textDirection: pw.TextDirection.rtl, child: child);
+          pw.Widget rtlWrap(pw.Widget child) => pw.Directionality(textDirection: pw.TextDirection.rtl, child: child);
           
           return [
             rtlWrap(pw.Container(

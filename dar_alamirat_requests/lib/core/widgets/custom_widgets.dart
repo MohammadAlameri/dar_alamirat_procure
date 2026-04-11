@@ -104,17 +104,9 @@ class RequestCard extends StatelessWidget {
             StatusBadge(status: status),
           ],
         ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '${amount.toStringAsFixed(2)} ${AppLocalizations.of(context)?.translate('sar') ?? 'SAR'}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-            const SizedBox(height: 4),
-            const Icon(LucideIcons.chevronRight, size: 16, color: Colors.grey),
-          ],
+        trailing: Text(
+          '${amount.toStringAsFixed(2)} ${AppLocalizations.of(context)?.translate('sar') ?? 'SAR'}',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         ),
         onTap: onTap,
       ),

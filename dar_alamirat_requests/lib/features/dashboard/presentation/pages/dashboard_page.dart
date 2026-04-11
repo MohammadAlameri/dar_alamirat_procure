@@ -10,7 +10,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../main.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../auth/domain/entities/profile.dart';
-import '../../../management/domain/entities/branch.dart';
 import '../../../purchase_request/presentation/pages/purchase_requests_page.dart';
 import '../../../expense_request/presentation/pages/expense_requests_page.dart';
 import '../../../purchase_request/presentation/pages/add_purchase_request_page.dart';
@@ -108,7 +107,11 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            state.selectedBranch?.name ?? l10n.translate('branch'),
+                            state.selectedBranch == null 
+                                ? l10n.translate('branch') 
+                                : (l10n.isRTL && state.selectedBranch!.nameAr != null && state.selectedBranch!.nameAr!.isNotEmpty 
+                                    ? state.selectedBranch!.nameAr! 
+                                    : state.selectedBranch!.name),
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                           const SizedBox(width: 4),
@@ -131,6 +134,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
   }
 
   void _showBranchDialog(BuildContext context, DashboardLoaded state) {
+    final dashboardCubit = context.read<DashboardCubit>();
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
@@ -146,8 +150,8 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: state.userBranches.length,
-              separatorBuilder: (context, _) => const Divider(height: 1),
-              itemBuilder: (context, index) {
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (_, index) {
                 final branch = state.userBranches[index].branch;
                 if (branch == null) return const SizedBox.shrink();
                 final isSelected = state.selectedBranch?.id == branch.id;
@@ -155,7 +159,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
                 return ListTile(
                   leading: const Icon(LucideIcons.building, color: AppTheme.darkGray),
                   title: Text(
-                    branch.name,
+                    (l10n.isRTL && branch.nameAr != null && branch.nameAr!.isNotEmpty) ? branch.nameAr! : branch.name,
                     style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
                   ),
                   trailing: isSelected
@@ -164,7 +168,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
                   onTap: () {
                     Navigator.pop(dialogContext);
                     if (branch.id != state.selectedBranch?.id) {
-                      context.read<DashboardCubit>().changeBranch(branch);
+                      dashboardCubit.changeBranch(branch);
                     }
                   },
                 );
@@ -497,7 +501,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
         onPressed: () {
           if (_selectedIndex == 1) _navigateToAddPurchaseRequest(state);
           else if (_selectedIndex == 2) _navigateToAddExpenseRequest(state);
-          else _showDashboardCreateOptions();
+          else _showDashboardCreateOptions(state);
         },
         backgroundColor: AppTheme.primaryPink,
         child: const Icon(LucideIcons.plus, color: AppTheme.darkGray),
@@ -515,7 +519,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
     Navigator.push(context, MaterialPageRoute(builder: (context) => AddExpenseRequestPage(profile: state.profile, selectedBranch: state.selectedBranch)));
   }
 
-  void _showDashboardCreateOptions() {
+  void _showDashboardCreateOptions(DashboardLoaded state) {
     final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
@@ -527,8 +531,12 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildCreateOption(LucideIcons.shoppingCart, l10n.translate('purchaseRequests'), Colors.blue, () => setState(() => _selectedIndex = 1)),
-              _buildCreateOption(LucideIcons.banknote, l10n.translate('expenseRequests'), Colors.orange, () => setState(() => _selectedIndex = 2)),
+              _buildCreateOption(LucideIcons.shoppingCart, l10n.translate('addPurchaseRequest'), Colors.blue, () {
+                _navigateToAddPurchaseRequest(state);
+              }),
+              _buildCreateOption(LucideIcons.banknote, l10n.translate('addExpenseRequest'), Colors.orange, () {
+                _navigateToAddExpenseRequest(state);
+              }),
             ],
           ),
         );

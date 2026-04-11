@@ -7,6 +7,7 @@ class ProfileModel extends Profile {
     required super.email,
     super.jobTitle,
     super.department,
+    super.managerId,
     required super.role,
   });
 
@@ -17,6 +18,7 @@ class ProfileModel extends Profile {
       email: json['email'] ?? '',
       jobTitle: json['job_title'],
       department: json['department'],
+      managerId: json['manager_id'],
       role: UserRole.fromString(json['role'] ?? 'employee'),
     );
   }
@@ -28,6 +30,7 @@ class ProfileModel extends Profile {
       'email': email,
       'job_title': jobTitle,
       'department': department,
+      'manager_id': managerId,
       'role': role.name,
     };
   }

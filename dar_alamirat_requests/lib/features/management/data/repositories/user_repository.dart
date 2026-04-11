@@ -10,13 +10,8 @@ class UserRepository {
 
   /// Fetch all profiles from the database
   Future<List<Profile>> fetchAllProfiles() async {
-    final response = await _client
-        .from('profiles')
-        .select('*')
-        .order('full_name', ascending: true);
-
-    final data = response as List;
-    return data.map((json) => ProfileModel.fromJson(json)).toList();
+    final data = await _client.from('profiles').select().order('full_name', ascending: true);
+    return (data as List).map((json) => ProfileModel.fromJson(json)).toList();
   }
 
   /// Fetch a single profile by ID
@@ -28,7 +23,7 @@ class UserRepository {
         .maybeSingle();
 
     if (response == null) return null;
-    return ProfileModel.fromJson(response as Map<String, dynamic>);
+    return ProfileModel.fromJson(response);
   }
 
   /// Update an existing profile
@@ -40,7 +35,7 @@ class UserRepository {
         .select()
         .single();
 
-    return ProfileModel.fromJson(response as Map<String, dynamic>);
+    return ProfileModel.fromJson(response);
   }
 
   /// Delete a profile
@@ -98,6 +93,6 @@ class UserRepository {
       }
     }
 
-    return ProfileModel.fromJson(response as Map<String, dynamic>);
+    return ProfileModel.fromJson(response);
   }
 }

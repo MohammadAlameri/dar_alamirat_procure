@@ -14,6 +14,8 @@ abstract class PurchaseRequestRepository {
     required String createdBy,
     required double totalAmount,
     required List<Map<String, dynamic>> items,
+    String? employeeName,
+    String? jobTitle,
   });
 
   Future<PurchaseRequest> updateStatus({

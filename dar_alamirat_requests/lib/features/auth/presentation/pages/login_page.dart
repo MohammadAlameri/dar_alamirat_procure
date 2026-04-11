@@ -106,6 +106,9 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: _toggleLanguage,
                       icon: const Icon(LucideIcons.languages, size: 18),
                       label: Text(isAr ? 'English' : 'العربية'),
+                      style: TextButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.primaryPink),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -132,8 +135,8 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      prefixIcon: const Icon(LucideIcons.mail, size: 20),
                       hintText: l10n.translate('emailAddress'),
+                      prefixIcon: const Icon(LucideIcons.mail, size: 20),
                       fillColor: Colors.grey[200],
                       filled: true,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
@@ -147,12 +150,12 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
+                      hintText: l10n.translate('password'),
                       prefixIcon: const Icon(LucideIcons.lock, size: 20),
                       suffixIcon: IconButton(
                         icon: Icon(_obscurePassword ? LucideIcons.eye : LucideIcons.eyeOff, size: 20),
                         onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
-                      hintText: '••••••••',
                       fillColor: Colors.grey[200],
                       filled: true,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),

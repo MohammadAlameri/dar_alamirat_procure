@@ -25,6 +25,7 @@ class _AddUserPageState extends State<AddUserPage> {
   final _departmentController = TextEditingController();
   
   String _selectedRole = 'employee';
+  String? _selectedManagerId;
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -48,6 +49,7 @@ class _AddUserPageState extends State<AddUserPage> {
       _selectedRole = user.role.name;
       _jobTitleController.text = user.jobTitle ?? '';
       _departmentController.text = user.department ?? '';
+      _selectedManagerId = user.managerId;
     }
   }
 
@@ -78,6 +80,7 @@ class _AddUserPageState extends State<AddUserPage> {
           role: UserRole.values.firstWhere((e) => e.name == _selectedRole),
           jobTitle: _jobTitleController.text.trim().isEmpty ? null : _jobTitleController.text.trim(),
           department: _departmentController.text.trim().isEmpty ? null : _departmentController.text.trim(),
+          managerId: _selectedManagerId,
         );
       } else {
         await cubit.createUser(
@@ -87,6 +90,7 @@ class _AddUserPageState extends State<AddUserPage> {
           role: _selectedRole,
           jobTitle: _jobTitleController.text.trim().isEmpty ? null : _jobTitleController.text.trim(),
           department: _departmentController.text.trim().isEmpty ? null : _departmentController.text.trim(),
+          managerId: _selectedManagerId,
         );
       }
 
@@ -214,7 +218,7 @@ class _AddUserPageState extends State<AddUserPage> {
 
             // Role Dropdown
             DropdownButtonFormField<String>(
-              value: _selectedRole,
+              initialValue: _selectedRole,
               decoration: InputDecoration(
                 labelText: l10n.translate('roles'),
                 prefixIcon: const Icon(LucideIcons.shield, size: 20),
@@ -261,6 +265,38 @@ class _AddUserPageState extends State<AddUserPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
+            ),
+            const SizedBox(height: 16),
+
+            // Direct Manager Dropdown
+            BlocBuilder<UserCubit, UserState>(
+              builder: (context, state) {
+                List<Profile> managers = [];
+                if (state is UserLoaded) {
+                  managers = state.users.where((u) => u.id != widget.userToEdit?.id).toList();
+                }
+
+                return DropdownButtonFormField<String>(
+                  initialValue: _selectedManagerId,
+                  decoration: InputDecoration(
+                    labelText: l10n.translate('directManager'),
+                    prefixIcon: const Icon(LucideIcons.userCheck, size: 20),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  hint: Text(l10n.translate('selectManager')),
+                  items: managers.map((manager) {
+                    return DropdownMenuItem(
+                      value: manager.id,
+                      child: Text('${manager.fullName} (${manager.role.name})'),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedManagerId = value);
+                  },
+                );
+              },
             ),
             const SizedBox(height: 24),
 

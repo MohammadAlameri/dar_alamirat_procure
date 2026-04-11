@@ -42,26 +42,33 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
     required String createdBy,
     required double totalAmount,
     required List<Map<String, dynamic>> items,
+    String? employeeName,
+    String? jobTitle,
   }) async {
     final data = await _client.from('purchase_requests').insert({
       'subject': subject,
-      'description': description,
+      'justification': description,
       'branch_id': branchId,
       'created_by': createdBy,
       'total_amount': totalAmount,
       'status': 'pending',
+      'requested_by_name': employeeName,
+      'requested_by_title': jobTitle,
     }).select().single();
 
     final request = PurchaseRequestModel.fromJson(data);
 
     // Insert items
     for (var item in items) {
-      await _client.from('purchase_request_items').insert({
+      await _client.from('request_items').insert({
         'request_id': request.id,
         'product_name': item['product_name'],
+        'product_id': item['product_id'],
+        'specifications': item['specifications'],
+        'unit': item['unit'] ?? 'pcs',
         'quantity': item['quantity'],
         'unit_price': item['unit_price'],
-        'total_price': item['total_price'],
+        // total_price is generated always stored in db, so we don't insert it.
       });
     }
 
