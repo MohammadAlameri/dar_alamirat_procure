@@ -596,6 +596,7 @@ class PrintService {
 
     final isAccepted = req.staffAcceptanceStatus == 'accepted';
     final isRejected = req.staffAcceptanceStatus == 'rejected';
+    final itApproval = req.logs.where((l) => l.action == 'it_approved' || l.action == 'purchased').firstOrNull;
 
     pdf.addPage(
       pw.Page(
@@ -657,9 +658,8 @@ class PrintService {
                       mainAxisSize: pw.MainAxisSize.min,
                       children: [
                         pw.Text('التاريخ: ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
-                        pw.Text(hijriDate, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9), textDirection: pw.TextDirection.ltr),
-                        pw.Text(' الموافق ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
-                        pw.Text(gregorianDate, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9), textDirection: pw.TextDirection.ltr),
+                        pw.Text(hijriDate.replaceAll(' هـ', '').trim(), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9), textDirection: pw.TextDirection.ltr),
+                        pw.Text(' هـ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
                       ],
                     ),
                     pw.Text('Date: $gregorianDate', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
@@ -677,20 +677,20 @@ class PrintService {
                   border: pw.TableBorder.all(),
                   columnWidths: {
                     0: const pw.FlexColumnWidth(2),
-                    1: const pw.FlexColumnWidth(4),
-                    2: const pw.FlexColumnWidth(1),
-                    3: const pw.FlexColumnWidth(2),
-                    4: const pw.FlexColumnWidth(2),
+                    1: const pw.FlexColumnWidth(2),
+                    2: const pw.FlexColumnWidth(2),
+                    3: const pw.FlexColumnWidth(1),
+                    4: const pw.FlexColumnWidth(4),
                     5: const pw.FlexColumnWidth(2),
                   },
                   children: [
                     pw.TableRow(children: [
-                      rtlWrap(_tableCellForTable('اسم الموظف', isLabel: true)),
-                      rtlWrap(_tableCellForTable(req.profile?.fullName ?? '')),
-                      rtlWrap(_tableCellForTable('الإدارة', isLabel: true)),
-                      rtlWrap(_tableCellForTable(req.profile?.department ?? '')),
-                      rtlWrap(_tableCellForTable('المسمى الوظيفي', isLabel: true)),
                       rtlWrap(_tableCellForTable(req.profile?.jobTitle ?? '')),
+                      rtlWrap(_tableCellForTable('المسمى الوظيفي', isLabel: true)),
+                      rtlWrap(_tableCellForTable(req.profile?.department ?? '')),
+                      rtlWrap(_tableCellForTable('الإدارة', isLabel: true)),
+                      rtlWrap(_tableCellForTable(req.profile?.fullName ?? '')),
+                      rtlWrap(_tableCellForTable('اسم الموظف', isLabel: true)),
                     ]),
                   ],
                 ),
@@ -705,38 +705,38 @@ class PrintService {
                 pw.Table(
                   border: pw.TableBorder.all(),
                   columnWidths: {
-                    0: const pw.FlexColumnWidth(1),
-                    1: const pw.FlexColumnWidth(8),
-                    2: const pw.FlexColumnWidth(4),
+                    0: const pw.FlexColumnWidth(5),
+                    1: const pw.FlexColumnWidth(3),
+                    2: const pw.FlexColumnWidth(2),
                     3: const pw.FlexColumnWidth(4),
-                    4: const pw.FlexColumnWidth(2),
-                    5: const pw.FlexColumnWidth(3),
-                    6: const pw.FlexColumnWidth(5),
+                    4: const pw.FlexColumnWidth(4),
+                    5: const pw.FlexColumnWidth(8),
+                    6: const pw.FlexColumnWidth(1),
                   },
                   children: [
                     pw.TableRow(
                       decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                       children: [
-                        rtlWrap(_tableCellForTable('م', isLabel: true)),
-                        rtlWrap(_tableCellForTable('الوصف', isLabel: true)),
-                        rtlWrap(_tableCellForTable('بلد الصناعة', isLabel: true)),
-                        rtlWrap(_tableCellForTable('مدة الضمان', isLabel: true)),
-                        rtlWrap(_tableCellForTable('الكمية', isLabel: true)),
-                        rtlWrap(_tableCellForTable('النوع', isLabel: true)),
                         rtlWrap(_tableCellForTable('ملاحظة', isLabel: true)),
+                        rtlWrap(_tableCellForTable('النوع', isLabel: true)),
+                        rtlWrap(_tableCellForTable('الكمية', isLabel: true)),
+                        rtlWrap(_tableCellForTable('مدة الضمان', isLabel: true)),
+                        rtlWrap(_tableCellForTable('بلد الصناعة', isLabel: true)),
+                        rtlWrap(_tableCellForTable('الوصف', isLabel: true)),
+                        rtlWrap(_tableCellForTable('م', isLabel: true)),
                       ],
                     ),
                     ...req.items.asMap().entries.map((entry) {
                       final i = entry.key;
                       final item = entry.value;
                       return pw.TableRow(children: [
-                        rtlWrap(_tableCellForTable('${i + 1}')),
-                        rtlWrap(_tableCellForTable('${item.productName}${item.brandModel != null ? ' (${item.brandModel})' : ''}')),
-                        rtlWrap(_tableCellForTable(item.countryOfOrigin ?? '')),
-                        rtlWrap(_tableCellForTable(item.warrantyPeriod ?? '')),
-                        rtlWrap(_tableCellForTable('${item.quantity}')),
-                        rtlWrap(_tableCellForTable(item.unit ?? '-')),
                         rtlWrap(_tableCellForTable(item.specifications ?? '')),
+                        rtlWrap(_tableCellForTable(item.unit ?? '-')),
+                        rtlWrap(_tableCellForTable('${item.quantity}')),
+                        rtlWrap(_tableCellForTable(item.warrantyPeriod ?? '')),
+                        rtlWrap(_tableCellForTable(item.countryOfOrigin ?? '')),
+                        rtlWrap(_tableCellForTable('${item.productName}${item.brandModel != null ? ' (${item.brandModel})' : ''}')),
+                        rtlWrap(_tableCellForTable('${i + 1}')),
                       ]);
                     }),
                   ],
@@ -756,7 +756,7 @@ class PrintService {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
-                        'أقر أنا الموقع أدناه بأنني استلمت العُهد الموضحة أعلاه في يوم/ $dayOfWeek الموافق $gregorianDate / $hijriDate في تمام الساعة $timeStr بحالة صالحة للاستخدام وأتعهد بالمحافظة عليها وان لا أتنازل عنها لأي شخص آخر وسأقوم بإعادتها عند طلبها أو عند ترك العمل أو دفع قيمة ما تسببت في تلفه وسأكون عرضة للمسائلة في حين مخالفتي للإقرار.',
+                        'أقر أنا الموقع أدناه بأنني استلمت العُهد الموضحة أعلاه في يوم/ $dayOfWeek الموافق $hijriDate الموافق $gregorianDate في تمام الساعة $timeStr بحالة صالحة للاستخدام وأتعهد بالمحافظة عليها وان لا أتنازل عنها لأي شخص آخر وسأقوم بإعادتها عند طلبها أو عند ترك العمل أو دفع قيمة ما تسببت في تلفه وسأكون عرضة للمسائلة في حين مخالفتي للإقرار.',
                         style: const pw.TextStyle(fontSize: 8),
                       ),
                       pw.SizedBox(height: 15),
@@ -806,7 +806,7 @@ class PrintService {
                           pw.Row(
                             mainAxisSize: pw.MainAxisSize.min,
                             children: [
-                              pw.Text(hijriDate, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9), textDirection: pw.TextDirection.ltr),
+                              pw.Text(hijriDate, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9), textDirection: pw.TextDirection.rtl),
                               pw.Text(' الموافق ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
                               pw.Text(gregorianDate, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9), textDirection: pw.TextDirection.ltr),
                             ],
@@ -819,7 +819,7 @@ class PrintService {
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text('مسؤول التسليم: ...................................', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
+                          pw.Text('مسؤول التسليم: ${itApproval?.profile?.fullName ?? ''}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
                           pw.Row(
                             children: [
                               pw.Text('التوقيع: ', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9)),
