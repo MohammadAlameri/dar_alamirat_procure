@@ -11,6 +11,7 @@ import 'package:dar_alamirat_requests/features/dashboard/data/repositories/dashb
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_widgets.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
+import 'package:dar_alamirat_requests/core/utils/excel_export_helper.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -107,6 +108,21 @@ class _ReportsPageState extends State<ReportsPage> {
 
   void _showError(String message) {
     AppSnackBar.show(context, message, type: SnackBarType.error);
+  }
+
+  Future<void> _exportToExcel() async {
+    setState(() => _isLoading = true);
+    try {
+      await ExcelExportHelper.exportRequests(
+        data: _reportData,
+        reportType: _reportType,
+        languageCode: 'ar', // Force Arabic as requested
+      );
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -287,19 +303,42 @@ class _ReportsPageState extends State<ReportsPage> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton.icon(
-                    onPressed: _isLoading ? null : _generateReport,
-                    icon: const Icon(LucideIcons.search, size: 18),
-                    label: Text(l10n.translate('generateReport'), key: ValueKey(l10n.locale.languageCode)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryPink,
-                      foregroundColor: AppTheme.darkGray,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          onPressed: _isLoading ? null : _generateReport,
+                          icon: const Icon(LucideIcons.search, size: 18),
+                          label: Text(l10n.translate('generateReport'), key: ValueKey(l10n.locale.languageCode)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryPink,
+                            foregroundColor: AppTheme.darkGray,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    if (_reportData.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        height: 48,
+                        width: 48,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : () => _exportToExcel(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade600,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.zero,
+                            shape: const CircleBorder(),
+                          ),
+                          child: const Icon(LucideIcons.fileSpreadsheet, size: 20),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
