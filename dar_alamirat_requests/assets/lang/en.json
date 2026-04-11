@@ -225,5 +225,7 @@
   "generateReport": "Generate Report",
   "ok": "OK",
   "requestProcessedSuccessfully": "Request processed successfully",
-  "accountInactive": "Account inactive (No active branches assigned)"
+  "accountInactive": "Account inactive (No active branches assigned)",
+  "countryOfOrigin": "Country of Origin",
+  "warrantyPeriod": "Warranty Period"
 }

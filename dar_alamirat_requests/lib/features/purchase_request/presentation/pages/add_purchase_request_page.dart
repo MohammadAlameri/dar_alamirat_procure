@@ -87,6 +87,8 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
       item['price_controller']?.dispose();
       item['qty_controller']?.dispose();
       item['product_controller']?.dispose();
+      item['origin_controller']?.dispose();
+      item['warranty_controller']?.dispose();
     }
     super.dispose();
   }
@@ -100,10 +102,14 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
         'unit': 'pcs',
         'quantity': 1,
         'unit_price': 0.0,
+        'country_of_origin': '',
+        'warranty_period': '',
         'spec_controller': TextEditingController(),
         'price_controller': TextEditingController(text: '0.0'),
         'qty_controller': TextEditingController(text: '1'),
         'product_controller': TextEditingController(),
+        'origin_controller': TextEditingController(),
+        'warranty_controller': TextEditingController(),
       });
     });
   }
@@ -114,6 +120,8 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
       _items[index]['price_controller']?.dispose();
       _items[index]['qty_controller']?.dispose();
       _items[index]['product_controller']?.dispose();
+      _items[index]['origin_controller']?.dispose();
+      _items[index]['warranty_controller']?.dispose();
       _items.removeAt(index);
     });
   }
@@ -423,6 +431,34 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                                 if (value == null || value.isEmpty) return l10n.translate('requiredField');
                                 return null;
                               },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Country of Origin & Warranty Period
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: item['origin_controller'],
+                              decoration: InputDecoration(
+                                labelText: l10n.translate('countryOfOrigin'),
+                                border: const OutlineInputBorder(),
+                              ),
+                              onChanged: (value) => _updateItem(index, 'country_of_origin', value),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextFormField(
+                              controller: item['warranty_controller'],
+                              decoration: InputDecoration(
+                                labelText: l10n.translate('warrantyPeriod'),
+                                border: const OutlineInputBorder(),
+                              ),
+                              onChanged: (value) => _updateItem(index, 'warranty_period', value),
                             ),
                           ),
                         ],

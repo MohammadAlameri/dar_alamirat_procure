@@ -225,5 +225,7 @@
   "generateReport": "إنشاء التقرير",
   "ok": "حسنا",
   "requestProcessedSuccessfully": "تمت معالجة الطلب بنجاح",
-  "accountInactive": "الحساب غير نشط (لا توجد فروع نشطة مرتبطة)"
+  "accountInactive": "الحساب غير نشط (لا توجد فروع نشطة مرتبطة)",
+  "countryOfOrigin": "بلد المنشأ",
+  "warrantyPeriod": "فترة الضمان"
 }

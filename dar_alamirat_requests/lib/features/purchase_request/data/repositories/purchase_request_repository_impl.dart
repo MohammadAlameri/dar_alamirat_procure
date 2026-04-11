@@ -58,18 +58,21 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
 
     final request = PurchaseRequestModel.fromJson(data);
 
-    // Insert items
-    for (var item in items) {
-      await _client.from('request_items').insert({
+    // Insert items in batch
+    if (items.isNotEmpty) {
+      final itemsToInsert = items.map((item) => {
         'request_id': request.id,
         'product_name': item['product_name'],
         'product_id': item['product_id'],
         'specifications': item['specifications'],
         'unit': item['unit'] ?? 'pcs',
-        'quantity': item['quantity'],
-        'unit_price': item['unit_price'],
-        // total_price is generated always stored in db, so we don't insert it.
-      });
+        'quantity': (item['quantity'] as num).toInt(),
+        'unit_price': (item['unit_price'] as num).toDouble(),
+        'country_of_origin': item['country_of_origin'],
+        'warranty_period': item['warranty_period'],
+      }).toList();
+
+      await _client.from('request_items').insert(itemsToInsert);
     }
 
     return request;

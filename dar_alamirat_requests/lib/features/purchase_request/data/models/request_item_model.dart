@@ -12,6 +12,8 @@ class RequestItemModel extends RequestItem {
     super.unit,
     required super.quantity,
     required super.unitPrice,
+    super.countryOfOrigin,
+    super.warrantyPeriod,
   });
 
   factory RequestItemModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,8 @@ class RequestItemModel extends RequestItem {
       unit: json['unit'],
       quantity: (json['quantity'] ?? 0).toInt(),
       unitPrice: (json['unit_price'] ?? 0).toDouble(),
+      countryOfOrigin: json['country_of_origin'],
+      warrantyPeriod: json['warranty_period'],
     );
   }
 
@@ -39,6 +43,8 @@ class RequestItemModel extends RequestItem {
       'unit': unit,
       'quantity': quantity,
       'unit_price': unitPrice,
+      'country_of_origin': countryOfOrigin,
+      'warranty_period': warrantyPeriod,
     };
   }
 }

@@ -581,6 +581,29 @@ class _RequestItemCard extends StatelessWidget {
                 item.specifications!,
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
+            if ((item.countryOfOrigin != null && item.countryOfOrigin!.isNotEmpty) ||
+                (item.warrantyPeriod != null && item.warrantyPeriod!.isNotEmpty))
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Row(
+                  children: [
+                    if (item.countryOfOrigin != null && item.countryOfOrigin!.isNotEmpty)
+                      Expanded(
+                        child: Text(
+                          '${l10n.translate('countryOfOrigin')}: ${item.countryOfOrigin}',
+                          style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
+                        ),
+                      ),
+                    if (item.warrantyPeriod != null && item.warrantyPeriod!.isNotEmpty)
+                      Expanded(
+                        child: Text(
+                          '${l10n.translate('warrantyPeriod')}: ${item.warrantyPeriod}',
+                          style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
