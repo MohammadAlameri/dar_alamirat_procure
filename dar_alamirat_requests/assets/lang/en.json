@@ -223,5 +223,6 @@
   "dateFrom": "From Date",
   "dateTo": "To Date",
   "generateReport": "Generate Report",
-  "ok": "OK"
+  "ok": "OK",
+  "requestProcessedSuccessfully": "Request processed successfully"
 }

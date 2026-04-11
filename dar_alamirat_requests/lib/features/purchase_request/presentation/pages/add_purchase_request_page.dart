@@ -52,7 +52,7 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
   final _employeeNameController = TextEditingController();
   final _jobTitleController = TextEditingController();
   
-  List<Map<String, dynamic>> _items = [];
+  final List<Map<String, dynamic>> _items = [];
   bool _isSubmitting = false;
   List<Map<String, dynamic>> _availableProducts = [];
 

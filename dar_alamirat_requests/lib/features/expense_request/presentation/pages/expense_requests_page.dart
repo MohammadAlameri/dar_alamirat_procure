@@ -126,12 +126,13 @@ class _ExpenseRequestsViewState extends State<ExpenseRequestsView> with Automati
                         amount: request.amount,
                         status: request.status,
                         type: 'expense',
-                        onTap: () {
-                          context.push('/request-details', extra: {
+                        onTap: () async {
+                          await context.push('/request-details', extra: {
                             'requestId': request.id,
                             'type': 'expense',
                             'currentUser': widget.profile,
                           });
+                          if (mounted) _fetchRequests();
                         },
                       );
                     },

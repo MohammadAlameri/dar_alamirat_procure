@@ -78,9 +78,9 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
 
         if (state is DashboardLoaded) {
           final isManager = state.profile.role == UserRole.manager ||
-              state.profile.role == UserRole.general_manager ||
+              state.profile.role == UserRole.generalManager ||
               state.profile.role == UserRole.finance ||
-              state.profile.role == UserRole.it_procurement ||
+              state.profile.role == UserRole.itProcurement ||
               state.profile.role == UserRole.admin;
 
           return Scaffold(
@@ -189,7 +189,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryPink.withOpacity(0.3),
+            color: AppTheme.primaryPink.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -301,7 +301,8 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
                     color: Colors.red,
                     onTap: () async {
                       await Supabase.instance.client.auth.signOut();
-                      if (mounted) context.go('/login');
+                      if (!mounted) return;
+                      context.go('/login');
                     },
                   ),
                 ],
@@ -357,9 +358,9 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
   Widget _getBody(DashboardLoaded state) {
     switch (_selectedIndex) {
       case 0: return _buildOverview(state);
-      case 1: return PurchaseRequestsPage(profile: state.profile, initialBranch: state.selectedBranch);
-      case 2: return ExpenseRequestsPage(profile: state.profile, initialBranch: state.selectedBranch);
-      case 3: return ApprovalsPage(profile: state.profile, branchId: state.selectedBranch?.id);
+      case 1: return PurchaseRequestsPage(key: ValueKey('pr_${state.selectedBranch?.id}'), profile: state.profile, initialBranch: state.selectedBranch);
+      case 2: return ExpenseRequestsPage(key: ValueKey('ex_${state.selectedBranch?.id}'), profile: state.profile, initialBranch: state.selectedBranch);
+      case 3: return ApprovalsPage(key: ValueKey('app_${state.selectedBranch?.id}'), profile: state.profile, branchId: state.selectedBranch?.id);
       case 5: return const ReportsPage();
       case 6: return const UserManagementPage();
       case 7: return const BranchesPage();
@@ -370,8 +371,11 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
 
   Widget _buildOverview(DashboardLoaded state) {
     final l10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
+    return RefreshIndicator(
+      onRefresh: () async => context.read<DashboardCubit>().loadDashboard(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -400,6 +404,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
           const SizedBox(height: 140),
         ],
       ),
+    ),
     );
   }
 
@@ -432,7 +437,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
         return ListTile(
           contentPadding: EdgeInsets.zero,
           leading: CircleAvatar(
-            backgroundColor: (item.type == 'procure' ? Colors.blue : Colors.orange).withOpacity(0.1),
+            backgroundColor: (item.type == 'procure' ? Colors.blue : Colors.orange).withValues(alpha: 0.1),
             child: Icon(item.type == 'procure' ? LucideIcons.shoppingCart : LucideIcons.banknote, size: 16, color: item.type == 'procure' ? Colors.blue : Colors.orange),
           ),
           title: Text(item.subject, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
@@ -446,8 +451,10 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
               _buildStatusBadge(item.status, l10n),
             ],
           ),
-          onTap: () {
-            context.push('/request-details', extra: {'requestId': item.id, 'type': item.type, 'currentUser': state.profile});
+          onTap: () async {
+            await context.push('/request-details', extra: {'requestId': item.id, 'type': item.type, 'currentUser': state.profile});
+            if (!mounted) return;
+            context.read<DashboardCubit>().loadDashboard();
           },
         );
       },
@@ -487,7 +494,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10), border: Border.all(color: color.withOpacity(0.5))),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10), border: Border.all(color: color.withValues(alpha: 0.5))),
       child: Text(l10n.translate(statusKey).toUpperCase(), style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold)),
     );
   }
@@ -513,14 +520,16 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
     );
   }
 
-  void _navigateToAddPurchaseRequest(DashboardLoaded state) {
+  Future<void> _navigateToAddPurchaseRequest(DashboardLoaded state) async {
     if (state.selectedBranch == null) return;
-    Navigator.push(context, MaterialPageRoute(builder: (context) => AddPurchaseRequestPage(profile: state.profile, selectedBranch: state.selectedBranch)));
+    await Navigator.push(context, MaterialPageRoute(builder: (context) => AddPurchaseRequestPage(profile: state.profile, selectedBranch: state.selectedBranch)));
+    if (mounted) context.read<DashboardCubit>().loadDashboard();
   }
 
-  void _navigateToAddExpenseRequest(DashboardLoaded state) {
+  Future<void> _navigateToAddExpenseRequest(DashboardLoaded state) async {
     if (state.selectedBranch == null) return;
-    Navigator.push(context, MaterialPageRoute(builder: (context) => AddExpenseRequestPage(profile: state.profile, selectedBranch: state.selectedBranch)));
+    await Navigator.push(context, MaterialPageRoute(builder: (context) => AddExpenseRequestPage(profile: state.profile, selectedBranch: state.selectedBranch)));
+    if (mounted) context.read<DashboardCubit>().loadDashboard();
   }
 
   void _showDashboardCreateOptions(DashboardLoaded state) {
@@ -554,7 +563,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircleAvatar(radius: 24, backgroundColor: AppTheme.primaryPink.withOpacity(0.3), child: Icon(icon, size: 24, color: AppTheme.darkGray)),
+          CircleAvatar(radius: 24, backgroundColor: AppTheme.primaryPink.withValues(alpha: 0.3), child: Icon(icon, size: 24, color: AppTheme.darkGray)),
           const SizedBox(height: 8),
           Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],

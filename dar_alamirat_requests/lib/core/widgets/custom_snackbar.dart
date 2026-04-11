@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 
 enum SnackBarType { success, error, info, warning }
 
@@ -33,7 +32,6 @@ class AppSnackBar {
         icon = LucideIcons.alertTriangle;
         break;
       case SnackBarType.info:
-      default:
         bgColor = const Color(0xFF3B82F6); // Modern info blue
         icon = LucideIcons.info;
         break;
@@ -133,23 +131,23 @@ class _SnackBarWidgetState extends State<_SnackBarWidget> with SingleTickerProvi
             color: Colors.transparent,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: widget.bgColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.bgColor.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                  decoration: BoxDecoration(
+                    color: widget.bgColor,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.bgColor.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                ],
-              ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(widget.icon, color: Colors.white, size: 20),

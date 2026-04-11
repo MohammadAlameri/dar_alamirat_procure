@@ -70,7 +70,7 @@ class ApprovalCubit extends Cubit<ApprovalState> {
       List<PurchaseRequest> pendingPurchases = [];
       if (role == UserRole.manager) {
         pendingPurchases = allPurchases.where((r) => r.status == 'pending' || r.status == 'rejected_by_manager').toList();
-      } else if (role == UserRole.it_procurement) {
+      } else if (role == UserRole.itProcurement) {
         pendingPurchases = allPurchases.where((r) => ['manager_approved', 'finance_approved', 'received_by_staff', 'rejected_by_it', 'rejected_by_it_purchase'].contains(r.status)).toList();
       } else if (role == UserRole.finance) {
         pendingPurchases = allPurchases.where((r) => r.status == 'it_approved' || r.status == 'rejected_by_finance').toList();
@@ -98,7 +98,7 @@ class ApprovalCubit extends Cubit<ApprovalState> {
         pendingExpenses = allExpenses.where((e) => e.status == 'pending' || e.status == 'rejected_by_manager').toList();
       } else if (role == UserRole.finance) {
         pendingExpenses = allExpenses.where((e) => ['finance', 'general_manager'].contains(e.highestApprovalLevel) && (e.status == 'manager_approved' || e.status == 'rejected_by_finance')).toList();
-      } else if (role == UserRole.general_manager) {
+      } else if (role == UserRole.generalManager) {
         pendingExpenses = allExpenses.where((e) => e.highestApprovalLevel == 'general_manager' && (e.status == 'finance_approved' || e.status == 'rejected_by_gm')).toList();
       } else if (role == UserRole.accountant) {
         pendingExpenses = allExpenses.where((e) {

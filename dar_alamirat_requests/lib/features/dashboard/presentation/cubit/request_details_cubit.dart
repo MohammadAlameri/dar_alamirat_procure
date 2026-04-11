@@ -90,7 +90,7 @@ class RequestDetailsCubit extends Cubit<RequestDetailsState> {
         'comments': comments,
       });
 
-      emit(RequestDetailsActionSuccess(message: 'Request processed successfully'));
+      emit(RequestDetailsActionSuccess(message: 'requestProcessedSuccessfully'));
       // Reload details
       await loadDetails(requestId, type);
     } catch (e) {

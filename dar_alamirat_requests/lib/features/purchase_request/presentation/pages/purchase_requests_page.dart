@@ -126,12 +126,13 @@ class _PurchaseRequestsViewState extends State<PurchaseRequestsView> with Automa
                         amount: request.totalAmount,
                         status: request.status,
                         type: 'procure',
-                        onTap: () {
-                          context.push('/request-details', extra: {
+                        onTap: () async {
+                          await context.push('/request-details', extra: {
                             'requestId': request.id,
                             'type': 'procure',
                             'currentUser': widget.profile,
                           });
+                          if (mounted) _fetchRequests();
                         },
                       );
                     },

@@ -133,38 +133,41 @@ class ProductsTab extends StatelessWidget {
             return Center(child: Text(l10n.translate('noProductsFound')));
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-            itemCount: state.products.length,
-            itemBuilder: (context, index) {
-              final product = state.products[index];
-              final l10n = AppLocalizations.of(context)!;
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  title: Text(
-                    product['name'] ?? '',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(product['categories']?['name'] ?? l10n.translate('noCategory')),
-                  trailing: IconButton(
-                    icon: const Icon(LucideIcons.edit, size: 18),
-                    onPressed: () {
-                      final productCubit = context.read<ProductCubit>();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BlocProvider.value(
-                            value: productCubit,
-                            child: AddProductPage(productToEdit: product),
+          return RefreshIndicator(
+            onRefresh: () => context.read<ProductCubit>().loadProducts(),
+            child: ListView.builder(
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+              itemCount: state.products.length,
+              itemBuilder: (context, index) {
+                final product = state.products[index];
+                final l10n = AppLocalizations.of(context)!;
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    title: Text(
+                      product['name'] ?? '',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(product['categories']?['name'] ?? l10n.translate('noCategory')),
+                    trailing: IconButton(
+                      icon: const Icon(LucideIcons.edit, size: 18),
+                      onPressed: () {
+                        final productCubit = context.read<ProductCubit>();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BlocProvider.value(
+                              value: productCubit,
+                              child: AddProductPage(productToEdit: product),
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         }
 
@@ -216,36 +219,39 @@ class CategoriesTab extends StatelessWidget {
             return Center(child: Text(l10n.translate('noCategoriesFound')));
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-            itemCount: state.categories.length,
-            itemBuilder: (context, index) {
-              final category = state.categories[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  title: Text(
-                    category['name'] ?? '',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(LucideIcons.edit, size: 18),
-                    onPressed: () {
-                      final productCubit = context.read<ProductCubit>();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BlocProvider.value(
-                            value: productCubit,
-                            child: AddCategoryPage(categoryToEdit: category),
+          return RefreshIndicator(
+            onRefresh: () => context.read<ProductCubit>().loadProducts(),
+            child: ListView.builder(
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
+              itemCount: state.categories.length,
+              itemBuilder: (context, index) {
+                final category = state.categories[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    title: Text(
+                      category['name'] ?? '',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(LucideIcons.edit, size: 18),
+                      onPressed: () {
+                        final productCubit = context.read<ProductCubit>();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BlocProvider.value(
+                              value: productCubit,
+                              child: AddCategoryPage(categoryToEdit: category),
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           );
         }
 

@@ -28,7 +28,7 @@ class MaintenanceScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryPink.withOpacity(0.1),
+                  color: AppTheme.primaryPink.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

@@ -93,12 +93,18 @@ class ApprovalsView extends StatelessWidget {
                           amount: item.totalAmount,
                           status: item.status,
                           type: 'procure',
-                          onTap: () {
-                            context.push('/request-details', extra: {
+                          onTap: () async {
+                            await context.push('/request-details', extra: {
                               'requestId': item.id,
                               'type': 'procure',
                               'currentUser': profile,
                             });
+                            if (context.mounted) {
+                              context.read<ApprovalCubit>().loadApprovals(
+                                profile: profile,
+                                branchId: branchId,
+                              );
+                            }
                           },
                         );
                       } else {
@@ -110,12 +116,18 @@ class ApprovalsView extends StatelessWidget {
                           amount: e.amount,
                           status: e.status,
                           type: 'expense',
-                          onTap: () {
-                            context.push('/request-details', extra: {
+                          onTap: () async {
+                            await context.push('/request-details', extra: {
                               'requestId': e.id,
                               'type': 'expense',
                               'currentUser': profile,
                             });
+                            if (context.mounted) {
+                              context.read<ApprovalCubit>().loadApprovals(
+                                profile: profile,
+                                branchId: branchId,
+                              );
+                            }
                           },
                         );
                       }

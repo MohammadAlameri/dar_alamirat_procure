@@ -223,5 +223,6 @@
   "dateFrom": "من تاريخ",
   "dateTo": "إلى تاريخ",
   "generateReport": "إنشاء التقرير",
-  "ok": "حسنا"
+  "ok": "حسنا",
+  "requestProcessedSuccessfully": "تمت معالجة الطلب بنجاح"
 }

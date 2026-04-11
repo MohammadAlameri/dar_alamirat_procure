@@ -35,9 +35,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
   Future<Either<Failure, List<UserBranch>>> getUserBranches(String userId, UserRole role) async {
     try {
       final isManager = role == UserRole.manager ||
-          role == UserRole.general_manager ||
+          role == UserRole.generalManager ||
           role == UserRole.finance ||
-          role == UserRole.it_procurement ||
+          role == UserRole.itProcurement ||
           role == UserRole.admin;
 
       if (isManager) {

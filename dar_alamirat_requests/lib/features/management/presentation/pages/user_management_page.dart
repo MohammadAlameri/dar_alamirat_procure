@@ -151,7 +151,7 @@ class UserCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryPink.withOpacity(0.1),
+          backgroundColor: AppTheme.primaryPink.withValues(alpha: 0.1),
           child: Text(
             profile.fullName.substring(0, 1).toUpperCase(),
             style: const TextStyle(color: AppTheme.primaryPink, fontWeight: FontWeight.bold),

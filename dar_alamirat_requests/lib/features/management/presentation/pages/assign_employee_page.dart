@@ -82,7 +82,7 @@ class _AssignEmployeeViewState extends State<AssignEmployeeView> {
                         if (state is UserLoading) return const Center(child: CircularProgressIndicator());
                         if (state is UserLoaded) {
                           return DropdownButtonFormField<String>(
-                            value: selectedUserId,
+                            initialValue: selectedUserId,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -116,7 +116,7 @@ class _AssignEmployeeViewState extends State<AssignEmployeeView> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: selectedAccessLevel,
+                      initialValue: selectedAccessLevel,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),

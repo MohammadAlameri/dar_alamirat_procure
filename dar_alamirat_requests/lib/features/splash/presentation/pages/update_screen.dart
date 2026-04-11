@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/localization/app_localizations.dart';
 
 class UpdateScreen extends StatelessWidget {
   final String storeUrl;
@@ -45,7 +44,7 @@ class UpdateScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryPink.withOpacity(0.1),
+                  color: AppTheme.primaryPink.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

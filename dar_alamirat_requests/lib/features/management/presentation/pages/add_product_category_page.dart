@@ -150,7 +150,7 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
 
             // Category Dropdown
             DropdownButtonFormField<String>(
-              value: _selectedCategoryId,
+              initialValue: _selectedCategoryId,
               decoration: InputDecoration(
                 labelText: l10n.translate('category'),
                 border: const OutlineInputBorder(),

@@ -36,9 +36,9 @@ class StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
         l10n != null ? l10n.translate(statusKey) : statusKey.toUpperCase(),
@@ -78,7 +78,7 @@ class RequestCard extends StatelessWidget {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: isProcure ? Colors.blue.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+          backgroundColor: isProcure ? Colors.blue.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
           child: Icon(
             isProcure ? LucideIcons.shoppingCart : LucideIcons.banknote,
             size: 20,

@@ -10,6 +10,7 @@ import 'package:dar_alamirat_requests/features/purchase_request/domain/entities/
 import 'package:dar_alamirat_requests/features/expense_request/domain/entities/expense_request.dart';
 import 'package:dar_alamirat_requests/core/services/print_service.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
+import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import '../cubit/request_details_cubit.dart';
 
 class RequestDetailsPage extends StatelessWidget {
@@ -115,7 +116,7 @@ class RequestDetailsView extends StatelessWidget {
       body: BlocConsumer<RequestDetailsCubit, RequestDetailsState>(
         listener: (context, state) {
           if (state is RequestDetailsActionSuccess) {
-            AppSnackBar.show(context, state.message, type: SnackBarType.success);
+            AppSnackBar.show(context, l10n.translate(state.message), type: SnackBarType.success);
           }
           if (state is RequestDetailsError) {
             AppSnackBar.show(context, state.message, type: SnackBarType.error);
@@ -258,11 +259,11 @@ class _PurchaseDetails extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     bool showManagerAction = role == UserRole.manager && (status == 'pending' || status == 'rejected_by_manager');
-    bool showITAction = role == UserRole.it_procurement && (status == 'manager_approved' || status == 'rejected_by_it');
+    bool showITAction = role == UserRole.itProcurement && (status == 'manager_approved' || status == 'rejected_by_it');
     bool showFinanceAction = role == UserRole.finance && (status == 'it_approved' || status == 'rejected_by_finance');
-    bool showPurchaseAction = (role == UserRole.it_procurement || role == UserRole.admin) && (status == 'finance_approved' || status == 'rejected_by_it_purchase');
+    bool showPurchaseAction = (role == UserRole.itProcurement || role == UserRole.admin) && (status == 'finance_approved' || status == 'rejected_by_it_purchase');
     bool showStaffReceiptAction = (status == 'purchased' || status == 'rejected_by_staff') && currentUser.id == request.createdBy;
-    bool showITCompleteAction = (role == UserRole.it_procurement || role == UserRole.admin) && (status == 'received_by_staff');
+    bool showITCompleteAction = (role == UserRole.itProcurement || role == UserRole.admin) && (status == 'received_by_staff');
 
     if (showManagerAction) {
       return _ActionCard(
@@ -455,7 +456,7 @@ class _ExpenseDetails extends StatelessWidget {
 
     bool showManagerAction = role == UserRole.manager && (status == 'pending' || status == 'rejected_by_manager');
     bool showFinanceAction = role == UserRole.finance && (highestLevel != 'manager') && (status == 'manager_approved' || status == 'rejected_by_finance');
-    bool showGMAction = role == UserRole.general_manager && (highestLevel == 'general_manager') && (status == 'finance_approved' || status == 'rejected_by_gm');
+    bool showGMAction = role == UserRole.generalManager && (highestLevel == 'general_manager') && (status == 'finance_approved' || status == 'rejected_by_gm');
     
     // Accountant/Payment processing
     bool showAccountantAction = (role == UserRole.accountant || role == UserRole.admin) && (
@@ -564,7 +565,7 @@ class _RequestItemCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -622,9 +623,9 @@ class _ApprovalLogTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: isRejected ? Colors.red.withValues(alpha: 0.05) : AppTheme.primaryPink.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.1)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,7 +649,7 @@ class _ApprovalLogTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -720,10 +721,11 @@ class _ActionCardState extends State<_ActionCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Card(
-      color: Theme.of(context).primaryColor.withOpacity(0.05),
+      color: AppTheme.primaryPink.withValues(alpha: 0.15),
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.2)),
+        side: const BorderSide(color: AppTheme.primaryPink),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),

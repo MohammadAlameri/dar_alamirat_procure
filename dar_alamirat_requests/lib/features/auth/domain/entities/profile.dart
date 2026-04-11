@@ -1,10 +1,10 @@
 enum UserRole {
   employee,
   manager,
-  it_procurement,
+  itProcurement,
   finance,
   admin,
-  general_manager,
+  generalManager,
   accountant;
 
   static UserRole fromString(String role) {
@@ -14,13 +14,13 @@ enum UserRole {
       case 'manager':
         return UserRole.manager;
       case 'it_procurement':
-        return UserRole.it_procurement;
+        return UserRole.itProcurement;
       case 'finance':
         return UserRole.finance;
       case 'admin':
         return UserRole.admin;
       case 'general_manager':
-        return UserRole.general_manager;
+        return UserRole.generalManager;
       case 'accountant':
         return UserRole.accountant;
       default:
