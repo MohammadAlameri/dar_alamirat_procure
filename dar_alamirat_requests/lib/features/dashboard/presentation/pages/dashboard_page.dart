@@ -257,33 +257,46 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: AppTheme.primaryPink,
-                    child: Text(
-                      state.profile.fullName.substring(0, 1).toUpperCase(),
-                      style: const TextStyle(color: AppTheme.darkGray),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              InkWell(
+                onTap: () {
+                  setState(() => _selectedIndex = 10);
+                  Navigator.pop(bottomSheetContext);
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
                     children: [
-                      Text(state.profile.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text('${state.profile.email} • ${l10n.translate(state.profile.role.name)}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      CircleAvatar(
+                        backgroundColor: AppTheme.primaryPink,
+                        child: Text(
+                          state.profile.fullName.substring(0, 1).toUpperCase(),
+                          style: const TextStyle(color: AppTheme.darkGray),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(state.profile.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Text('${state.profile.email} • ${l10n.translate(state.profile.role.name)}', 
+                                 style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
+                      const Icon(LucideIcons.chevronRight, size: 16, color: Colors.grey),
                     ],
                   ),
-                ],
+                ),
               ),
-              const Divider(height: 32),
+              const Divider(height: 24),
               GridView.count(
                 crossAxisCount: 3,
                 shrinkWrap: true,
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
                 children: [
-                  _buildMenuItem(10, LucideIcons.user, l10n.translate('profile')),
                   if (isAdmin) ...[
                     _buildMenuItem(5, LucideIcons.barChart2, l10n.translate('reports')),
                     _buildMenuItem(6, LucideIcons.users, l10n.translate('userManagement')),

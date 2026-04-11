@@ -46,7 +46,7 @@ class RequestDetailsCubit extends Cubit<RequestDetailsState> {
       } else {
         final response = await _client
             .from('expense_requests')
-            .select('*, profiles:employee_id(*), approvals_log(*, profiles:user_id(*))')
+            .select('*, profiles:employee_id(*), approvals_log:expense_approvals_log(*, profiles:user_id(*))')
             .eq('id', id)
             .single();
         
@@ -83,7 +83,8 @@ class RequestDetailsCubit extends Cubit<RequestDetailsState> {
       await _client.from(table).update(updates).eq('id', requestId);
 
       // 4. Log approval
-      await _client.from('approvals_log').insert({
+      final logTable = type == 'procure' ? 'approvals_log' : 'expense_approvals_log';
+      await _client.from(logTable).insert({
         'request_id': requestId,
         'user_id': currentUser.id,
         'action': action,
