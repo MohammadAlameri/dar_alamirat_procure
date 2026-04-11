@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/management/presentation/cubit/user_cubit.dart';
+import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
 
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
@@ -95,21 +96,19 @@ class _AddUserPageState extends State<AddUserPage> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.userToEdit != null ? l10n.translate('userUpdatedSuccessfully') : l10n.translate('userCreatedSuccessfully')),
-            backgroundColor: Colors.green,
-          ),
+        AppSnackBar.show(
+          context,
+          widget.userToEdit != null ? l10n.translate('userUpdatedSuccessfully') : l10n.translate('userCreatedSuccessfully'),
+          type: SnackBarType.success,
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.translate('error')}: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+        AppSnackBar.show(
+          context,
+          '${l10n.translate('error')}: ${e.toString()}',
+          type: SnackBarType.error,
         );
       }
     } finally {
@@ -229,7 +228,7 @@ class _AddUserPageState extends State<AddUserPage> {
               items: _roles.map((role) {
                 return DropdownMenuItem(
                   value: role,
-                  child: Text(l10n.translate(role).toUpperCase()),
+                  child: Text(l10n.translate(role)),
                 );
               }).toList(),
               onChanged: (value) {
@@ -289,7 +288,7 @@ class _AddUserPageState extends State<AddUserPage> {
                   items: managers.map((manager) {
                     return DropdownMenuItem(
                       value: manager.id,
-                      child: Text('${manager.fullName} (${manager.role.name})'),
+                      child: Text('${manager.fullName} (${l10n.translate(manager.role.name)})'),
                     );
                   }).toList(),
                   onChanged: (value) {

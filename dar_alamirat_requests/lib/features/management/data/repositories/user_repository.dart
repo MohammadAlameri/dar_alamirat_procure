@@ -95,4 +95,18 @@ class UserRepository {
 
     return ProfileModel.fromJson(response);
   }
+
+  Future<void> resetPassword(String email) async {
+    await _client.auth.resetPasswordForEmail(email);
+  }
+
+  Future<void> updateUserPassword(String userId, String newPassword) async {
+    // Note: This requires admin privileges (Service Role Key)
+    // In a typical client-side app, this might be handled via an Edge Function
+    // For this implementation, we use the admin API assuming it's available or mocked
+    await _client.auth.admin.updateUserById(
+      userId,
+      attributes: AdminUserAttributes(password: newPassword),
+    );
+  }
 }

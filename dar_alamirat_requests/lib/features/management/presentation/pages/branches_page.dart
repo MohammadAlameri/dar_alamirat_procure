@@ -154,6 +154,7 @@ class BranchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -162,7 +163,10 @@ class BranchCard extends StatelessWidget {
           backgroundColor: AppTheme.primaryPink,
           child: Icon(LucideIcons.building, color: AppTheme.darkGray, size: 20),
         ),
-        title: Text(branch.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          (l10n.isRTL && branch.nameAr != null && branch.nameAr!.isNotEmpty) ? branch.nameAr! : branch.name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Text(branch.code ?? 'No Code'),
         trailing: const Icon(LucideIcons.chevronRight, color: Colors.grey),
         onTap: onTap,

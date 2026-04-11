@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../../auth/domain/entities/profile.dart';
 import '../../../management/domain/entities/branch.dart';
+import '../../../management/domain/entities/user_branch.dart';
 import '../../../purchase_request/domain/entities/purchase_request.dart';
 import '../../../expense_request/domain/entities/expense_request.dart';
 

@@ -214,7 +214,7 @@ class _AssignEmployeeViewState extends State<AssignEmployeeView> {
                               ),
                               subtitle: Padding(
                                 padding: const EdgeInsets.only(top: 4.0),
-                                child: Text('${l10n.translate('role')}: ${ub.profile != null ? l10n.translate(ub.profile!.role.name) : '-'}'),
+                                child: Text('${l10n.translate('roleLabel')}${ub.profile != null ? l10n.translate(ub.profile!.role.name) : '-'}'),
                               ),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,

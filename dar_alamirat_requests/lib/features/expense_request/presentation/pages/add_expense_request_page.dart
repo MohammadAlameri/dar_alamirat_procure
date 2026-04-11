@@ -6,6 +6,7 @@ import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
 import 'package:dar_alamirat_requests/core/di/injection_container.dart';
+import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
 import '../cubit/expense_request_cubit.dart';
 
 class AddExpenseRequestPage extends StatelessWidget {
@@ -77,15 +78,19 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.translate('expenseRequestCreatedSuccessfully'))),
+        AppSnackBar.show(
+          context,
+          l10n.translate('expenseRequestCreatedSuccessfully'),
+          type: SnackBarType.success,
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.translate('error')}: $e')),
+        AppSnackBar.show(
+          context,
+          '${l10n.translate('error')}: $e',
+          type: SnackBarType.error,
         );
       }
     } finally {

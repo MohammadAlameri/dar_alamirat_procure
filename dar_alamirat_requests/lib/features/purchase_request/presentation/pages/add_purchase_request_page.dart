@@ -7,6 +7,7 @@ import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dar_alamirat_requests/core/di/injection_container.dart';
+import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
 import '../cubit/purchase_request_cubit.dart';
 
 class AddPurchaseRequestPage extends StatelessWidget {
@@ -135,8 +136,10 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.translate('addAtLeastOneItem'))),
+      AppSnackBar.show(
+        context,
+        l10n.translate('addAtLeastOneItem'),
+        type: SnackBarType.warning,
       );
       return;
     }
@@ -157,15 +160,19 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.translate('purchaseRequestCreatedSuccessfully'))),
+        AppSnackBar.show(
+          context,
+          l10n.translate('purchaseRequestCreatedSuccessfully'),
+          type: SnackBarType.success,
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.translate('error')}: $e')),
+        AppSnackBar.show(
+          context,
+          '${l10n.translate('error')}: $e',
+          type: SnackBarType.error,
         );
       }
     } finally {
@@ -434,7 +441,7 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                   ),
                 ),
               );
-            }).toList(),
+            }),
 
             if (_items.isNotEmpty) ...[
               const SizedBox(height: 16),

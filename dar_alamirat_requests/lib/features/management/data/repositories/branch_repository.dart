@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/branch.dart';
 import '../models/branch_model.dart';
-import '../models/user_branch_model.dart' hide UserBranchModel;
+import 'package:dar_alamirat_requests/features/management/data/models/user_branch_model.dart';
 
 class BranchRepository {
   final _client = Supabase.instance.client;

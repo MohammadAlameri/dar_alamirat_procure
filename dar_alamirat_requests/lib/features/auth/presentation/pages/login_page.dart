@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/custom_snackbar.dart';
 import '../../../../main.dart';
 
 class LoginPage extends StatefulWidget {
@@ -22,11 +23,10 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _signIn() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.translate('pleaseFillAllFields')),
-          backgroundColor: AppTheme.dangerRed,
-        ),
+      AppSnackBar.show(
+        context,
+        AppLocalizations.of(context)!.translate('pleaseFillAllFields'),
+        type: SnackBarType.error,
       );
       return;
     }
@@ -50,17 +50,14 @@ class _LoginPageState extends State<LoginPage> {
         if (message.contains('Invalid login credentials')) {
           message = AppLocalizations.of(context)!.translate('invalidCredentials');
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: AppTheme.dangerRed),
-        );
+        AppSnackBar.show(context, message, type: SnackBarType.error);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.translate('unexpectedError')),
-            backgroundColor: AppTheme.dangerRed,
-          ),
+        AppSnackBar.show(
+          context,
+          AppLocalizations.of(context)!.translate('unexpectedError'),
+          type: SnackBarType.error,
         );
       }
     } finally {

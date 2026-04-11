@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/branch_repository.dart';
+import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
 import '../../domain/entities/branch.dart';
 import '../cubit/branch_cubit.dart';
 
@@ -90,15 +91,19 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.branchToEdit != null ? l10n.translate('branchUpdatedSuccessfully') ?? 'Branch Updated' : l10n.translate('branchCreatedSuccessfully'))),
+        AppSnackBar.show(
+          context,
+          widget.branchToEdit != null ? l10n.translate('branchUpdatedSuccessfully') : l10n.translate('branchCreatedSuccessfully'),
+          type: SnackBarType.success,
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.translate('error')}: $e')),
+        AppSnackBar.show(
+          context,
+          '${l10n.translate('error')}: $e',
+          type: SnackBarType.error,
         );
       }
     } finally {
@@ -114,7 +119,7 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.branchToEdit != null ? l10n.translate('editBranch') ?? 'Edit Branch' : l10n.translate('addBranch')),
+        title: Text(widget.branchToEdit != null ? l10n.translate('editBranch') : l10n.translate('addBranch')),
         backgroundColor: AppTheme.primaryPink,
         foregroundColor: AppTheme.darkGray,
       ),
@@ -198,7 +203,7 @@ class _AddBranchPageContentState extends State<_AddBranchPageContent> {
                 child: _isSubmitting
                     ? const CircularProgressIndicator(color: AppTheme.darkGray)
                     : Text(
-                        widget.branchToEdit != null ? l10n.translate('updateBranch') ?? 'Update Branch' : l10n.translate('createBranch'),
+                        widget.branchToEdit != null ? l10n.translate('updateBranch') : l10n.translate('createBranch'),
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),

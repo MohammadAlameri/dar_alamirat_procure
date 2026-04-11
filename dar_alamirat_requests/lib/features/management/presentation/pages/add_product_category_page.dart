@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/product_repository.dart';
+import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
 import '../cubit/product_cubit.dart';
 
 class AddProductPage extends StatelessWidget {
@@ -94,15 +95,19 @@ class _AddProductPageContentState extends State<_AddProductPageContent> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.productToEdit != null ? l10n.translate('productUpdatedSuccessfully') : l10n.translate('productCreatedSuccessfully'))),
+        AppSnackBar.show(
+          context,
+          widget.productToEdit != null ? l10n.translate('productUpdatedSuccessfully') : l10n.translate('productCreatedSuccessfully'),
+          type: SnackBarType.success,
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.translate('error')}: $e')),
+        AppSnackBar.show(
+          context,
+          '${l10n.translate('error')}: $e',
+          type: SnackBarType.error,
         );
       }
     } finally {
@@ -264,15 +269,19 @@ class _AddCategoryPageContentState extends State<_AddCategoryPageContent> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(widget.categoryToEdit != null ? l10n.translate('categoryUpdatedSuccessfully') : l10n.translate('categoryCreatedSuccessfully'))),
+        AppSnackBar.show(
+          context,
+          widget.categoryToEdit != null ? l10n.translate('categoryUpdatedSuccessfully') : l10n.translate('categoryCreatedSuccessfully'),
+          type: SnackBarType.success,
         );
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.translate('error')}: $e')),
+        AppSnackBar.show(
+          context,
+          '${l10n.translate('error')}: $e',
+          type: SnackBarType.error,
         );
       }
     } finally {

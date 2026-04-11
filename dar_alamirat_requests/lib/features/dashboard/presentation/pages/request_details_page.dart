@@ -9,6 +9,7 @@ import 'package:dar_alamirat_requests/features/purchase_request/domain/entities/
 import 'package:dar_alamirat_requests/features/purchase_request/domain/entities/request_item.dart';
 import 'package:dar_alamirat_requests/features/expense_request/domain/entities/expense_request.dart';
 import 'package:dar_alamirat_requests/core/services/print_service.dart';
+import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
 import '../cubit/request_details_cubit.dart';
 
 class RequestDetailsPage extends StatelessWidget {
@@ -114,14 +115,10 @@ class RequestDetailsView extends StatelessWidget {
       body: BlocConsumer<RequestDetailsCubit, RequestDetailsState>(
         listener: (context, state) {
           if (state is RequestDetailsActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.green),
-            );
+            AppSnackBar.show(context, state.message, type: SnackBarType.success);
           }
           if (state is RequestDetailsError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-            );
+            AppSnackBar.show(context, state.message, type: SnackBarType.error);
           }
         },
         builder: (context, state) {
@@ -594,7 +591,7 @@ class _RequestItemCard extends StatelessWidget {
                     Text('${item.quantity} ', style: const TextStyle(fontSize: 12)),
                     Text('${item.unit ?? l10n.translate('pcs')} ', style: const TextStyle(fontSize: 12)),
                     Text(' x ', style: const TextStyle(fontSize: 12)),
-                    Text('${item.unitPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12)),
+                    Text(item.unitPrice.toStringAsFixed(2), style: const TextStyle(fontSize: 12)),
                   ],
                 ),
                 Text(

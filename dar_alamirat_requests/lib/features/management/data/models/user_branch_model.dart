@@ -1,4 +1,5 @@
 import 'package:dar_alamirat_requests/features/auth/data/models/profile_model.dart';
+import 'package:dar_alamirat_requests/features/management/data/models/branch_model.dart';
 import '../../domain/entities/user_branch.dart';
 
 class UserBranchModel extends UserBranch {
@@ -8,6 +9,7 @@ class UserBranchModel extends UserBranch {
     required super.branchId,
     required super.accessLevel,
     super.profile,
+    super.branch,
   });
 
   factory UserBranchModel.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,7 @@ class UserBranchModel extends UserBranch {
       branchId: json['branch_id'] ?? '',
       accessLevel: json['access_level'] ?? 'view',
       profile: json['profiles'] != null ? ProfileModel.fromJson(json['profiles']) : null,
+      branch: json['branches'] != null ? BranchModel.fromJson(json['branches']) : null,
     );
   }
 }

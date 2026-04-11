@@ -103,4 +103,35 @@ class UserCubit extends Cubit<UserState> {
       }
     }
   }
+
+  Future<void> hideError() async {
+    if (state is UserLoaded) {
+      emit(UserLoaded(users: (state as UserLoaded).users));
+    } else {
+      emit(UserInitial());
+    }
+  }
+  Future<void> resetPassword(String email) async {
+    try {
+      await _repository.resetPassword(email);
+    } catch (e) {
+      emit(UserError(message: e.toString()));
+    }
+  }
+
+  Future<void> updatePassword(String userId, String newPassword) async {
+    if (isClosed) return;
+    emit(UserLoading());
+    try {
+      await _repository.updateUserPassword(userId, newPassword);
+      if (!isClosed) {
+        final users = await _repository.fetchAllProfiles();
+        emit(UserLoaded(users: users));
+      }
+    } catch (e) {
+      if (!isClosed) {
+        emit(UserError(message: e.toString()));
+      }
+    }
+  }
 }

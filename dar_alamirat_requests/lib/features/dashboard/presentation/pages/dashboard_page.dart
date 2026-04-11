@@ -150,7 +150,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: state.userBranches.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (_, index) {
                 final branch = state.userBranches[index].branch;
                 if (branch == null) return const SizedBox.shrink();
@@ -266,7 +266,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(state.profile.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text(state.profile.email, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text('${state.profile.email} • ${l10n.translate(state.profile.role.name)}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                     ],
                   ),
                 ],
@@ -499,9 +499,13 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
       padding: const EdgeInsets.only(bottom: 20),
       child: FloatingActionButton(
         onPressed: () {
-          if (_selectedIndex == 1) _navigateToAddPurchaseRequest(state);
-          else if (_selectedIndex == 2) _navigateToAddExpenseRequest(state);
-          else _showDashboardCreateOptions(state);
+          if (_selectedIndex == 1) {
+            _navigateToAddPurchaseRequest(state);
+          } else if (_selectedIndex == 2) {
+            _navigateToAddExpenseRequest(state);
+          } else {
+            _showDashboardCreateOptions(state);
+          }
         },
         backgroundColor: AppTheme.primaryPink,
         child: const Icon(LucideIcons.plus, color: AppTheme.darkGray),

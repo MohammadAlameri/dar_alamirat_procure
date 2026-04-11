@@ -17,19 +17,3 @@ class Branch {
     this.isActive = true,
   });
 }
-
-class UserBranch {
-  final String id;
-  final String userId;
-  final String branchId;
-  final String accessLevel; // 'full' or 'view'
-  final Branch? branch;
-
-  UserBranch({
-    required this.id,
-    required this.userId,
-    required this.branchId,
-    required this.accessLevel,
-    this.branch,
-  });
-}

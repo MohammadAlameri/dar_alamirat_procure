@@ -145,6 +145,7 @@ class UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -157,11 +158,17 @@ class UserCard extends StatelessWidget {
           ),
         ),
         title: Text(profile.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${profile.email}\nRole: ${profile.role.name.toUpperCase()}'),
+        subtitle: Text('${profile.email}\n${l10n.translate('roleLabel')}${l10n.translate(profile.role.name)}'),
         isThreeLine: true,
-        trailing: IconButton(
-          icon: const Icon(LucideIcons.edit2, size: 18),
-          onPressed: onEdit,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(LucideIcons.edit2, size: 18, color: Colors.blue),
+              onPressed: onEdit,
+              tooltip: l10n.translate('edit'),
+            ),
+          ],
         ),
         onTap: onTap,
       ),

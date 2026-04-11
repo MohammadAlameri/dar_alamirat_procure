@@ -1,4 +1,5 @@
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
+import 'branch.dart';
 
 class UserBranch {
   final String id;
@@ -6,6 +7,7 @@ class UserBranch {
   final String branchId;
   final String accessLevel;
   final Profile? profile;
+  final Branch? branch;
 
   UserBranch({
     required this.id,
@@ -13,5 +15,6 @@ class UserBranch {
     required this.branchId,
     required this.accessLevel,
     this.profile,
+    this.branch,
   });
 }

@@ -35,23 +35,3 @@ class BranchModel extends Branch {
     };
   }
 }
-
-class UserBranchModel extends UserBranch {
-  UserBranchModel({
-    required super.id,
-    required super.userId,
-    required super.branchId,
-    required super.accessLevel,
-    super.branch,
-  });
-
-  factory UserBranchModel.fromJson(Map<String, dynamic> json) {
-    return UserBranchModel(
-      id: json['id'] ?? '',
-      userId: json['user_id'] ?? '',
-      branchId: json['branch_id'] ?? '',
-      accessLevel: json['access_level'] ?? 'view',
-      branch: json['branches'] != null ? BranchModel.fromJson(json['branches']) : null,
-    );
-  }
-}

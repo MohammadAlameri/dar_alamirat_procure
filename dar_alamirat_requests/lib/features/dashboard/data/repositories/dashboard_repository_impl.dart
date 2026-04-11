@@ -4,7 +4,8 @@ import '../../../../core/error/failures.dart';
 import '../../../auth/data/models/profile_model.dart';
 import '../../../auth/domain/entities/profile.dart';
 import '../../../management/data/models/branch_model.dart';
-import '../../../management/domain/entities/branch.dart';
+import '../../../management/data/models/user_branch_model.dart';
+import '../../../management/domain/entities/user_branch.dart';
 import '../../../purchase_request/data/models/purchase_request_model.dart';
 import '../../../purchase_request/domain/entities/purchase_request.dart';
 import '../../../expense_request/data/models/expense_request_model.dart';
@@ -65,18 +66,17 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, List<PurchaseRequest>>> getPurchaseRequests({String? branchId, String? userId}) async {
+  Future<Either<Failure, List<PurchaseRequest>>> getPurchaseRequests({String? branchId, String? userId, String? status, String? dateFrom, String? dateTo}) async {
     try {
       var query = supabase.from('purchase_requests').select(
             '*, profiles:created_by(id, full_name, email, role, manager_id)',
           );
 
-      if (branchId != null) {
-        query = query.eq('branch_id', branchId);
-      }
-      if (userId != null) {
-        query = query.eq('created_by', userId);
-      }
+      if (branchId != null) query = query.eq('branch_id', branchId);
+      if (userId != null) query = query.eq('created_by', userId);
+      if (status != null) query = query.eq('status', status);
+      if (dateFrom != null) query = query.gte('created_at', dateFrom);
+      if (dateTo != null) query = query.lte('created_at', dateTo);
 
       final data = await query.order('created_at', ascending: false);
       final purchases = (data as List).map((e) => PurchaseRequestModel.fromJson(e)).toList();
@@ -87,18 +87,17 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, List<ExpenseRequest>>> getExpenseRequests({String? branchId, String? userId}) async {
+  Future<Either<Failure, List<ExpenseRequest>>> getExpenseRequests({String? branchId, String? userId, String? status, String? dateFrom, String? dateTo}) async {
     try {
       var query = supabase.from('expense_requests').select(
             '*, profiles:employee_id(id, full_name, email, role, manager_id)',
           );
 
-      if (branchId != null) {
-        query = query.eq('branch_id', branchId);
-      }
-      if (userId != null) {
-        query = query.eq('employee_id', userId);
-      }
+      if (branchId != null) query = query.eq('branch_id', branchId);
+      if (userId != null) query = query.eq('employee_id', userId);
+      if (status != null) query = query.eq('status', status);
+      if (dateFrom != null) query = query.gte('created_at', dateFrom);
+      if (dateTo != null) query = query.lte('created_at', dateTo);
 
       final data = await query.order('created_at', ascending: false);
       final expenses = (data as List).map((e) => ExpenseRequestModel.fromJson(e)).toList();

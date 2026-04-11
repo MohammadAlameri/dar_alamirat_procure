@@ -20,15 +20,14 @@ class StatusBadge extends StatelessWidget {
     Color color = Colors.grey;
     String statusKey = status.toLowerCase();
     
+    // Determine color based on common patterns
     if (statusKey.contains('approved')) {
       color = Colors.green;
-      statusKey = 'approved';
     } else if (statusKey.contains('rejected')) {
       color = Colors.red;
-      statusKey = 'rejected';
     } else if (statusKey == 'pending') {
       color = Colors.orange;
-    } else if (statusKey == 'completed' || statusKey == 'paid' || statusKey == 'received') {
+    } else if (statusKey == 'completed' || statusKey == 'paid' || statusKey == 'received' || statusKey.contains('received')) {
       color = Colors.blue;
     } else if (statusKey == 'purchased') {
       color = Colors.deepPurple;
@@ -42,7 +41,7 @@ class StatusBadge extends StatelessWidget {
         border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(
-        l10n != null ? l10n.translate(statusKey).toUpperCase() : statusKey.toUpperCase(),
+        l10n != null ? l10n.translate(statusKey) : statusKey.toUpperCase(),
         style: TextStyle(color: color, fontSize: fontSize, fontWeight: FontWeight.bold),
       ),
     );
