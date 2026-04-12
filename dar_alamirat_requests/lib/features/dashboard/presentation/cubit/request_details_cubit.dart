@@ -1,9 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 import '../../../auth/domain/entities/profile.dart';
 import '../../../purchase_request/data/models/purchase_request_model.dart';
 import '../../../purchase_request/data/models/request_item_model.dart';
 import '../../../expense_request/data/models/expense_request_model.dart';
+import '../../../../core/services/notification_helper.dart';
 
 abstract class RequestDetailsState {}
 
@@ -91,11 +93,62 @@ class RequestDetailsCubit extends Cubit<RequestDetailsState> {
         'comments': comments,
       });
 
+      // 5. Send push notification (fire-and-forget)
+      _sendStatusNotification(
+        requestId: requestId,
+        type: type,
+        action: action,
+      );
+
       emit(RequestDetailsActionSuccess(message: 'requestProcessedSuccessfully'));
       // Reload details
       await loadDetails(requestId, type);
     } catch (e) {
       emit(RequestDetailsError(message: e.toString()));
+    }
+  }
+
+  /// Fire-and-forget notification after status change
+  Future<void> _sendStatusNotification({
+    required String requestId,
+    required String type,
+    required String action,
+  }) async {
+    try {
+      if (type == 'procure') {
+        // Fetch the purchase request to get details
+        final data = await _client
+            .from('purchase_requests')
+            .select('subject, branch_id, created_by')
+            .eq('id', requestId)
+            .single();
+
+        NotificationHelper.onPurchaseStatusChanged(
+          requestId: requestId,
+          newStatus: action,
+          subject: data['subject'] ?? '',
+          branchId: data['branch_id'] ?? '',
+          createdBy: data['created_by'],
+        );
+      } else {
+        // Fetch the expense request to get details
+        final data = await _client
+            .from('expense_requests')
+            .select('subject, branch_id, employee_id, highest_approval_level')
+            .eq('id', requestId)
+            .single();
+
+        NotificationHelper.onExpenseStatusChanged(
+          requestId: requestId,
+          newStatus: action,
+          subject: data['subject'] ?? '',
+          branchId: data['branch_id'] ?? '',
+          employeeId: data['employee_id'],
+          highestApprovalLevel: data['highest_approval_level'] ?? 'manager',
+        );
+      }
+    } catch (e) {
+      debugPrint('[RequestDetailsCubit] Error sending notification: $e');
     }
   }
 

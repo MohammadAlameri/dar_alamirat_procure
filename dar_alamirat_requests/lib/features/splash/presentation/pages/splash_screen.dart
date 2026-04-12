@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/models/app_config.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/notification_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -58,6 +59,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
       // 4. No maintenance or update, proceed to landing
       if (mounted) {
+        // Save/refresh FCM token if user is already logged in
+        if (Supabase.instance.client.auth.currentUser != null) {
+          NotificationService().saveTokenToDatabase();
+        }
         context.go('/login'); // Redirect to login, router will handle if already logged in
       }
     } catch (e) {

@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../../auth/domain/entities/profile.dart';
 import '../../domain/entities/purchase_request.dart';
 import '../../domain/repositories/purchase_request_repository.dart';
+import '../../../../core/services/notification_helper.dart';
 
 // States
 abstract class PurchaseRequestState extends Equatable {
@@ -88,6 +89,13 @@ class PurchaseRequestCubit extends Cubit<PurchaseRequestState> {
         employeeName: employeeName,
         jobTitle: jobTitle,
       );
+
+      // Send notification to managers
+      NotificationHelper.onPurchaseRequestCreated(
+        subject: subject,
+        branchId: branchId,
+        createdByName: employeeName ?? 'موظف',
+      );
     } catch (e) {
       emit(PurchaseRequestError(message: e.toString()));
     }
@@ -96,9 +104,23 @@ class PurchaseRequestCubit extends Cubit<PurchaseRequestState> {
   Future<void> updateStatus({
     required String id,
     required String status,
+    String? subject,
+    String? branchId,
+    String? createdBy,
   }) async {
     try {
       await _repository.updateStatus(id: id, status: status);
+
+      // Send notification about status change
+      if (subject != null && branchId != null) {
+        NotificationHelper.onPurchaseStatusChanged(
+          requestId: id,
+          newStatus: status,
+          subject: subject,
+          branchId: branchId,
+          createdBy: createdBy,
+        );
+      }
     } catch (e) {
       emit(PurchaseRequestError(message: e.toString()));
     }

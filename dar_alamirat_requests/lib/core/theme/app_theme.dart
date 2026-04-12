@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Brand colors from web
-  static const Color primaryPink = Color(0xFFe4cde7);
+  static const Color primaryPink = Color(0xFFE2C9E6);
   static const Color backgroundGray = Color(0xFFF8F9FA);
   static const Color darkGray = Color(0xFF212529);
   static const Color successGreen = Color(0xFF198754);

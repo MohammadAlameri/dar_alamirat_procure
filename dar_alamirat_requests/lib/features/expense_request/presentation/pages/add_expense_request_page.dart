@@ -75,6 +75,7 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
         employeeId: widget.profile.id,
         amount: double.tryParse(_amountController.text) ?? 0,
         highestApprovalLevel: _approvalLevel,
+        employeeName: widget.profile.fullName,
       );
 
       if (mounted) {

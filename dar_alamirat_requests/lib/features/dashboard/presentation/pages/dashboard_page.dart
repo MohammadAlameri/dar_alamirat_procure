@@ -22,6 +22,7 @@ import '../../../management/presentation/pages/user_management_page.dart';
 import '../../../management/presentation/pages/product_management_page.dart';
 import '../../../reports/presentation/pages/reports_page.dart';
 import '../../../auth/presentation/pages/profile_page.dart';
+import '../../../../core/services/notification_service.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -319,6 +320,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
                     l10n.translate('signOut'),
                     color: Colors.red,
                     onTap: () async {
+                      await NotificationService().removeTokenFromDatabase();
                       await Supabase.instance.client.auth.signOut();
                       if (context.mounted) {
                         context.go('/login');

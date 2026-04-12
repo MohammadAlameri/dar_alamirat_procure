@@ -10,6 +10,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/custom_snackbar.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../dashboard/domain/repositories/dashboard_repository.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../main.dart';
 
 class LoginPage extends StatefulWidget {
@@ -86,6 +87,8 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       if (mounted) {
+        // Save FCM token after successful login
+        NotificationService().saveTokenToDatabase();
         context.go('/dashboard');
       }
     } on AuthException catch (e) {

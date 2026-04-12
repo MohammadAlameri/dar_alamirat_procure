@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Dar Alamirat Employees</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #E2C9E6;
+            --primary-dark: #b399b7;
+            --text-main: #2d3436;
+            --text-light: #636e72;
+            --bg-color: #fcfaff;
+            --card-bg: #ffffff;
+            --border-radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Kufi Arabic', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .logo {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #8e7392; /* Derived darker version of your primary for readability */
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--primary-color);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #5d4a61;
+            margin-bottom: 15px;
+        }
+
+        .language-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 35px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: 2px solid var(--primary-color);
+            border-radius: 30px;
+            background: transparent;
+            color: var(--text-light);
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button.active {
+            background: var(--primary-color);
+            color: #5d4a61;
+            box-shadow: 0 4px 15px rgba(226, 201, 230, 0.4);
+        }
+
+        .policy-card {
+            background: var(--card-bg);
+            padding: 50px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 40px rgba(142, 115, 146, 0.08);
+            margin-bottom: 40px;
+            border: 1px solid rgba(226, 201, 230, 0.3);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #5d4a61;
+        }
+
+        h2 {
+            color: #8e7392;
+            margin: 35px 0 15px;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        p, ul {
+            margin-bottom: 22px;
+            color: var(--text-light);
+            font-size: 1.05rem;
+        }
+
+        ul {
+            list-style-position: inside;
+            padding-left: 15px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        [dir="rtl"] {
+            text-align: right;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.95rem;
+            margin-top: 50px;
+            padding-bottom: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .policy-card {
+                padding: 30px 20px;
+            }
+            .logo { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="badge">Internal Staff Tool</div>
+        <div class="logo">Dar Alamirat</div>
+        <p>Employee Management Portal</p>
+    </header>
+
+    <div class="language-switcher">
+        <button id="btn-en" class="active" onclick="showLang('en')">English</button>
+        <button id="btn-ar" onclick="showLang('ar')">العربية</button>
+    </div>
+
+    <!-- English Content -->
+    <div id="content-en" class="policy-card">
+        <h1>Privacy Policy</h1>
+        <p style="font-size: 0.9rem; color: #a4b0be;">Version: 1.0.1 | Effective: April 12, 2026</p>
+
+        <p>Dar Alamirat ("the Company") operates the <strong>Dar Alamirat Employees</strong> application as an internal tool. This Privacy Policy outlines how we handle data for our employees and authorized personnel.</p>
+
+        <h2>1. Scope of Application</h2>
+        <p>This application is intended exclusively for the use of Dar Alamirat employees. It is not available for public registration. Access is granted through company-issued credentials.</p>
+
+        <h2>2. Information Collection</h2>
+        <p>To facilitate internal requests and procurement workflows, the following professional information is collected:</p>
+        <ul>
+            <li>Employee Name & Identification Number</li>
+            <li>Corporate Email Address</li>
+            <li>Branch Assignment & Role</li>
+            <li>Purchase Request details and workflow history</li>
+        </ul>
+
+        <h2>3. Purpose of Use</h2>
+        <p>The collected data is used strictly for internal operational purposes, including:</p>
+        <ul>
+            <li>Processing workplace procurement and purchase requests</li>
+            <li>Tracking status updates for internal branch requirements</li>
+            <li>Internal communication regarding administrative tasks</li>
+            <li>Ensuring secure access to company resources</li>
+        </ul>
+
+        <h2>4. Data Security</h2>
+        <p>As an internal application, we prioritize the confidentiality of corporate data. We implement technical and organizational measures to ensure that employee data is protected against unauthorized access or disclosure.</p>
+
+        <h2>5. Disclosure of Information</h2>
+        <p>We do not share, sell, or trade your personal or professional information with outside third parties for marketing purposes. Data is only accessible to authorized administrative departments within Dar Alamirat.</p>
+
+        <h2>6. Changes to This Policy</h2>
+        <p>The Company reserves the right to update this policy as internal procedures evolve. Significant changes will be communicated through internal company channels.</p>
+
+        <h2>7. Support</h2>
+        <p>For inquiries regarding data usage or access, employees should contact the IT Department via the internal support portal or email: <strong>tech@daralamirat.com</strong></p>
+    </div>
+
+    <!-- Arabic Content -->
+    <div id="content-ar" class="policy-card hidden" dir="rtl">
+        <h1>سياسة الخصوصية</h1>
+        <p style="font-size: 0.9rem; color: #a4b0be;">الإصدار: 1.0.1 | تاريخ السريان: 12 أبريل 2026</p>
+
+        <p>تدير دار الأميرات ("الشركة") تطبيق <strong>Dar Alamirat Employees</strong> كأداة داخلية. توضح سياسة الخصوصية هذه كيفية تعاملنا مع البيانات الخاصة بموظفينا والأفراد المصرح لهم.</p>
+
+        <h2>1. نطاق التطبيق</h2>
+        <p>هذا التطبيق مخصص حصرياً لاستخدام موظفي دار الأميرات. وهو غير متاح للتسجيل العام. يتم منح حق الوصول من خلال بيانات الاعتماد الصادرة عن الشركة.</p>
+
+        <h2>2. جمع المعلومات</h2>
+        <p>لتسهيل الطلبات الداخلية وسير عمل التوريد، يتم جمع المعلومات المهنية التالية:</p>
+        <ul>
+            <li>اسم الموظف والرقم الوظيفي</li>
+            <li>البريد الإلكتروني للشركة</li>
+            <li>الفرع المعين والدور الوظيفي</li>
+            <li>تفاصيل طلبات الشراء وسجل سير العمل</li>
+        </ul>
+
+        <h2>3. غرض الاستخدام</h2>
+        <p>تستخدم البيانات المجموعة بدقة للأغراض التشغيلية الداخلية، بما في ذلك:</p>
+        <ul>
+            <li>معالجة طلبات التوريد والشراء في مكان العمل</li>
+            <li>تتبع تحديثات الحالة لمتطلبات الفروع الداخلية</li>
+            <li>التواصل الداخلي بخصوص المهام الإدارية</li>
+            <li>ضمان الوصول الآمن إلى موارد الشركة</li>
+        </ul>
+
+        <h2>4. أمن البيانات</h2>
+        <p>باعتبارنا تطبيقاً داخلياً، فإننا نولي الأولوية لسرية بيانات الشركة. نحن نطبق تدابير فنية وتنظيمية لضمان حماية بيانات الموظفين ضد الوصول غير المصرح به أو الكشف عنها.</p>
+
+        <h2>5. الإفصاح عن المعلومات</h2>
+        <p>نحن لا نشارك أو نبيع أو نتاجر ببياناتك الشخصية أو المهنية مع أطراف ثالثة خارجية لأغراض التسويق. البيانات متاحة فقط للأقسام الإدارية المخولة داخل دار الأميرات.</p>
+
+        <h2>6. التغييرات على هذه السياسة</h2>
+        <p>تحتفظ الشركة بالحق في تحديث هذه السياسة مع تطور الإجراءات الداخلية. سيتم إبلاغ الموظفين بأي تغييرات جوهرية من خلال قنوات الشركة الداخلية.</p>
+
+        <h2>7. الدعم الفني</h2>
+        <p>للاستفسارات المتعلقة باستخدام البيانات أو الوصول إليها، يجب على الموظفين التواصل مع قسم تقنية المعلومات عبر بوابة الدعم الداخلية أو البريد الإلكتروني: <strong>tech@daralamirat.com</strong></p>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Dar Alamirat. Internal Corporate Document.</p>
+    </footer>
+</div>
+
+<script>
+    function showLang(lang) {
+        const enContent = document.getElementById('content-en');
+        const arContent = document.getElementById('content-ar');
+        const btnEn = document.getElementById('btn-en');
+        const btnAr = document.getElementById('btn-ar');
+
+        if (lang === 'en') {
+            enContent.classList.remove('hidden');
+            arContent.classList.add('hidden');
+            btnEn.classList.add('active');
+            btnAr.classList.remove('active');
+            document.documentElement.dir = 'ltr';
+        } else {
+            enContent.classList.add('hidden');
+            arContent.classList.remove('hidden');
+            btnEn.classList.remove('active');
+            btnAr.classList.add('active');
+            document.documentElement.dir = 'rtl';
+        }
+    }
+</script>
+
+</body>
+</html>

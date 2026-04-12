@@ -314,3 +314,25 @@ INSERT INTO public.configurations (
   false, 
   false
 );
+
+-- FCM TOKENS TABLE --
+CREATE TABLE public.fcm_tokens (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  token text NOT NULL,
+  device_type text DEFAULT 'android' CHECK (device_type = ANY (ARRAY['android'::text, 'ios'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT fcm_tokens_pkey PRIMARY KEY (id),
+  CONSTRAINT fcm_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE,
+  CONSTRAINT fcm_tokens_user_token_unique UNIQUE (user_id, token)
+);
+
+ALTER TABLE public.fcm_tokens ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own tokens" ON public.fcm_tokens FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own tokens" ON public.fcm_tokens FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own tokens" ON public.fcm_tokens FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own tokens" ON public.fcm_tokens FOR DELETE USING (auth.uid() = user_id);
+-- Service role can read all tokens (for Edge Function)
+CREATE POLICY "Service role can read all tokens" ON public.fcm_tokens FOR SELECT USING (true);

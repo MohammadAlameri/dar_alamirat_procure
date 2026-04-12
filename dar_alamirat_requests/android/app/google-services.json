@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "556917965808",
+    "project_id": "dar-alamirat-employee",
+    "storage_bucket": "dar-alamirat-employee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:556917965808:android:0ea7a99c033317df709335",
+        "android_client_info": {
+          "package_name": "com.daralamirat.dar_alamirat_requests"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_zYzLfRZRue-UWeS_iFl6ULyvLBMTRd4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
