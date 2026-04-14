@@ -12,6 +12,7 @@ import 'core/services/language_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/navigation/app_router.dart';
 import 'core/di/injection_container.dart' as di;
+import 'features/dashboard/domain/repositories/dashboard_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,21 +38,52 @@ Future<void> main() async {
 
   // Initialize notification service
   final notificationService = NotificationService();
-  await notificationService.initialize();
 
-  // Set up notification tap handler for navigation
-  notificationService.onNotificationTap = (requestId, requestType) {
+  // Set up notification tap handler for navigation BEFORE initialization
+  // to catch the initial message if the app was terminated.
+  notificationService.onNotificationTap = (requestId, requestType) async {
     if (requestId != null && requestId.isNotEmpty) {
-      // Navigate to request details when notification is tapped
-      final context = AppRouter.router.routerDelegate.navigatorKey.currentContext;
-      if (context != null) {
-        AppRouter.router.push('/request-details', extra: {
-          'requestId': requestId,
-          'type': requestType ?? 'purchase',
-        });
-      }
+      debugPrint('[FCM] Handling notification tap: $requestId ($requestType)');
+      
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return;
+
+      // Fetch current user profile to pass to details page
+      final repo = di.sl<DashboardRepository>();
+      final profileResult = await repo.getProfile(user.id);
+      
+      profileResult.fold(
+        (failure) => debugPrint('[FCM] Failed to fetch profile for navigation'),
+        (profile) async {
+          // Wait for context to be ready if app is cold-starting
+          BuildContext? context;
+          int attempts = 0;
+          while (context == null && attempts < 10) {
+            context = AppRouter.router.routerDelegate.navigatorKey.currentContext;
+            if (context == null) {
+              await Future.delayed(const Duration(milliseconds: 500));
+              attempts++;
+            }
+          }
+
+          if (context != null) {
+            // Unify request type names: 'procure' vs 'purchase'
+            final type = requestType == 'purchase' ? 'procure' : requestType;
+            
+            AppRouter.router.push('/request-details', extra: {
+              'requestId': requestId,
+              'type': type ?? 'procure',
+              'currentUser': profile,
+            });
+          } else {
+            debugPrint('[FCM] Navigation context not found after retry');
+          }
+        },
+      );
     }
   };
+
+  await notificationService.initialize();
 
   // Load saved locale
   final Locale savedLocale = await LanguageService.getLocale();

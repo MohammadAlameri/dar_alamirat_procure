@@ -23,7 +23,7 @@ class NotificationHelper {
         title: 'طلب مشتريات جديد',
         body: '$createdByName قدم طلب مشتريات: $subject',
         requestId: requestId,
-        requestType: 'purchase',
+        requestType: 'procure',
       );
     } catch (e) {
       debugPrint('[NotificationHelper] Error sending purchase create notification: $e');
@@ -145,7 +145,7 @@ class NotificationHelper {
         title: title,
         body: body,
         requestId: requestId,
-        requestType: 'purchase',
+        requestType: 'procure',
       );
     } catch (e) {
       debugPrint('[NotificationHelper] Error sending purchase status notification: $e');
