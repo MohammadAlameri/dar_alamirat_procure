@@ -79,7 +79,7 @@ class PurchaseRequestCubit extends Cubit<PurchaseRequestState> {
     String? jobTitle,
   }) async {
     try {
-      await _repository.createRequest(
+      final request = await _repository.createRequest(
         subject: subject,
         description: description,
         branchId: branchId,
@@ -92,6 +92,7 @@ class PurchaseRequestCubit extends Cubit<PurchaseRequestState> {
 
       // Send notification to managers
       NotificationHelper.onPurchaseRequestCreated(
+        requestId: request.id,
         subject: subject,
         branchId: branchId,
         createdByName: employeeName ?? 'موظف',

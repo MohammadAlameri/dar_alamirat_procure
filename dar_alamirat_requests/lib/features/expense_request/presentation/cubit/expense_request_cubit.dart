@@ -78,7 +78,7 @@ class ExpenseRequestCubit extends Cubit<ExpenseRequestState> {
     String? employeeName,
   }) async {
     try {
-      await _repository.createRequest(
+      final request = await _repository.createRequest(
         subject: subject,
         description: description,
         branchId: branchId,
@@ -89,6 +89,7 @@ class ExpenseRequestCubit extends Cubit<ExpenseRequestState> {
 
       // Send notification to managers
       NotificationHelper.onExpenseRequestCreated(
+        requestId: request.id,
         subject: subject,
         branchId: branchId,
         createdByName: employeeName ?? 'موظف',

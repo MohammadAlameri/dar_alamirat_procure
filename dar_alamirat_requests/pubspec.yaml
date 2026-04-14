@@ -2,7 +2,7 @@ name: dar_alamirat_requests
 description: "an app for dar alamirat requests"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.1+2
+version: 1.0.3+4
 
 environment:
   sdk: ^3.11.4
@@ -81,9 +81,9 @@ flutter_launcher_icons:
 
 flutter_native_splash:
   color: "#ffffff"
-  image: "assets/images/splach_screen.jpg"
+  image: "assets/images/splach_icon.jpg"
   android_12:
-    image: "assets/images/splach_screen.jpg"
+    image: "assets/images/splach_icon.jpg"
   android: true
   ios: true
   web: false

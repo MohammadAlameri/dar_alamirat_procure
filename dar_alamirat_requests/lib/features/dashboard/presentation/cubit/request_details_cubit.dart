@@ -82,7 +82,11 @@ class RequestDetailsCubit extends Cubit<RequestDetailsState> {
       };
 
       // 3. Update request table
-      await _client.from(table).update(updates).eq('id', requestId);
+      final response = await _client.from(table).update(updates).eq('id', requestId).select();
+      
+      if (response == null || (response as List).isEmpty) {
+        throw Exception('Failed to update request status. You might not have permission or the request was not found.');
+      }
 
       // 4. Log approval
       final logTable = type == 'procure' ? 'approvals_log' : 'expense_approvals_log';

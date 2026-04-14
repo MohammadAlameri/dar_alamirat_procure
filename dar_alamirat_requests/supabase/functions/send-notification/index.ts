@@ -20,26 +20,35 @@ interface NotificationPayload {
   data?: Record<string, string>;
 }
 
-/**
- * Import a PEM-encoded RSA private key for use with Web Crypto API.
- */
 async function importPrivateKey(pem: string): Promise<CryptoKey> {
-  // Handle escaped newlines from environment variables
-  const pemContents = pem
-    .replace(/\\n/g, "\n")
+  if (!pem) {
+    throw new Error("FCM_SERVICE_ACCOUNT_PRIVATE_KEY environment variable is not set");
+  }
+
+  // Aggressive cleaning: 
+  // 1. Remove PEM headers and footers
+  // 2. Remove any literal "\n" strings that might be in the env var
+  // 3. Remove EVERY character that is not a valid base64 character (A-Z, a-z, 0-9, +, /, =)
+  const base64Data = pem
     .replace(/-----BEGIN PRIVATE KEY-----/, "")
     .replace(/-----END PRIVATE KEY-----/, "")
-    .replace(/\s/g, "");
+    .replace(/\\n/g, "") // remove literal \n strings
+    .replace(/[^A-Za-z0-9+/=]/g, ""); // remove all non-base64 chars (including spaces, actual newlines, quotes, etc.)
 
-  const binaryDer = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+  try {
+    const binaryDer = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
 
-  return await crypto.subtle.importKey(
-    "pkcs8",
-    binaryDer,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
+    return await crypto.subtle.importKey(
+      "pkcs8",
+      binaryDer,
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+  } catch (err) {
+    console.error("Failed to decode FCM_SERVICE_ACCOUNT_PRIVATE_KEY aggressive cleaning failed.");
+    throw new Error(`Invalid private key format: ${err}`);
+  }
 }
 
 /**
@@ -169,40 +178,100 @@ async function sendFcmMessage(
   }
 }
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 serve(async (req: Request) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   try {
     const payload: NotificationPayload = await req.json();
-    const { user_ids, title, body, data } = payload;
-
-    if (!user_ids || user_ids.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "No user IDs provided" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
+    const { user_ids, branch_id, role, roles, title, body, data } = payload;
 
     // Create Supabase client with service role (bypasses RLS)
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    let targetUserIds: string[] = user_ids || [];
+
+    // If no specific user IDs, find users by branch and role
+    if (targetUserIds.length === 0 && branch_id) {
+      console.log(`Finding users for branch ${branch_id} with role ${role || roles}`);
+      
+      let query = supabase
+        .from('user_branches')
+        .select('user_id, profiles!inner(role)')
+        .eq('branch_id', branch_id);
+
+      if (role) {
+        query = query.eq('profiles.role', role);
+      } else if (roles && roles.length > 0) {
+        query = query.in('profiles.role', roles);
+      }
+
+      const { data: branchUsers, error: branchError } = await query;
+
+      if (branchError) {
+        console.error("Error fetching branch users:", branchError);
+      } else if (branchUsers) {
+        targetUserIds = branchUsers.map((u: any) => u.user_id);
+      }
+
+      // If it's a central role and still no users found, search profiles globally
+      const centralRoles = ['finance', 'it_procurement', 'general_manager', 'accountant', 'admin'];
+      const targetRoles = roles || (role ? [role] : []);
+      const hasCentralRole = targetRoles.some(r => centralRoles.includes(r));
+
+      if (targetUserIds.length === 0 && hasCentralRole) {
+        console.log("No branch users found, searching globally for roles:", targetRoles);
+        const { data: globalUsers, error: globalError } = await supabase
+          .from('profiles')
+          .select('id')
+          .in('role', targetRoles);
+        
+        if (globalError) {
+          console.error("Error fetching global users:", globalError);
+        } else if (globalUsers) {
+          targetUserIds = globalUsers.map((u: any) => u.id);
+        }
+      }
+    }
+
+    if (targetUserIds.length === 0) {
+      console.log("No target users found for notification");
+      return new Response(
+        JSON.stringify({ message: "No target users found", sent: 0 }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Remove duplicates
+    targetUserIds = [...new Set(targetUserIds)];
+    console.log(`Target users: ${targetUserIds}`);
 
     // Fetch FCM tokens for the target users
     const { data: tokenRecords, error } = await supabase
       .from("fcm_tokens")
       .select("token")
-      .in_("user_id", user_ids);
+      .in("user_id", targetUserIds);
 
     if (error) {
       console.error("Error fetching tokens:", error);
       return new Response(
         JSON.stringify({ error: "Failed to fetch tokens" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
     if (!tokenRecords || tokenRecords.length === 0) {
-      console.log("No FCM tokens found for users:", user_ids);
+      console.log("No FCM tokens found for users:", targetUserIds);
       return new Response(
         JSON.stringify({ message: "No tokens found", sent: 0 }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -237,13 +306,15 @@ serve(async (req: Request) => {
         sent: successCount,
         total: tokens.length,
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (err) {
     console.error("Error:", err);
     return new Response(
       JSON.stringify({ error: String(err) }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 });
+
+

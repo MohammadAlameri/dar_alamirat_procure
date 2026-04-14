@@ -92,7 +92,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Dar Alamirat Procurement',
+      title: 'دار الأميرات - الموظفين',
       routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

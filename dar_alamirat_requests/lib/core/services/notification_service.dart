@@ -27,7 +27,7 @@ class NotificationService {
   /// Android notification channel
   static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
     'dar_alamirat_notifications',
-    'Dar Alamirat Notifications',
+    'دار الأميرات - الموظفين',
     description: 'Notifications for purchase and expense request updates',
     importance: Importance.high,
     playSound: true,
@@ -154,21 +154,27 @@ class NotificationService {
     }
   }
 
-  /// Send notification to specific users via Supabase Edge Function
+  /// Send notification to specific users or groups via Supabase Edge Function
   Future<void> sendNotificationToUsers({
-    required List<String> userIds,
+    List<String>? userIds,
+    String? branchId,
+    String? role,
+    List<String>? roles,
     required String title,
     required String body,
     String? requestId,
     String? requestType,
   }) async {
     try {
-      debugPrint('[FCM] Sending notification to users: $userIds');
+      debugPrint('[FCM] Sending notification - Target: ${userIds ?? 'Branch: $branchId, Role: $role$roles'}');
 
       await Supabase.instance.client.functions.invoke(
         'send-notification',
         body: {
-          'user_ids': userIds,
+          if (userIds != null) 'user_ids': userIds,
+          if (branchId != null) 'branch_id': branchId,
+          if (role != null) 'role': role,
+          if (roles != null) 'roles': roles,
           'title': title,
           'body': body,
           'data': {
@@ -178,7 +184,7 @@ class NotificationService {
         },
       );
 
-      debugPrint('[FCM] Notification sent successfully');
+      debugPrint('[FCM] Notification request sent to Edge Function');
     } catch (e) {
       debugPrint('[FCM] Error sending notification: $e');
     }

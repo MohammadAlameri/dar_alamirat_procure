@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "dar_alamirat_requests",
+            "cwd": "dar_alamirat_requests",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "dar_alamirat_requests (profile mode)",
+            "cwd": "dar_alamirat_requests",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "dar_alamirat_requests (release mode)",
+            "cwd": "dar_alamirat_requests",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}
