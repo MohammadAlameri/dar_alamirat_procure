@@ -2,7 +2,7 @@ name: dar_alamirat_requests
 description: "an app for dar alamirat requests"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.3+4
+version: 1.0.4+5
 
 environment:
   sdk: ^3.11.4
@@ -57,6 +57,8 @@ flutter:
     - assets/lang/
     - assets/google_fonts/Cairo-Regular.ttf
     - assets/google_fonts/Cairo-Bold.ttf
+    - assets/google_fonts/NotoKufiArabic-Regular.ttf
+    - assets/google_fonts/NotoKufiArabic-Bold.ttf
     - shorebird.yaml
     - assets/images/
 

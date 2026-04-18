@@ -53,17 +53,23 @@ class RequestDetailsView extends StatelessWidget {
                 return PopupMenuButton<String>(
                   icon: const Icon(LucideIcons.printer),
                   onSelected: (value) async {
-                    if (value == 'request') {
-                      if (state.request is PurchaseRequest) {
-                        await PrintService.printPurchaseRequest(state.request as PurchaseRequest);
-                      } else if (state.request is ExpenseRequest) {
-                        await PrintService.printExpenseRequest(state.request as ExpenseRequest);
+                    try {
+                      if (value == 'request') {
+                        if (state.request is PurchaseRequest) {
+                          await PrintService.printPurchaseRequest(state.request as PurchaseRequest);
+                        } else if (state.request is ExpenseRequest) {
+                          await PrintService.printExpenseRequest(state.request as ExpenseRequest);
+                        }
+                      } else if (value == 'receipt') {
+                        if (state.request is PurchaseRequest) {
+                          await PrintService.printReceipt(state.request as PurchaseRequest);
+                        } else if (state.request is ExpenseRequest) {
+                          await PrintService.printExpenseReceipt(state.request as ExpenseRequest);
+                        }
                       }
-                    } else if (value == 'receipt') {
-                      if (state.request is PurchaseRequest) {
-                        await PrintService.printReceipt(state.request as PurchaseRequest);
-                      } else if (state.request is ExpenseRequest) {
-                        await PrintService.printExpenseReceipt(state.request as ExpenseRequest);
+                    } catch (e) {
+                      if (context.mounted) {
+                        AppSnackBar.show(context, '${l10n.translate('error')}: $e', type: SnackBarType.error);
                       }
                     }
                   },
