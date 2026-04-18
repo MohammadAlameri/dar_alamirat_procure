@@ -17,6 +17,7 @@ class PurchaseRequest {
   final String? budgetLineItem;
   final String? commitmentNumber;
   final String? amountInWords;
+  final bool? budgetStatus;
   final String? staffAcceptanceStatus;
   final String? staffRejectionReason;
   final DateTime? staffReceivingDate;
@@ -37,6 +38,7 @@ class PurchaseRequest {
     this.budgetLineItem,
     this.commitmentNumber,
     this.amountInWords,
+    this.budgetStatus,
     this.staffAcceptanceStatus,
     this.staffRejectionReason,
     this.staffReceivingDate,
@@ -51,6 +53,7 @@ class PurchaseRequest {
     String? budgetLineItem,
     String? commitmentNumber,
     String? amountInWords,
+    bool? budgetStatus,
     String? staffAcceptanceStatus,
     String? staffRejectionReason,
     DateTime? staffReceivingDate,
@@ -73,6 +76,7 @@ class PurchaseRequest {
       budgetLineItem: budgetLineItem ?? this.budgetLineItem,
       commitmentNumber: commitmentNumber ?? this.commitmentNumber,
       amountInWords: amountInWords ?? this.amountInWords,
+      budgetStatus: budgetStatus ?? this.budgetStatus,
       staffAcceptanceStatus: staffAcceptanceStatus ?? this.staffAcceptanceStatus,
       staffRejectionReason: staffRejectionReason ?? this.staffRejectionReason,
       staffReceivingDate: staffReceivingDate ?? this.staffReceivingDate,

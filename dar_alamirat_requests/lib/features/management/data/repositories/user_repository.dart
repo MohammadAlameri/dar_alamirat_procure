@@ -10,7 +10,7 @@ class UserRepository {
 
   /// Fetch all profiles from the database
   Future<List<Profile>> fetchAllProfiles() async {
-    final data = await _client.from('profiles').select().order('full_name', ascending: true);
+    final data = await _client.from('profiles').select().order('full_name_ar', ascending: true);
     return (data as List).map((json) => ProfileModel.fromJson(json)).toList();
   }
 
@@ -28,6 +28,11 @@ class UserRepository {
 
   /// Update an existing profile
   Future<Profile> updateProfile(String id, Map<String, dynamic> data) async {
+    // If updating full_name, map it to full_name_ar
+    if (data.containsKey('full_name')) {
+      data['full_name_ar'] = data.remove('full_name');
+    }
+
     final response = await _client
         .from('profiles')
         .update(data)
@@ -54,6 +59,21 @@ class UserRepository {
     String? jobTitle,
     String? department,
     String? managerId,
+    DateTime? dateOfBirth,
+    String? gender,
+    String? phoneNumber,
+    String? nationality,
+    String? currentAddress,
+    String? maritalStatus,
+    String? qualification,
+    String? idNumber,
+    DateTime? idExpiryDate,
+    String? passportNumber,
+    DateTime? passportExpiryDate,
+    String? workPermitNumber,
+    DateTime? workPermitDate,
+    String? sponsorshipNumber,
+    DateTime? sponsorshipExpiryDate,
   }) async {
     // Save the current admin session before creating new user
     final currentSession = _client.auth.currentSession;
@@ -73,15 +93,32 @@ class UserRepository {
       throw Exception('Failed to create authentication user');
     }
 
+    String? formatDate(DateTime? date) => date?.toIso8601String().split('T').first;
+
     // Step 2: Create profile with the auth user's ID
     final response = await _client.from('profiles').insert({
       'id': authResponse.user!.id,
-      'full_name': fullName,
+      'full_name_ar': fullName,
       'email': email,
       'role': role,
       'job_title': jobTitle,
       'department': department,
       'manager_id': managerId,
+      'date_of_birth': formatDate(dateOfBirth),
+      'gender': gender,
+      'phone_number': phoneNumber,
+      'nationality': nationality,
+      'current_address': currentAddress,
+      'marital_status': maritalStatus,
+      'qualification': qualification,
+      'id_number': idNumber,
+      'id_expiry_date': formatDate(idExpiryDate),
+      'passport_number': passportNumber,
+      'passport_expiry_date': formatDate(passportExpiryDate),
+      'work_permit_number': workPermitNumber,
+      'work_permit_date': formatDate(workPermitDate),
+      'sponsorship_number': sponsorshipNumber,
+      'sponsorship_expiry_date': formatDate(sponsorshipExpiryDate),
     }).select().single();
 
     // Step 3: Restore the admin session if it existed

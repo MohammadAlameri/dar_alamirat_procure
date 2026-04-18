@@ -19,6 +19,7 @@ class PurchaseRequestModel extends PurchaseRequest {
     super.budgetLineItem,
     super.commitmentNumber,
     super.amountInWords,
+    super.budgetStatus,
     super.staffAcceptanceStatus,
     super.staffRejectionReason,
     super.staffReceivingDate,
@@ -45,6 +46,7 @@ class PurchaseRequestModel extends PurchaseRequest {
       budgetLineItem: json['budget_line_item'],
       commitmentNumber: json['commitment_number'],
       amountInWords: json['amount_in_words'],
+      budgetStatus: json['budget_status'],
       staffAcceptanceStatus: json['staff_acceptance_status'],
       staffRejectionReason: json['staff_rejection_reason'],
       staffReceivingDate: json['staff_receiving_date'] != null
@@ -63,6 +65,7 @@ class PurchaseRequestModel extends PurchaseRequest {
       'budget_line_item': budgetLineItem,
       'commitment_number': commitmentNumber,
       'amount_in_words': amountInWords,
+      'budget_status': budgetStatus,
       'staff_acceptance_status': staffAcceptanceStatus,
       'staff_rejection_reason': staffRejectionReason,
       'staff_receiving_date': staffReceivingDate?.toIso8601String(),

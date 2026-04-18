@@ -62,7 +62,7 @@ class BranchRepository {
   Future<List<UserBranchModel>> fetchAssignedUsers(String branchId) async {
     final data = await _client
         .from('user_branches')
-        .select('*, profiles(id, full_name, email, role)')
+        .select('*, profiles(id, full_name_en, full_name_ar, email, role)')
         .eq('branch_id', branchId);
     return (data as List).map((e) => UserBranchModel.fromJson(e)).toList();
   }

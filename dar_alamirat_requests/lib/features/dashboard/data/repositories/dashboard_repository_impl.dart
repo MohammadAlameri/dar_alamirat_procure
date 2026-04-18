@@ -70,7 +70,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   Future<Either<Failure, List<PurchaseRequest>>> getPurchaseRequests({String? branchId, String? userId, String? status, String? dateFrom, String? dateTo}) async {
     try {
       var query = supabase.from('purchase_requests').select(
-            '*, profiles:created_by(id, full_name, email, role, manager_id)',
+            '*, profiles:created_by(id, full_name_en, full_name_ar, email, role, manager_id)',
           );
 
       if (branchId != null) query = query.eq('branch_id', branchId);
@@ -91,7 +91,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   Future<Either<Failure, List<ExpenseRequest>>> getExpenseRequests({String? branchId, String? userId, String? status, String? dateFrom, String? dateTo}) async {
     try {
       var query = supabase.from('expense_requests').select(
-            '*, profiles:employee_id(id, full_name, email, role, manager_id)',
+            '*, profiles:employee_id(id, full_name_en, full_name_ar, email, role, manager_id)',
           );
 
       if (branchId != null) query = query.eq('branch_id', branchId);

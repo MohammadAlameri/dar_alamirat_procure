@@ -16,7 +16,7 @@ class ExpenseRequestRepositoryImpl implements ExpenseRequestRepository {
   }) async {
     var query = _client
         .from('expense_requests')
-        .select('*, profiles:employee_id(id, full_name, email, role, manager_id)');
+        .select('*, profiles:employee_id(id, full_name_en, full_name_ar, email, role, manager_id)');
 
     if (branchId != null) {
       query = query.eq('branch_id', branchId);

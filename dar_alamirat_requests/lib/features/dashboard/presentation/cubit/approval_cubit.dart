@@ -57,7 +57,7 @@ class ApprovalCubit extends Cubit<ApprovalState> {
       // 1. Fetch Purchase Requests
       var purchaseQuery = _client
           .from('purchase_requests')
-          .select('*, profiles:created_by(id, full_name, email, role, manager_id)');
+          .select('*, profiles:created_by(id, full_name_en, full_name_ar, email, role, manager_id)');
 
       if (branchId != null) {
         purchaseQuery = purchaseQuery.eq('branch_id', branchId);
@@ -83,7 +83,7 @@ class ApprovalCubit extends Cubit<ApprovalState> {
       // 2. Fetch Expense Requests
       var expenseQuery = _client
           .from('expense_requests')
-          .select('*, profiles:employee_id(id, full_name, email, role, manager_id)');
+          .select('*, profiles:employee_id(id, full_name_en, full_name_ar, email, role, manager_id)');
 
       if (branchId != null) {
         expenseQuery = expenseQuery.eq('branch_id', branchId);

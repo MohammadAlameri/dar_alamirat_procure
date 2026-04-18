@@ -228,6 +228,46 @@ class _PurchaseDetails extends StatelessWidget {
           ),
         ),
 
+        if (request.budgetLineItem != null || request.commitmentNumber != null || request.budgetStatus != null) ...[
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.translate('financeApproval'),
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                  ),
+                  const Divider(height: 24),
+                  if (request.budgetStatus != null)
+                    _InfoRow(
+                      label: l10n.translate('budgetStatus'),
+                      value: request.budgetStatus! ? l10n.translate('available') : l10n.translate('unavailable'),
+                      valueColor: request.budgetStatus! ? Colors.green : Colors.red,
+                    ),
+                  if (request.budgetLineItem != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: _InfoRow(label: l10n.translate('budgetLine'), value: request.budgetLineItem!),
+                    ),
+                  if (request.commitmentNumber != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: _InfoRow(label: l10n.translate('commitmentNo'), value: request.commitmentNumber!),
+                    ),
+                  if (request.amountInWords != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: _InfoRow(label: l10n.translate('amountInWords'), value: request.amountInWords!),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+
         const SizedBox(height: 16),
         Text(
           l10n.translate('requestedItems'),
@@ -304,7 +344,6 @@ class _PurchaseDetails extends StatelessWidget {
               border: const OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 12),
           TextField(
             controller: controllers['commitment_no'] ??= TextEditingController(),
             decoration: InputDecoration(
@@ -312,11 +351,30 @@ class _PurchaseDetails extends StatelessWidget {
               border: const OutlineInputBorder(),
             ),
           ),
+          const SizedBox(height: 12),
+          StatefulBuilder(
+            builder: (context, setState) {
+              final isReserved = controllers['budget_status_val']?.text == 'true';
+              return CheckboxListTile(
+                title: Text(l10n.translate('budgetStatus')),
+                subtitle: Text(l10n.translate('isBudgetAvailable')),
+                value: isReserved,
+                onChanged: (val) {
+                  setState(() {
+                    controllers['budget_status_val']?.text = val.toString();
+                  });
+                },
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+              );
+            },
+          ),
         ],
         onApprove: (comments, extras) => _handleAction(context, 'finance_approved', comments, {
           'budget_line_item': extras['budget_line'],
           'commitment_number': extras['commitment_no'],
           'amount_in_words': comments,
+          'budget_status': extras['budget_status_val'] == 'true',
         }),
         onReject: (comments, _) => _handleAction(context, 'rejected_by_finance', comments),
       );

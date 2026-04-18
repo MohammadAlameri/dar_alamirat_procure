@@ -16,7 +16,7 @@ class PurchaseRequestRepositoryImpl implements PurchaseRequestRepository {
   }) async {
     var query = _client
         .from('purchase_requests')
-        .select('*, profiles:created_by(id, full_name, email, role, manager_id)');
+        .select('*, profiles:created_by(id, full_name_en, full_name_ar, email, role, manager_id)');
 
     if (branchId != null) {
       query = query.eq('branch_id', branchId);

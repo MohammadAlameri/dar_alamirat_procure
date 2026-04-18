@@ -96,7 +96,23 @@ CREATE TABLE public.products (
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
-  full_name text,
+  full_name_en text,
+  full_name_ar text,
+  date_of_birth date,
+  gender text,
+  phone_number text,
+  nationality text,
+  current_address text,
+  marital_status text,
+  qualification text,
+  id_number text,
+  id_expiry_date date,
+  passport_number text,
+  passport_expiry_date date,
+  work_permit_number text,
+  work_permit_date date,
+  sponsorship_number text,
+  sponsorship_expiry_date date,
   job_title text,
   department text,
   role text DEFAULT 'employee'::text CHECK (role = ANY (ARRAY['employee'::text, 'manager'::text, 'it_procurement'::text, 'finance'::text, 'accountant'::text, 'general_manager'::text, 'admin'::text])),
@@ -336,3 +352,43 @@ CREATE POLICY "Users can update own tokens" ON public.fcm_tokens FOR UPDATE USIN
 CREATE POLICY "Users can delete own tokens" ON public.fcm_tokens FOR DELETE USING (auth.uid() = user_id);
 -- Service role can read all tokens (for Edge Function)
 CREATE POLICY "Service role can read all tokens" ON public.fcm_tokens FOR SELECT USING (true);
+
+
+-- 1. Resolve duplicate name field by renaming existing 'full_name' to 'full_name_en'
+-- This preserves any existing data while aligning with the new Arabic/English requirements.
+DO $$ 
+BEGIN 
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'full_name') AND 
+     NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'full_name_en') THEN
+    ALTER TABLE public.profiles RENAME COLUMN full_name TO full_name_en;
+  END IF;
+END $$;
+
+-- 2. Add all missing personal detail fields
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS full_name_ar text,
+  ADD COLUMN IF NOT EXISTS date_of_birth date,
+  ADD COLUMN IF NOT EXISTS gender text, 
+  ADD COLUMN IF NOT EXISTS phone_number text,
+  ADD COLUMN IF NOT EXISTS nationality text,
+  ADD COLUMN IF NOT EXISTS current_address text,
+  ADD COLUMN IF NOT EXISTS marital_status text,
+  ADD COLUMN IF NOT EXISTS qualification text,
+  ADD COLUMN IF NOT EXISTS id_number text,
+  ADD COLUMN IF NOT EXISTS id_expiry_date date,
+  ADD COLUMN IF NOT EXISTS passport_number text,
+  ADD COLUMN IF NOT EXISTS passport_expiry_date date,
+  ADD COLUMN IF NOT EXISTS work_permit_number text,
+  ADD COLUMN IF NOT EXISTS work_permit_date date,
+  ADD COLUMN IF NOT EXISTS sponsorship_number text,
+  ADD COLUMN IF NOT EXISTS sponsorship_expiry_date date;
+
+-- 3. Add Check Constraints for data integrity
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_gender_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_gender_check CHECK (gender = ANY (ARRAY['ذكر'::text, 'أنثى'::text]));
+
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_marital_status_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_marital_status_check CHECK (marital_status = ANY (ARRAY['متزوج'::text, 'اعزب'::text, 'ارمل'::text, 'مطلق'::text]));
+
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_qualification_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_qualification_check CHECK (qualification = ANY (ARRAY['دكتوراه'::text, 'بكالريوس'::text, 'ماجستير'::text, 'دبلوم'::text, 'ثانوية عامة'::text, 'غير ذلك'::text]));
