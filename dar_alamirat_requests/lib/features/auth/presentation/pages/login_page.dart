@@ -4,14 +4,15 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-/* ... rest of imports ... */
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/network/network_info.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/custom_snackbar.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../dashboard/domain/repositories/dashboard_repository.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../main.dart';
+import '../../../../core/utils/validation_helper.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,6 +22,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
@@ -43,14 +45,15 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _signIn() async {
-/* ... existing _signIn code ... */
+    if (!_formKey.currentState!.validate()) return;
+
     final l10n = AppLocalizations.of(context)!;
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      AppSnackBar.show(
-        context,
-        l10n.translate('pleaseFillAllFields'),
-        type: SnackBarType.error,
-      );
+    
+    final networkInfo = sl<NetworkInfo>();
+    if (!await networkInfo.isConnected) {
+      if (mounted) {
+        AppSnackBar.show(context, l10n.translate('noInternet'), type: SnackBarType.error);
+      }
       return;
     }
 
@@ -101,11 +104,11 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(
-          context,
-          AppLocalizations.of(context)!.translate('unexpectedError'),
-          type: SnackBarType.error,
-        );
+        String message = l10n.translate('unexpectedError');
+        if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
+          message = l10n.translate('networkError');
+        }
+        AppSnackBar.show(context, message, type: SnackBarType.error);
       }
     } finally {
       if (mounted) {
@@ -173,36 +176,46 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 32),
                   
                   // Login Form
-                  Text(l10n.translate('emailAddress'), style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      hintText: l10n.translate('emailAddress'),
-                      prefixIcon: const Icon(LucideIcons.mail, size: 20),
-                      fillColor: Colors.grey[200],
-                      filled: true,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  Text(l10n.translate('password'), style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      hintText: l10n.translate('password'),
-                      prefixIcon: const Icon(LucideIcons.lock, size: 20),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? LucideIcons.eye : LucideIcons.eyeOff, size: 20),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                      ),
-                      fillColor: Colors.grey[200],
-                      filled: true,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(l10n.translate('emailAddress'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                            hintText: l10n.translate('emailAddress'),
+                            prefixIcon: const Icon(LucideIcons.mail, size: 20),
+                            fillColor: Colors.grey[200],
+                            filled: true,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                          ),
+                          validator: (value) => ValidationHelper.validateEmail(context, value),
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        Text(l10n.translate('password'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            hintText: l10n.translate('password'),
+                            prefixIcon: const Icon(LucideIcons.lock, size: 20),
+                            suffixIcon: IconButton(
+                              icon: Icon(_obscurePassword ? LucideIcons.eye : LucideIcons.eyeOff, size: 20),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
+                            fillColor: Colors.grey[200],
+                            filled: true,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                          ),
+                          validator: (value) => ValidationHelper.validatePassword(context, value),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -259,4 +272,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-

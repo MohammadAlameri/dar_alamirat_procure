@@ -7,11 +7,10 @@ import 'package:dar_alamirat_requests/features/dashboard/domain/repositories/das
 import 'package:dar_alamirat_requests/features/management/data/repositories/branch_repository.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/user_repository.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
-import 'package:dar_alamirat_requests/features/dashboard/data/repositories/dashboard_repository_impl.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_widgets.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
 import 'package:dar_alamirat_requests/core/utils/excel_export_helper.dart';
+import 'package:dar_alamirat_requests/core/di/injection_container.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -21,7 +20,7 @@ class ReportsPage extends StatefulWidget {
 }
 
 class _ReportsPageState extends State<ReportsPage> {
-  final DashboardRepository _repository = DashboardRepositoryImpl(Supabase.instance.client);
+  final DashboardRepository _repository = sl<DashboardRepository>();
   final BranchRepository _branchRepository = BranchRepository();
   final UserRepository _userRepository = UserRepository();
 

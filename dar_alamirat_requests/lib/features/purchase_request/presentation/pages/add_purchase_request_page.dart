@@ -8,6 +8,8 @@ import 'package:dar_alamirat_requests/features/management/domain/entities/branch
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dar_alamirat_requests/core/di/injection_container.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
+import 'package:dar_alamirat_requests/core/utils/validation_helper.dart';
+import '../../../../core/network/network_info.dart';
 import '../cubit/purchase_request_cubit.dart';
 
 class AddPurchaseRequestPage extends StatelessWidget {
@@ -154,6 +156,15 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
 
     setState(() => _isSubmitting = true);
 
+    final networkInfo = sl<NetworkInfo>();
+    if (!await networkInfo.isConnected) {
+      if (mounted) {
+        AppSnackBar.show(context, l10n.translate('noInternet'), type: SnackBarType.error);
+        setState(() => _isSubmitting = false);
+      }
+      return;
+    }
+
     try {
       final cubit = context.read<PurchaseRequestCubit>();
       await cubit.createRequest(
@@ -177,9 +188,13 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
       }
     } catch (e) {
       if (mounted) {
+        String message = e.toString();
+        if (message.contains('SocketException') || message.contains('Failed host lookup')) {
+          message = l10n.translate('networkError');
+        }
         AppSnackBar.show(
           context,
-          '${l10n.translate('error')}: $e',
+          '${l10n.translate('error')}: $message',
           type: SnackBarType.error,
         );
       }
@@ -213,12 +228,7 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(LucideIcons.fileText),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.translate('enterSubject');
-                }
-                return null;
-              },
+              validator: (value) => ValidationHelper.validateRequired(context, value),
             ),
             const SizedBox(height: 16),
 
@@ -340,9 +350,6 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                           }
                         },
                         fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                          // Keep item state synced
-                          // If we loaded a draft or something, we'd set controller.text here.
-                          // But we start fresh, so we just attach listeners.
                           return TextFormField(
                             controller: controller,
                             focusNode: focusNode,
@@ -351,7 +358,7 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                               border: const OutlineInputBorder(),
                             ),
                             onChanged: (value) => _updateItem(index, 'product_name', value),
-                            validator: (value) => (value == null || value.trim().isEmpty) ? l10n.translate('requiredField') : null,
+                            validator: (value) => ValidationHelper.validateRequired(context, value),
                           );
                         },
                       ),
@@ -370,7 +377,7 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
 
                       // Unit
                       DropdownButtonFormField<String>(
-                        initialValue: item['unit'],
+                        value: item['unit'],
                         decoration: InputDecoration(
                           labelText: l10n.translate('unit'),
                           border: const OutlineInputBorder(),
@@ -402,12 +409,9 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                                 }
                               },
                               onChanged: (value) {
-                                _updateItem(index, 'quantity', double.tryParse(value) ?? 0);
+                                _updateItem(index, 'quantity', double.tryParse(value) ?? 0.0);
                               },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) return l10n.translate('requiredField');
-                                return null;
-                              },
+                              validator: (value) => ValidationHelper.validateNumber(context, value, allowZero: false),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -425,12 +429,9 @@ class _AddPurchaseRequestPageContentState extends State<_AddPurchaseRequestPageC
                                 }
                               },
                               onChanged: (value) {
-                                _updateItem(index, 'unit_price', double.tryParse(value) ?? 0);
+                                _updateItem(index, 'unit_price', double.tryParse(value) ?? 0.0);
                               },
-                              validator: (value) {
-                                if (value == null || value.isEmpty) return l10n.translate('requiredField');
-                                return null;
-                              },
+                              validator: (value) => ValidationHelper.validateNumber(context, value, allowZero: false),
                             ),
                           ),
                         ],

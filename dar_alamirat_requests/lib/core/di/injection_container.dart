@@ -1,5 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import '../network/network_info.dart';
 import '../../features/dashboard/domain/repositories/dashboard_repository.dart';
 import '../../features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import '../../features/dashboard/presentation/cubit/dashboard_cubit.dart';
@@ -19,7 +21,7 @@ Future<void> init() async {
   
   // Repositories
   sl.registerLazySingleton<DashboardRepository>(
-    () => DashboardRepositoryImpl(sl()),
+    () => DashboardRepositoryImpl(sl(), sl()),
   );
 
   //! Features - Procurement
@@ -36,6 +38,6 @@ Future<void> init() async {
 
   //! Core
   sl.registerLazySingleton(() => Supabase.instance.client);
-  
-  // More features can be added here...
+  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
+  sl.registerLazySingleton(() => Connectivity());
 }

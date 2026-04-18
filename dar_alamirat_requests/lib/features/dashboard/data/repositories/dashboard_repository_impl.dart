@@ -12,13 +12,19 @@ import '../../../expense_request/data/models/expense_request_model.dart';
 import '../../../expense_request/domain/entities/expense_request.dart';
 import '../../domain/repositories/dashboard_repository.dart';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
+import '../../../../core/network/network_info.dart';
+import 'dart:io';
+
 class DashboardRepositoryImpl implements DashboardRepository {
   final SupabaseClient supabase;
+  final NetworkInfo networkInfo;
 
-  DashboardRepositoryImpl(this.supabase);
+  DashboardRepositoryImpl(this.supabase, this.networkInfo);
 
   @override
   Future<Either<Failure, Profile>> getProfile(String userId) async {
+    if (!await networkInfo.isConnected) return const Left(NetworkFailure('No internet connection'));
     try {
       final data = await supabase
           .from('profiles')
@@ -26,13 +32,19 @@ class DashboardRepositoryImpl implements DashboardRepository {
           .eq('id', userId)
           .single();
       return Right(ProfileModel.fromJson(data));
+    } on SocketException {
+      return const Left(NetworkFailure('Network Error'));
     } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
+        return const Left(NetworkFailure('Network Error'));
+      }
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
   Future<Either<Failure, List<UserBranch>>> getUserBranches(String userId, UserRole role) async {
+    if (!await networkInfo.isConnected) return const Left(NetworkFailure('No internet connection'));
     try {
       final isManager = role == UserRole.manager ||
           role == UserRole.generalManager ||
@@ -61,13 +73,19 @@ class DashboardRepositoryImpl implements DashboardRepository {
         final branches = (data as List).map((e) => UserBranchModel.fromJson(e)).toList();
         return Right(branches);
       }
+    } on SocketException {
+      return const Left(NetworkFailure('Network Error'));
     } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
+        return const Left(NetworkFailure('Network Error'));
+      }
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
   Future<Either<Failure, List<PurchaseRequest>>> getPurchaseRequests({String? branchId, String? userId, String? status, String? dateFrom, String? dateTo}) async {
+    if (!await networkInfo.isConnected) return const Left(NetworkFailure('No internet connection'));
     try {
       var query = supabase.from('purchase_requests').select(
             '*, profiles:created_by(id, full_name_en, full_name_ar, email, role, manager_id)',
@@ -82,13 +100,19 @@ class DashboardRepositoryImpl implements DashboardRepository {
       final data = await query.order('created_at', ascending: false);
       final purchases = (data as List).map((e) => PurchaseRequestModel.fromJson(e)).toList();
       return Right(purchases);
+    } on SocketException {
+      return const Left(NetworkFailure('Network Error'));
     } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
+        return const Left(NetworkFailure('Network Error'));
+      }
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
   Future<Either<Failure, List<ExpenseRequest>>> getExpenseRequests({String? branchId, String? userId, String? status, String? dateFrom, String? dateTo}) async {
+    if (!await networkInfo.isConnected) return const Left(NetworkFailure('No internet connection'));
     try {
       var query = supabase.from('expense_requests').select(
             '*, profiles:employee_id(id, full_name_en, full_name_ar, email, role, manager_id)',
@@ -103,7 +127,12 @@ class DashboardRepositoryImpl implements DashboardRepository {
       final data = await query.order('created_at', ascending: false);
       final expenses = (data as List).map((e) => ExpenseRequestModel.fromJson(e)).toList();
       return Right(expenses);
+    } on SocketException {
+      return const Left(NetworkFailure('Network Error'));
     } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Failed host lookup')) {
+        return const Left(NetworkFailure('Network Error'));
+      }
       return Left(ServerFailure(e.toString()));
     }
   }

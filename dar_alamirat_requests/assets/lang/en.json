@@ -232,5 +232,7 @@
   "requestProcessedSuccessfully": "Request processed successfully",
   "accountInactive": "Account inactive (No active branches assigned)",
   "countryOfOrigin": "Country of Origin",
-  "warrantyPeriod": "Warranty Period"
+  "warrantyPeriod": "Warranty Period",
+  "noInternet": "No internet connection. Please check your network settings.",
+  "networkError": "A network error occurred. Please try again later."
 }

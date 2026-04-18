@@ -7,6 +7,8 @@ import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart
 import 'package:dar_alamirat_requests/features/management/domain/entities/branch.dart';
 import 'package:dar_alamirat_requests/core/di/injection_container.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_snackbar.dart';
+import 'package:dar_alamirat_requests/core/utils/validation_helper.dart';
+import '../../../../core/network/network_info.dart';
 import '../cubit/expense_request_cubit.dart';
 
 class AddExpenseRequestPage extends StatelessWidget {
@@ -63,8 +65,17 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSubmitting = true);
     final l10n = AppLocalizations.of(context)!;
+    
+    final networkInfo = sl<NetworkInfo>();
+    if (!await networkInfo.isConnected) {
+      if (mounted) {
+        AppSnackBar.show(context, l10n.translate('noInternet'), type: SnackBarType.error);
+      }
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
 
     try {
       final cubit = context.read<ExpenseRequestCubit>();
@@ -88,9 +99,13 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
       }
     } catch (e) {
       if (mounted) {
+        String message = e.toString();
+        if (message.contains('SocketException') || message.contains('Failed host lookup')) {
+          message = l10n.translate('networkError');
+        }
         AppSnackBar.show(
           context,
-          '${l10n.translate('error')}: $e',
+          '${l10n.translate('error')}: $message',
           type: SnackBarType.error,
         );
       }
@@ -124,12 +139,7 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(LucideIcons.fileText),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.translate('enterSubject');
-                }
-                return null;
-              },
+              validator: (value) => ValidationHelper.validateRequired(context, value),
             ),
             const SizedBox(height: 16),
 
@@ -142,12 +152,7 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
                 prefixIcon: const Icon(LucideIcons.alignLeft),
               ),
               maxLines: 4,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.translate('enterDescription');
-                }
-                return null;
-              },
+              validator: (value) => ValidationHelper.validateRequired(context, value),
             ),
             const SizedBox(height: 16),
 
@@ -160,21 +165,13 @@ class _AddExpenseRequestPageContentState extends State<_AddExpenseRequestPageCon
                 prefixIcon: const Icon(LucideIcons.banknote),
               ),
               keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.translate('enterAmount');
-                }
-                if (double.tryParse(value) == null) {
-                  return l10n.translate('validNumber');
-                }
-                return null;
-              },
+              validator: (value) => ValidationHelper.validateNumber(context, value, allowZero: false),
             ),
             const SizedBox(height: 16),
 
             // Approval Level
             DropdownButtonFormField<String>(
-              initialValue: _approvalLevel,
+              value: _approvalLevel,
               decoration: InputDecoration(
                 labelText: l10n.translate('highestApprovalLevel'),
                 border: const OutlineInputBorder(),

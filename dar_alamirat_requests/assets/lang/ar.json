@@ -232,5 +232,7 @@
   "requestProcessedSuccessfully": "تمت معالجة الطلب بنجاح",
   "accountInactive": "الحساب غير نشط (لا توجد فروع نشطة مرتبطة)",
   "countryOfOrigin": "بلد المنشأ",
-  "warrantyPeriod": "فترة الضمان"
+  "warrantyPeriod": "فترة الضمان",
+  "noInternet": "لا يوجد اتصال بالإنترنت. يرجى التحقق من إعدادات الشبكة.",
+  "networkError": "حدث خطأ في الشبكة. يرجى المحاولة مرة أخرى لاحقاً."
 }
