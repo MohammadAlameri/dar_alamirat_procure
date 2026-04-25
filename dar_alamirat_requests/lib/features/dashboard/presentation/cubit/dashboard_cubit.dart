@@ -4,7 +4,7 @@ import '../../domain/repositories/dashboard_repository.dart';
 import 'dashboard_state.dart';
 import '../../../auth/domain/entities/profile.dart';
 import '../../../management/domain/entities/branch.dart';
-import '../../../management/domain/entities/user_branch.dart';
+import '../../../management/domain/entities/user_structure_assignment.dart';
 import '../../../purchase_request/domain/entities/purchase_request.dart';
 import '../../../expense_request/domain/entities/expense_request.dart';
 
@@ -27,34 +27,45 @@ class DashboardCubit extends Cubit<DashboardState> {
     await profileResult.fold(
       (failure) async => emit(DashboardError(failure.message)),
       (profile) async {
-        final branchesResult = await repository.getUserBranches(user.id, profile.role);
+        final assignmentsResult = await repository.getUserAssignments(user.id, profile.role);
         
-        await branchesResult.fold(
+        await assignmentsResult.fold(
           (failure) async => emit(DashboardError(failure.message)),
-          (branches) async {
-            // Filter only active branches
-            final activeBranches = branches.where((ub) => ub.branch?.isActive ?? false).toList();
+          (assignments) async {
+            // For dashboard context, we still look for "Branches" to filter requests
+            // or we just take any node that can act as a context.
+            // If the user is assigned to a Branch, we use it.
+            // If they are assigned to a Department/Division/Unit, they might not have a "selectedBranch" yet.
             
-            if (activeBranches.isEmpty) {
-              emit(const DashboardError('Account access restricted: No active branches assigned.'));
+            if (assignments.isEmpty) {
+              emit(const DashboardError('Account access restricted: No assignments found.'));
               return;
             }
 
             Branch? selectedBranch;
-            if (activeBranches.isNotEmpty) {
-              if (branchId != null) {
-                selectedBranch = activeBranches.map((e) => e.branch).where((b) => b?.id == branchId).firstOrNull;
+            if (branchId != null) {
+              // Try to find if this branchId is in user assignments (if they are assigned directly to branches)
+              for (var a in assignments) {
+                if (a.assignedNode is Branch && a.assignedNode!.id == branchId) {
+                  selectedBranch = a.assignedNode as Branch;
+                  break;
+                }
               }
-              
-              if (selectedBranch == null) {
-                final fullBranch = activeBranches.where((b) => b.accessLevel == 'full').firstOrNull;
-                selectedBranch = fullBranch?.branch ?? activeBranches.first.branch;
+            }
+            
+            if (selectedBranch == null) {
+              // Pick the first Branch found in assignments
+              for (var a in assignments) {
+                if (a.assignedNode is Branch) {
+                  selectedBranch = a.assignedNode as Branch;
+                  break;
+                }
               }
             }
 
             await fetchDashboardData(
               profile: profile,
-              userBranches: activeBranches,
+              userAssignments: assignments,
               selectedBranch: selectedBranch,
             );
           },
@@ -70,7 +81,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
       await fetchDashboardData(
         profile: currentState.profile,
-        userBranches: currentState.userBranches,
+        userAssignments: currentState.userAssignments,
         selectedBranch: branch,
       );
     }
@@ -78,7 +89,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   Future<void> fetchDashboardData({
     required Profile profile,
-    required List<UserBranch> userBranches,
+    required List<UserStructureAssignment> userAssignments,
     Branch? selectedBranch,
   }) async {
     final branchId = selectedBranch?.id;
@@ -104,7 +115,7 @@ class DashboardCubit extends Cubit<DashboardState> {
             
             emit(DashboardLoaded(
               profile: profile,
-              userBranches: userBranches,
+              userAssignments: userAssignments,
               selectedBranch: selectedBranch,
               purchaseRequests: purchases,
               expenseRequests: expenses,

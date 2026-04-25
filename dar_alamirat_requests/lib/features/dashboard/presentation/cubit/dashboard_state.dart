@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import '../../../auth/domain/entities/profile.dart';
 import '../../../management/domain/entities/branch.dart';
-import '../../../management/domain/entities/user_branch.dart';
+import '../../../management/domain/entities/user_structure_assignment.dart';
 import '../../../purchase_request/domain/entities/purchase_request.dart';
 import '../../../expense_request/domain/entities/expense_request.dart';
 
@@ -18,7 +18,7 @@ class DashboardLoading extends DashboardState {}
 
 class DashboardLoaded extends DashboardState {
   final Profile profile;
-  final List<UserBranch> userBranches;
+  final List<UserStructureAssignment> userAssignments;
   final Branch? selectedBranch;
   final List<PurchaseRequest> purchaseRequests;
   final List<ExpenseRequest> expenseRequests;
@@ -29,7 +29,7 @@ class DashboardLoaded extends DashboardState {
 
   const DashboardLoaded({
     required this.profile,
-    required this.userBranches,
+    required this.userAssignments,
     this.selectedBranch,
     required this.purchaseRequests,
     required this.expenseRequests,
@@ -42,7 +42,7 @@ class DashboardLoaded extends DashboardState {
   @override
   List<Object?> get props => [
         profile,
-        userBranches,
+        userAssignments,
         selectedBranch,
         purchaseRequests,
         expenseRequests,
@@ -54,7 +54,7 @@ class DashboardLoaded extends DashboardState {
 
   DashboardLoaded copyWith({
     Profile? profile,
-    List<UserBranch>? userBranches,
+    List<UserStructureAssignment>? userAssignments,
     Branch? selectedBranch,
     List<PurchaseRequest>? purchaseRequests,
     List<ExpenseRequest>? expenseRequests,
@@ -65,7 +65,7 @@ class DashboardLoaded extends DashboardState {
   }) {
     return DashboardLoaded(
       profile: profile ?? this.profile,
-      userBranches: userBranches ?? this.userBranches,
+      userAssignments: userAssignments ?? this.userAssignments,
       selectedBranch: selectedBranch ?? this.selectedBranch,
       purchaseRequests: purchaseRequests ?? this.purchaseRequests,
       expenseRequests: expenseRequests ?? this.expenseRequests,

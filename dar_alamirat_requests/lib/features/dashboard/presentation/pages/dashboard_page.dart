@@ -17,12 +17,14 @@ import '../../../expense_request/presentation/pages/add_expense_request_page.dar
 import '../cubit/dashboard_cubit.dart';
 import '../cubit/dashboard_state.dart';
 import 'approvals_page.dart';
-import '../../../management/presentation/pages/branches_page.dart';
+import '../../../management/presentation/pages/company_structure_page.dart';
 import '../../../management/presentation/pages/user_management_page.dart';
 import '../../../management/presentation/pages/product_management_page.dart';
 import '../../../reports/presentation/pages/reports_page.dart';
 import '../../../auth/presentation/pages/profile_page.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../management/domain/entities/branch.dart';
+import '../widgets/floating_bottom_navbar.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -104,7 +106,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
               foregroundColor: AppTheme.darkGray,
               iconTheme: const IconThemeData(color: AppTheme.darkGray),
               actions: [
-                if (state.userBranches.isNotEmpty)
+                if (state.userAssignments.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 8.0, right: 24.0, left: 16.0),
                     child: InkWell(
@@ -130,7 +132,12 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
             ),
             body: _getBody(state),
             floatingActionButton: _buildFAB(state),
-            bottomNavigationBar: _buildFloatingBottomNavbar(l10n, isManager),
+            bottomNavigationBar: FloatingBottomNavbar(
+              selectedIndex: _selectedIndex,
+              isManager: isManager,
+              onItemSelected: (index) => setState(() => _selectedIndex = index),
+              onMenuTap: () => _showMenu(context),
+            ),
           );
         }
 
@@ -142,24 +149,27 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
   void _showBranchDialog(BuildContext context, DashboardLoaded state) {
     final dashboardCubit = context.read<DashboardCubit>();
     final l10n = AppLocalizations.of(context)!;
+    
+    // Filter only Branch assignments for the branch switcher
+    final branchAssignments = state.userAssignments.where((a) => a.assignedNode is Branch).toList();
+
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.white,
           title: Text(
-            l10n.translate('branchManagement'),
+            l10n.translate('companyStructure'),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.separated(
               shrinkWrap: true,
-              itemCount: state.userBranches.length,
+              itemCount: branchAssignments.length,
               separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (_, index) {
-                final branch = state.userBranches[index].branch;
-                if (branch == null) return const SizedBox.shrink();
+                final branch = branchAssignments[index].assignedNode as Branch;
                 final isSelected = state.selectedBranch?.id == branch.id;
 
                 return ListTile(
@@ -185,60 +195,8 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
       },
     );
   }
-
-  Widget _buildFloatingBottomNavbar(AppLocalizations l10n, bool isManager) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      height: 70,
-      decoration: BoxDecoration(
-        color: AppTheme.primaryPink,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primaryPink.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildNavIcon(0, LucideIcons.layoutDashboard, l10n.translate('dashboard')),
-          _buildNavIcon(1, LucideIcons.fileText, l10n.translate('myRequests')),
-          _buildNavIcon(2, LucideIcons.banknote, l10n.translate('expenseRequests')),
-          if (isManager) _buildNavIcon(3, LucideIcons.checkSquare, l10n.translate('approvals')),
-          _buildNavIcon(99, LucideIcons.menu, l10n.translate('menu'), onTap: () => _showMenu(context)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavIcon(int index, IconData icon, String label, {VoidCallback? onTap}) {
-    final isSelected = _selectedIndex == index;
-    return InkWell(
-      onTap: onTap ?? () => setState(() => _selectedIndex = index),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? AppTheme.darkGray : Colors.black54,
-            size: isSelected ? 24 : 22,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? AppTheme.darkGray : Colors.black54,
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  
+  // FloatingBottomNavbar handles nav icons now
 
   void _showMenu(BuildContext context) {
     final state = context.read<DashboardCubit>().state as DashboardLoaded;
@@ -301,7 +259,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
                   if (isAdmin) ...[
                     _buildMenuItem(5, LucideIcons.barChart2, l10n.translate('reports')),
                     _buildMenuItem(6, LucideIcons.users, l10n.translate('userManagement')),
-                    _buildMenuItem(7, LucideIcons.building, l10n.translate('branchManagement')),
+                    _buildMenuItem(7, LucideIcons.building, l10n.translate('companyStructure')),
                     _buildMenuItem(8, LucideIcons.package, l10n.translate('productManagement')),
                   ],
                   _buildMenuItem(
@@ -371,7 +329,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
       case 3: return l10n.translate('approvals');
       case 5: return l10n.translate('reports');
       case 6: return l10n.translate('userManagement');
-      case 7: return l10n.translate('branchManagement');
+      case 7: return l10n.translate('companyStructure');
       case 8: return l10n.translate('productManagement');
       case 10: return l10n.translate('profile');
       default: return l10n.translate('dashboard');
@@ -386,7 +344,7 @@ class _DashboardViewState extends State<DashboardView> with AutomaticKeepAliveCl
       case 3: return ApprovalsPage(key: ValueKey('app_${state.selectedBranch?.id}_$_refreshCounter'), profile: state.profile, branchId: state.selectedBranch?.id);
       case 5: return const ReportsPage();
       case 6: return const UserManagementPage();
-      case 7: return const BranchesPage();
+      case 7: return const CompanyStructurePage();
       case 8: return const ProductManagementPage();
       case 10: return ProfilePage(profile: state.profile);
       default: return _buildOverview(state);

@@ -94,7 +94,7 @@ class _ProductManagementViewState extends State<ProductManagementView>
           ],
         ),
         Positioned(
-          bottom: 100,
+          bottom: 90,
           right: 20,
           child: FloatingActionButton(
             onPressed: () {

@@ -4,7 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
 import 'package:dar_alamirat_requests/features/dashboard/domain/repositories/dashboard_repository.dart';
-import 'package:dar_alamirat_requests/features/management/data/repositories/branch_repository.dart';
+import 'package:dar_alamirat_requests/features/management/data/repositories/company_structure_repository.dart';
 import 'package:dar_alamirat_requests/features/management/data/repositories/user_repository.dart';
 import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart';
 import 'package:dar_alamirat_requests/core/widgets/custom_widgets.dart';
@@ -21,7 +21,7 @@ class ReportsPage extends StatefulWidget {
 
 class _ReportsPageState extends State<ReportsPage> {
   final DashboardRepository _repository = sl<DashboardRepository>();
-  final BranchRepository _branchRepository = BranchRepository();
+  final CompanyStructureRepository _structureRepository = CompanyStructureRepository();
   final UserRepository _userRepository = UserRepository();
 
   String _reportType = 'procure'; // 'procure' or 'expense'
@@ -61,12 +61,14 @@ class _ReportsPageState extends State<ReportsPage> {
   Future<void> _loadFilters() async {
     setState(() => _isLoading = true);
     try {
-      final branches = await _branchRepository.fetchBranches(onlyActive: true);
+      final branches = await _structureRepository.fetchBranches(onlyActive: true);
       final users = await _userRepository.fetchAllProfiles();
       setState(() {
         _branches = branches.map((b) => BranchState(b.id, b.name, b.nameAr)).toList();
         _staff = users;
       });
+    } catch (e) {
+      _showError(e.toString());
     } finally {
       setState(() => _isLoading = false);
     }

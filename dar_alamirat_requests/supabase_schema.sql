@@ -171,16 +171,7 @@ CREATE TABLE public.request_items (
   CONSTRAINT request_items_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.categories(id),
   CONSTRAINT request_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id)
 );
-CREATE TABLE public.user_branches (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  branch_id uuid NOT NULL,
-  access_level text DEFAULT 'view'::text CHECK (access_level = ANY (ARRAY['full'::text, 'view'::text])),
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT user_branches_pkey PRIMARY KEY (id),
-  CONSTRAINT user_branches_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
-  CONSTRAINT user_branches_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id)
-);
+
 
 -- FUNCTIONS AND TRIGGERS --
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
@@ -229,7 +220,7 @@ ALTER TABLE public.configurations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expense_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expense_approvals_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.user_branches ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 
 -- RLS POLICIES --
@@ -392,3 +383,111 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_marital_status_check CHECK (
 
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_qualification_check;
 ALTER TABLE public.profiles ADD CONSTRAINT profiles_qualification_check CHECK (qualification = ANY (ARRAY['دكتوراه'::text, 'بكالريوس'::text, 'ماجستير'::text, 'دبلوم'::text, 'ثانوية عامة'::text, 'غير ذلك'::text]));
+
+-- 4. Company Structure (Departments -> Branches -> Divisions -> Units)
+
+-- DEPARTMENTS (إدارات)
+CREATE TABLE public.departments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  name_ar text,
+  description text,
+  phone text,
+  manager_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT departments_pkey PRIMARY KEY (id),
+  CONSTRAINT departments_manager_id_fkey FOREIGN KEY (manager_id) REFERENCES public.profiles(id)
+);
+
+ALTER TABLE public.departments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Everyone can view departments" ON public.departments FOR SELECT USING (true);
+CREATE POLICY "Admins can manage departments" ON public.departments FOR ALL 
+USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- Update existing BRANCHES table (فروع)
+ALTER TABLE public.branches 
+  ADD COLUMN IF NOT EXISTS description text,
+  ADD COLUMN IF NOT EXISTS manager_id uuid REFERENCES public.profiles(id),
+  ADD COLUMN IF NOT EXISTS department_id uuid REFERENCES public.departments(id);
+
+-- DIVISIONS (أقسام)
+CREATE TABLE public.divisions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  name_ar text,
+  description text,
+  phone text,
+  manager_id uuid,
+  branch_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT divisions_pkey PRIMARY KEY (id),
+  CONSTRAINT divisions_manager_id_fkey FOREIGN KEY (manager_id) REFERENCES public.profiles(id),
+  CONSTRAINT divisions_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id)
+);
+
+ALTER TABLE public.divisions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Everyone can view divisions" ON public.divisions FOR SELECT USING (true);
+CREATE POLICY "Admins can manage divisions" ON public.divisions FOR ALL 
+USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- UNITS (وحدات)
+CREATE TABLE public.units (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  name_ar text,
+  description text,
+  phone text,
+  manager_id uuid,
+  division_id uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT units_pkey PRIMARY KEY (id),
+  CONSTRAINT units_manager_id_fkey FOREIGN KEY (manager_id) REFERENCES public.profiles(id),
+  CONSTRAINT units_division_id_fkey FOREIGN KEY (division_id) REFERENCES public.divisions(id)
+);
+
+ALTER TABLE public.units ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Everyone can view units" ON public.units FOR SELECT USING (true);
+CREATE POLICY "Admins can manage units" ON public.units FOR ALL 
+USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- Triggers for updated_at
+CREATE TRIGGER set_updated_at_departments BEFORE UPDATE ON public.departments FOR EACH ROW EXECUTE PROCEDURE handle_updated_at();
+CREATE TRIGGER set_updated_at_divisions BEFORE UPDATE ON public.divisions FOR EACH ROW EXECUTE PROCEDURE handle_updated_at();
+CREATE TRIGGER set_updated_at_units BEFORE UPDATE ON public.units FOR EACH ROW EXECUTE PROCEDURE handle_updated_at();
+
+-- USER STRUCTURE ASSIGNMENTS (Replaces user_branches)
+CREATE TABLE public.user_structure_assignments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  department_id uuid,
+  branch_id uuid,
+  division_id uuid,
+  unit_id uuid,
+  access_level text DEFAULT 'view'::text CHECK (access_level = ANY (ARRAY['full'::text, 'view'::text])),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_structure_assignments_pkey PRIMARY KEY (id),
+  CONSTRAINT user_structure_assignments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE,
+  CONSTRAINT user_structure_assignments_dept_id_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id) ON DELETE CASCADE,
+  CONSTRAINT user_structure_assignments_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id) ON DELETE CASCADE,
+  CONSTRAINT user_structure_assignments_div_id_fkey FOREIGN KEY (division_id) REFERENCES public.divisions(id) ON DELETE CASCADE,
+  CONSTRAINT user_structure_assignments_unit_id_fkey FOREIGN KEY (unit_id) REFERENCES public.units(id) ON DELETE CASCADE,
+  CONSTRAINT single_assignment_check CHECK (
+    (department_id IS NOT NULL)::integer + 
+    (branch_id IS NOT NULL)::integer + 
+    (division_id IS NOT NULL)::integer + 
+    (unit_id IS NOT NULL)::integer = 1
+  )
+);
+
+ALTER TABLE public.user_structure_assignments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own structure assignments" 
+ON public.user_structure_assignments FOR SELECT 
+USING (user_id = auth.uid() OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'manager')));
+
+CREATE POLICY "Admins can manage structure assignments" 
+ON public.user_structure_assignments FOR ALL 
+USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin'));

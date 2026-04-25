@@ -316,6 +316,7 @@ class _PurchaseDetails extends StatelessWidget {
         title: l10n.translate('managerApproval'),
         onApprove: (comments, _) => _handleAction(context, 'manager_approved', comments),
         onReject: (comments, _) => _handleAction(context, 'rejected_by_manager', comments),
+        hideReject: status == 'rejected_by_manager',
       );
     }
 
@@ -336,6 +337,7 @@ class _PurchaseDetails extends StatelessWidget {
           'suggested_suppliers': extras['suggested_suppliers'],
         }),
         onReject: (comments, _) => _handleAction(context, 'rejected_by_it', comments),
+        hideReject: status == 'rejected_by_it',
       );
     }
 
@@ -383,6 +385,7 @@ class _PurchaseDetails extends StatelessWidget {
           'budget_status': extras['budget_status_val'] == 'true',
         }),
         onReject: (comments, _) => _handleAction(context, 'rejected_by_finance', comments),
+        hideReject: status == 'rejected_by_finance',
       );
     }
 
@@ -391,6 +394,7 @@ class _PurchaseDetails extends StatelessWidget {
         title: l10n.translate('markAsPurchased'),
         onApprove: (comments, _) => _handleAction(context, 'purchased', comments),
         onReject: (comments, _) => _handleAction(context, 'rejected_by_it_purchase', comments),
+        hideReject: status == 'rejected_by_it_purchase',
       );
     }
 
@@ -408,6 +412,7 @@ class _PurchaseDetails extends StatelessWidget {
           'staff_rejection_reason': comments,
           'staff_receiving_date': DateTime.now().toIso8601String(),
         }),
+        hideReject: status == 'rejected_by_staff',
       );
     }
 
@@ -534,6 +539,7 @@ class _ExpenseDetails extends StatelessWidget {
         title: l10n.translate('managerApproval'),
         onApprove: (comments, _) => _handleAction(context, 'manager_approved', comments),
         onReject: (comments, _) => _handleAction(context, 'rejected_by_manager', comments),
+        hideReject: status == 'rejected_by_manager',
       );
     }
 
@@ -542,6 +548,7 @@ class _ExpenseDetails extends StatelessWidget {
         title: l10n.translate('financeApproval'),
         onApprove: (comments, _) => _handleAction(context, 'finance_approved', comments),
         onReject: (comments, _) => _handleAction(context, 'rejected_by_finance', comments),
+        hideReject: status == 'rejected_by_finance',
       );
     }
 
@@ -550,6 +557,7 @@ class _ExpenseDetails extends StatelessWidget {
         title: l10n.translate('generalManagerApproval'),
         onApprove: (comments, _) => _handleAction(context, 'gm_approved', comments),
         onReject: (comments, _) => _handleAction(context, 'rejected_by_gm', comments),
+        hideReject: status == 'rejected_by_gm',
       );
     }
 

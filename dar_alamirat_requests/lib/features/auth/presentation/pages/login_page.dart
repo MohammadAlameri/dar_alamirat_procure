@@ -72,10 +72,10 @@ class _LoginPageState extends State<LoginPage> {
         bool hasAccess = await profileResult.fold(
           (failure) async => false,
           (profile) async {
-            final branchesResult = await repo.getUserBranches(user.id, profile.role);
-            return branchesResult.fold(
+            final assignmentsResult = await repo.getUserAssignments(user.id, profile.role);
+            return assignmentsResult.fold(
               (failure) => false,
-              (branches) => branches.isNotEmpty,
+              (assignments) => assignments.isNotEmpty,
             );
           },
         );

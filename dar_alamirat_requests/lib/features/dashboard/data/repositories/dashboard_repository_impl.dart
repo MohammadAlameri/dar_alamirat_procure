@@ -4,15 +4,14 @@ import '../../../../core/error/failures.dart';
 import '../../../auth/data/models/profile_model.dart';
 import '../../../auth/domain/entities/profile.dart';
 import '../../../management/data/models/branch_model.dart';
-import '../../../management/data/models/user_branch_model.dart';
-import '../../../management/domain/entities/user_branch.dart';
+import '../../../management/data/models/user_structure_assignment_model.dart';
+import '../../../management/domain/entities/user_structure_assignment.dart';
 import '../../../purchase_request/data/models/purchase_request_model.dart';
 import '../../../purchase_request/domain/entities/purchase_request.dart';
 import '../../../expense_request/data/models/expense_request_model.dart';
 import '../../../expense_request/domain/entities/expense_request.dart';
 import '../../domain/repositories/dashboard_repository.dart';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../../core/network/network_info.dart';
 import 'dart:io';
 
@@ -43,7 +42,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, List<UserBranch>>> getUserBranches(String userId, UserRole role) async {
+  Future<Either<Failure, List<UserStructureAssignment>>> getUserAssignments(String userId, UserRole role) async {
     if (!await networkInfo.isConnected) return const Left(NetworkFailure('No internet connection'));
     try {
       final isManager = role == UserRole.manager ||
@@ -56,22 +55,24 @@ class DashboardRepositoryImpl implements DashboardRepository {
         final data = await supabase.from('branches').select('*').eq('is_active', true).order('name');
         final allBranches = (data as List).map((e) => BranchModel.fromJson(e)).toList();
         return Right(allBranches
-            .map((b) => UserBranchModel(
+            .map((b) => UserStructureAssignmentModel(
                   id: '',
                   userId: userId,
                   branchId: b.id,
                   accessLevel: 'full',
-                  branch: b,
+                  assignedNode: b,
                 ))
             .toList());
       } else {
+        // Query the new user_structure_assignments table
+        // We join with branches, departments, divisions, and units to get the assigned node details
         final data = await supabase
-            .from('user_branches')
-            .select('*, branches!inner(*)')
-            .eq('user_id', userId)
-            .eq('branches.is_active', true);
-        final branches = (data as List).map((e) => UserBranchModel.fromJson(e)).toList();
-        return Right(branches);
+            .from('user_structure_assignments')
+            .select('*, departments(*), branches(*), divisions(*), units(*)')
+            .eq('user_id', userId);
+        
+        final assignments = (data as List).map((e) => UserStructureAssignmentModel.fromJson(e)).toList();
+        return Right(assignments);
       }
     } on SocketException {
       return const Left(NetworkFailure('Network Error'));

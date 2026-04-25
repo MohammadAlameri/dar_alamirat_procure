@@ -3,37 +3,55 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:dar_alamirat_requests/core/localization/app_localizations.dart';
 import 'package:dar_alamirat_requests/core/theme/app_theme.dart';
-import '../../domain/entities/branch.dart';
-import '../cubit/user_branch_cubit.dart';
-import '../cubit/user_cubit.dart';
-import '../../data/repositories/branch_repository.dart';
-import '../../data/repositories/user_repository.dart';
+import 'package:dar_alamirat_requests/features/management/domain/entities/structure_node.dart';
+import 'package:dar_alamirat_requests/features/management/presentation/cubit/company_structure_cubit.dart';
+import 'package:dar_alamirat_requests/features/management/presentation/cubit/user_assignment_cubit.dart';
+import 'package:dar_alamirat_requests/features/management/presentation/cubit/user_cubit.dart';
+import 'package:dar_alamirat_requests/features/management/data/repositories/company_structure_repository.dart';
+import 'package:dar_alamirat_requests/features/management/data/repositories/user_repository.dart';
+import 'package:dar_alamirat_requests/core/di/injection_container.dart';
 
 class AssignEmployeePage extends StatelessWidget {
-  final Branch branch;
+  final StructureNode node;
+  final StructureLevel level;
 
-  const AssignEmployeePage({super.key, required this.branch});
+  const AssignEmployeePage({
+    super.key,
+    required this.node,
+    required this.level,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => UserBranchCubit(branchRepository: BranchRepository())..fetchAssignedUsers(branch.id),
+          create: (_) => sl<UserAssignmentCubit>()
+            ..fetchAssignedUsers(
+              departmentId: level == StructureLevel.department ? node.id : null,
+              branchId: level == StructureLevel.branch ? node.id : null,
+              divisionId: level == StructureLevel.division ? node.id : null,
+              unitId: level == StructureLevel.unit ? node.id : null,
+            ),
         ),
         BlocProvider(
-          create: (_) => UserCubit(UserRepository())..loadUsers(),
+          create: (_) => sl<UserCubit>()..loadUsers(),
         ),
       ],
-      child: AssignEmployeeView(branch: branch),
+      child: AssignEmployeeView(node: node, level: level),
     );
   }
 }
 
 class AssignEmployeeView extends StatefulWidget {
-  final Branch branch;
+  final StructureNode node;
+  final StructureLevel level;
 
-  const AssignEmployeeView({super.key, required this.branch});
+  const AssignEmployeeView({
+    super.key,
+    required this.node,
+    required this.level,
+  });
 
   @override
   State<AssignEmployeeView> createState() => _AssignEmployeeViewState();
@@ -49,234 +67,121 @@ class _AssignEmployeeViewState extends State<AssignEmployeeView> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text('${l10n.translate('assignEmployee')} - ${widget.branch.name}'),
+        title: Text('${l10n.translate('assignEmployee') ?? 'Assign'} - ${widget.node.displayName}'),
         backgroundColor: AppTheme.primaryPink,
         foregroundColor: AppTheme.darkGray,
-        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Assignment Form
+            // Form
             Card(
-              elevation: 0,
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.shade200),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.translate('selectEmployee'),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    const SizedBox(height: 12),
                     BlocBuilder<UserCubit, UserState>(
                       builder: (context, state) {
-                        if (state is UserLoading) return const Center(child: CircularProgressIndicator());
                         if (state is UserLoaded) {
                           return DropdownButtonFormField<String>(
-                            initialValue: selectedUserId,
+                            value: selectedUserId,
                             decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                              filled: true,
-                              fillColor: Colors.grey.shade50,
+                              labelText: l10n.translate('selectEmployee') ?? 'Select Employee',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            items: state.users.map((u) {
-                              return DropdownMenuItem(
-                                value: u.id,
-                                child: Text('${u.fullName} (${l10n.translate(u.role.name)})'),
-                              );
-                            }).toList(),
+                            items: state.users.map((u) => DropdownMenuItem(
+                              value: u.id,
+                              child: Text(u.fullName),
+                            )).toList(),
                             onChanged: (val) => setState(() => selectedUserId = val),
-                            hint: Text(l10n.translate('selectUser')),
                           );
                         }
-                        return const SizedBox.shrink();
+                        return const CircularProgressIndicator();
                       },
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      l10n.translate('accessLevel'),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      initialValue: selectedAccessLevel,
+                      value: selectedAccessLevel,
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
+                        labelText: l10n.translate('accessLevel') ?? 'Access Level',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      items: [
-                        DropdownMenuItem(value: 'view', child: Text(l10n.translate('view'))),
-                        DropdownMenuItem(value: 'full', child: Text(l10n.translate('full'))),
+                      items: const [
+                        DropdownMenuItem(value: 'view', child: Text('View')),
+                        DropdownMenuItem(value: 'full', child: Text('Full')),
                       ],
                       onChanged: (val) => setState(() => selectedAccessLevel = val!),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     ElevatedButton(
+                      onPressed: selectedUserId == null ? null : () => _assign(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryPink,
-                        foregroundColor: AppTheme.darkGray,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
                         minimumSize: const Size.fromHeight(50),
                       ),
-                      onPressed: selectedUserId == null ? null : () {
-                        context.read<UserBranchCubit>().assignUser(selectedUserId!, widget.branch.id, selectedAccessLevel);
-                        setState(() => selectedUserId = null);
-                      },
-                      child: Text(
-                        l10n.translate('assign'),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
+                      child: Text(l10n.translate('assign') ?? 'Assign'),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
             Text(
-              l10n.translate('assignedEmployees'),
+              l10n.translate('assignedEmployees') ?? 'Assigned Employees',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: BlocBuilder<UserBranchCubit, UserBranchState>(
+              child: BlocBuilder<UserAssignmentCubit, UserAssignmentState>(
                 builder: (context, state) {
-                  if (state is UserBranchLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (state is UserBranchLoaded) {
-                    if (state.userBranches.isEmpty) {
-                      return Center(
-                        child: Text(
-                          l10n.translate('noAssignedUsers'),
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
-                        ),
-                      );
-                    }
+                  if (state is UserAssignmentLoaded) {
                     return ListView.builder(
-                      itemCount: state.userBranches.length,
+                      itemCount: state.assignments.length,
                       itemBuilder: (context, index) {
-                        final ub = state.userBranches[index];
-                        final isFull = ub.accessLevel == 'full';
-                        return Card(
-                          elevation: 0,
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: ListTile(
-                              leading: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: isFull ? Colors.green.shade50 : Colors.blue.shade50,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  LucideIcons.user,
-                                  color: isFull ? Colors.green.shade600 : Colors.blue.shade600,
-                                  size: 20,
-                                ),
-                              ),
-                              title: Text(
-                                ub.profile?.fullName ?? l10n.translate('unknownUser'),
-                                style: const TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              subtitle: Padding(
-                                padding: const EdgeInsets.only(top: 4.0),
-                                child: Text('${l10n.translate('roleLabel')}${ub.profile != null ? l10n.translate(ub.profile!.role.name) : '-'}'),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: isFull ? Colors.green.shade50 : Colors.blue.shade50,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      l10n.translate(ub.accessLevel),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: isFull ? Colors.green.shade700 : Colors.blue.shade700,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    icon: Icon(LucideIcons.trash2, color: Colors.red.shade400, size: 20),
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (ctx) => AlertDialog(
-                                          title: Text(l10n.translate('delete')),
-                                          content: Text(l10n.translate('confirmDelete')),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(ctx),
-                                              child: Text(l10n.translate('cancel')),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                context.read<UserBranchCubit>().removeUser(ub.id, widget.branch.id);
-                                                Navigator.pop(ctx);
-                                              },
-                                              child: Text(l10n.translate('delete'), style: const TextStyle(color: Colors.red)),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                    splashRadius: 24,
-                                  ),
-                                ],
-                              ),
-                            ),
+                        final assignment = state.assignments[index];
+                        return ListTile(
+                          title: Text(assignment.profile?.fullName ?? 'Unknown'),
+                          subtitle: Text(assignment.accessLevel),
+                          trailing: IconButton(
+                            icon: const Icon(LucideIcons.trash2, color: Colors.red),
+                            onPressed: () => _remove(context, assignment.id),
                           ),
                         );
                       },
                     );
                   }
-                  return const SizedBox.shrink();
+                  return const Center(child: CircularProgressIndicator());
                 },
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _assign(BuildContext context) {
+    context.read<UserAssignmentCubit>().assignUser(
+      userId: selectedUserId!,
+      departmentId: widget.level == StructureLevel.department ? widget.node.id : null,
+      branchId: widget.level == StructureLevel.branch ? widget.node.id : null,
+      divisionId: widget.level == StructureLevel.division ? widget.node.id : null,
+      unitId: widget.level == StructureLevel.unit ? widget.node.id : null,
+      accessLevel: selectedAccessLevel,
+    );
+    setState(() => selectedUserId = null);
+  }
+
+  void _remove(BuildContext context, String id) {
+    context.read<UserAssignmentCubit>().removeAssignment(
+      id,
+      departmentId: widget.level == StructureLevel.department ? widget.node.id : null,
+      branchId: widget.level == StructureLevel.branch ? widget.node.id : null,
+      divisionId: widget.level == StructureLevel.division ? widget.node.id : null,
+      unitId: widget.level == StructureLevel.unit ? widget.node.id : null,
     );
   }
 }

@@ -1,33 +1,25 @@
-import '../../domain/entities/branch.dart';
+import '../../domain/entities/department.dart';
 
-class BranchModel extends Branch {
-  BranchModel({
+class DepartmentModel extends Department {
+  DepartmentModel({
     required super.id,
     required super.name,
     super.nameAr,
     super.description,
     super.phone,
     super.managerId,
-    super.code,
-    super.address,
-    super.isActive,
-    super.departmentId,
     super.createdAt,
     super.updatedAt,
   });
 
-  factory BranchModel.fromJson(Map<String, dynamic> json) {
-    return BranchModel(
+  factory DepartmentModel.fromJson(Map<String, dynamic> json) {
+    return DepartmentModel(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
       nameAr: json['name_ar'],
       description: json['description'],
       phone: json['phone'],
       managerId: json['manager_id'],
-      code: json['code'],
-      address: json['address'],
-      isActive: json['is_active'] ?? true,
-      departmentId: json['department_id'],
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : null,
       updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
     );
@@ -40,10 +32,6 @@ class BranchModel extends Branch {
       'description': description,
       'phone': phone,
       'manager_id': managerId,
-      'code': code,
-      'address': address,
-      'is_active': isActive,
-      'department_id': departmentId,
     };
   }
 }

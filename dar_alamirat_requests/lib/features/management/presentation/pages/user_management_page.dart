@@ -8,6 +8,7 @@ import 'package:dar_alamirat_requests/features/auth/domain/entities/profile.dart
 import 'package:dar_alamirat_requests/features/management/data/repositories/user_repository.dart';
 import 'package:dar_alamirat_requests/features/management/presentation/pages/add_user_page.dart';
 import '../cubit/user_cubit.dart';
+import 'package:dar_alamirat_requests/core/di/injection_container.dart';
 
 class UserManagementPage extends StatelessWidget {
   const UserManagementPage({super.key});
@@ -15,7 +16,7 @@ class UserManagementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => UserCubit(UserRepository())..loadUsers(),
+      create: (_) => sl<UserCubit>()..loadUsers(),
       child: const UserManagementView(),
     );
   }
@@ -116,7 +117,7 @@ class UserManagementView extends StatelessWidget {
           },
         ),
         Positioned(
-          bottom: 100,
+          bottom: 90,
           right: 20,
           child: FloatingActionButton(
             onPressed: () {

@@ -11,6 +11,11 @@ import '../../features/expense_request/domain/repositories/expense_request_repos
 import '../../features/expense_request/data/repositories/expense_request_repository_impl.dart';
 import '../../features/purchase_request/presentation/cubit/purchase_request_cubit.dart';
 import '../../features/expense_request/presentation/cubit/expense_request_cubit.dart';
+import '../../features/management/data/repositories/company_structure_repository.dart';
+import '../../features/management/data/repositories/user_repository.dart';
+import '../../features/management/presentation/cubit/company_structure_cubit.dart';
+import '../../features/management/presentation/cubit/user_cubit.dart';
+import '../../features/management/presentation/cubit/user_assignment_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -35,6 +40,14 @@ Future<void> init() async {
   // Cubits
   sl.registerFactory(() => PurchaseRequestCubit(sl()));
   sl.registerFactory(() => ExpenseRequestCubit(sl()));
+
+  //! Features - Management
+  sl.registerLazySingleton(() => CompanyStructureRepository());
+  sl.registerLazySingleton(() => UserRepository());
+  
+  sl.registerFactory(() => CompanyStructureCubit(sl()));
+  sl.registerFactory(() => UserCubit(sl()));
+  sl.registerFactory(() => UserAssignmentCubit(repository: sl()));
 
   //! Core
   sl.registerLazySingleton(() => Supabase.instance.client);
