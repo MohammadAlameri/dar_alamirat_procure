@@ -2,7 +2,7 @@ name: dar_alamirat_requests
 description: "an app for dar alamirat requests"
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.4+5
+version: 1.0.6+7
 
 environment:
   sdk: ^3.11.4
